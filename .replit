@@ -1,0 +1,16 @@
+# Replit configuration for Padel League Hub
+# Uses Nix to provide Python 3.11 and Postgres client
+run = "bash -lc 'pip install -r requirements.txt && python -c \"import os; open(\'instance/.keep\', \'a\').close()\" && gunicorn app:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT'"
+
+language = "python3"
+
+[env]
+FLASK_ENV = "production"
+PYTHONUNBUFFERED = "1"
+# Replit provides $PORT automatically
+# Set your secrets in the Replit Secrets panel:
+# - SECRET_KEY
+# - ADMIN_PASSWORD
+# - VERIFY_TOKEN
+# - DATABASE_URI (defaults to sqlite:///instance/league.db)
+# - APP_BASE_URL
