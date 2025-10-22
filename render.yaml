@@ -15,13 +15,10 @@ services:
           property: connectionString
       - key: ADMIN_PASSWORD
         generateValue: true
-        sync: false
       - key: VERIFY_TOKEN
         generateValue: true
-        sync: false
       - key: SECRET_KEY
         generateValue: true
-        sync: false
       - key: TESTING_MODE
         value: false
       # Add these manually in Render dashboard after deployment:
@@ -49,11 +46,23 @@ services:
           name: padel-league-db
           property: connectionString
       - key: ADMIN_PASSWORD
-        sync: true
+        fromService:
+          type: web
+          name: padel-league-hub
+          property: envVar
+          envVarKey: ADMIN_PASSWORD
       - key: VERIFY_TOKEN
-        sync: true
+        fromService:
+          type: web
+          name: padel-league-hub
+          property: envVar
+          envVarKey: VERIFY_TOKEN
       - key: SECRET_KEY
-        sync: true
+        fromService:
+          type: web
+          name: padel-league-hub
+          property: envVar
+          envVarKey: SECRET_KEY
       - key: TESTING_MODE
         value: false
     autoDeploy: true
