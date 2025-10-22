@@ -1,0 +1,1101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.team_name }} - My Matches{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12">
+  <div class="max-w-6xl mx-auto px-4">
+    
+    <!-- Team Header -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ team.team_name }}</h1>
+          <div class="text-lg text-gray-700 space-y-1">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              {{ team.player1_name }}
+            </div>
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              {{ team.player2_name }}
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm text-gray-600 mb-2">Record</div>
+          <div class="text-3xl font-bold text-gray-900">
+            {{ team.wins }}-{{ team.draws }}-{{ team.losses }}
+          </div>
+          <div class="text-sm text-gray-600 mt-2">{{ team.points }} pts</div>
+        </div>
+      </div>
+      
+      <!-- Security Notice -->
+      <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          <div class="text-sm text-blue-800">
+            <strong>Private Link:</strong> This is your team's secure access page. Bookmark this URL to view your matches and opponent contact details anytime!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matches List -->
+    <div class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Matches</h2>
+      
+      {% if not match_details %}
+      <div class="bg-white/90 backdrop-blur-lg rounded-xl shadow-lg p-8 text-center">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <p class="text-gray-600 text-lg">No matches scheduled yet</p>
+        <p class="text-gray-500 text-sm mt-2">Check back when the next round is generated</p>
+      </div>
+      {% endif %}
+
+      {% for detail in match_details %}
+      {% set m = detail.match %}
+      {% set opp = detail.opponent %}
+      {% set is_team_a = detail.is_team_a %}
+      
+      <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden border-2 
+                  {% if m.status == 'scheduled' %}border-blue-300
+                  {% elif m.status == 'completed' %}border-green-300
+                  {% elif m.status == 'bye' %}border-gray-300
+                  {% else %}border-yellow-300{% endif %}">
+        
+        <!-- Match Header -->
+        <div class="bg-gradient-to-r 
+                    {% if m.status == 'scheduled' %}from-blue-500 to-blue-600
+                    {% elif m.status == 'completed' %}from-green-500 to-green-600
+                    {% elif m.status == 'bye' %}from-gray-500 to-gray-600
+                    {% else %}from-yellow-500 to-yellow-600{% endif %}
+                    text-white px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-semibold opacity-90">
+                Round {{ m.round }}
+                {% if m.round and m.round_dates %}
+                  <span class="text-xs opacity-75">({{ m.round_dates }})</span>
+                {% endif %}
+              </span>
+              <h3 class="text-xl font-bold mt-1">
+                {% if m.status == 'bye' %}
+                  Bye Round
+                {% else %}
+                  vs {{ opp.team_name if opp else 'TBD' }}
+                {% endif %}
+              </h3>
+            </div>
+            <div class="text-right">
+              <span class="inline-block px-4 py-1 rounded-full text-sm font-semibold
+                           {% if m.status == 'scheduled' %}bg-white/20
+                           {% elif m.status == 'completed' %}{% if m.winner_id == team.id %}bg-green-500{% else %}bg-red-500{% endif %}
+                           {% elif m.status == 'bye' %}bg-white/20
+                           {% else %}bg-white/25{% endif %}">
+                {% if m.status == 'completed' %}
+                  {% if m.winner_id == team.id %}WIN{% else %}LOSS{% endif %}
+                {% else %}
+                  {{ m.status|upper }}
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Match Details -->
+        <div class="p-6">
+          
+          {% if m.status == 'bye' %}
+          <!-- Bye Round -->
+          <div class="text-center py-4">
+            <p class="text-gray-600">You have a bye this round</p>
+            <p class="text-sm text-gray-500 mt-2">Your team automatically advances without playing</p>
+          </div>
+          
+          {% else %}
+          <!-- Regular Match -->
+          
+          <!-- Score Display -->
+          {% if m.status == 'completed' and m.score_a %}
+          <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="text-center">
+              <div class="text-sm text-gray-600 mb-2">Final Score</div>
+              <div class="text-2xl font-bold text-gray-900">
+                {% if is_team_a %}
+                  {{ m.score_a }}
+                {% else %}
+                  {{ m.score_b }}
+                {% endif %}
+              </div>
+              {% if m.winner_id %}
+              <div class="mt-2 text-sm">
+                {% if m.winner_id == team.id %}
+                <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+                  ✓ You Won!
+                </span>
+                {% else %}
+                <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full font-semibold">
+                  Loss
+                </span>
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Opponent Contact Info -->
+          {% if opp and m.status == 'scheduled' %}
+          <div class="mb-6 p-5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+              </svg>
+              Opponent Contact Details
+            </h4>
+            <div id="score-confirmation-{{ m.id }}" class="space-y-3">
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-24 text-sm font-medium text-gray-600">Team:</div>
+                <div class="flex-1 font-semibold text-gray-900">{{ opp.team_name }}</div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-24 text-sm font-medium text-gray-600">Player 1:</div>
+                <div class="flex-1">
+                  <div class="font-medium text-gray-900">{{ opp.player1_name }}</div>
+                  <a href="https://wa.me/{{ opp.player1_phone }}" target="_blank" 
+                     class="text-sm text-purple-600 hover:text-purple-800 flex items-center mt-1">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                    {{ opp.player1_phone }} (WhatsApp)
+                  </a>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-24 text-sm font-medium text-gray-600">Player 2:</div>
+                <div class="flex-1">
+                  <div class="font-medium text-gray-900">{{ opp.player2_name }}</div>
+                  <a href="https://wa.me/{{ opp.player2_phone }}" target="_blank" 
+                     class="text-sm text-purple-600 hover:text-purple-800 flex items-center mt-1">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                    {{ opp.player2_phone }} (WhatsApp)
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 p-3 bg-white rounded border border-purple-200">
+              <p class="text-xs text-gray-700">
+                <strong>💡 Tip:</strong> Click the phone numbers above to message your opponents on WhatsApp and coordinate your match timing and court booking!
+              </p>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Match Booking Section -->
+          {% if m.status == 'scheduled' %}
+          <div class="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+              </svg>
+              Match Booking
+            </h4>
+            
+            <!-- Booking Status Display -->
+            <div id="booking-status-{{ m.id }}" class="mb-4">
+              {% if m.booking_confirmed %}
+              <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                  <div>
+                    <div class="text-sm font-semibold text-green-800">✓ Confirmed by both teams</div>
+                    <div class="text-sm text-green-700 mt-1 whitespace-pre-line">{{ m.booking_details }}</div>
+                  </div>
+                </div>
+              </div>
+              {% elif m.booking_details %}
+              <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+                <div class="text-sm font-semibold text-yellow-800">⏳ Waiting for confirmation</div>
+                <div class="text-sm text-yellow-700 mt-1 whitespace-pre-line">{{ m.booking_details }}</div>
+              </div>
+              {% else %}
+              <div class="p-3 bg-gray-100 rounded border-l-4 border-gray-400">
+                <div class="text-sm text-gray-600">No booking yet</div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Booking Form -->
+            {% if not m.booking_confirmed %}
+              {% if m.booking_details and "Waiting for" in m.booking_details %}
+              <!-- Show Confirm Button for Pending Booking -->
+              <div class="space-y-3">
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div class="text-sm font-medium text-blue-900 mb-2">📅 Proposed Schedule</div>
+                  <div class="text-sm text-blue-800 whitespace-pre-line">{{ m.booking_details.split('Waiting for')[0].strip() }}</div>
+                </div>
+                
+                <div class="flex gap-3">
+                  <!-- Confirm Button -->
+                  <button type="button" onclick="confirmBooking({{ m.id }}, '{{ team.access_token }}')"
+                          class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                    ✓ Confirm This Schedule
+                  </button>
+                  
+                  <!-- Suggest Different Time Button -->
+                  <button type="button" onclick="toggleBookingForm({{ m.id }})"
+                          class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                    📝 Suggest Different Time
+                  </button>
+                </div>
+                
+                <!-- Hidden Form for Different Time -->
+                <div id="booking-form-{{ m.id }}" class="hidden space-y-3">
+                  <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div class="text-sm font-medium text-orange-900 mb-2">💡 Suggest a different time</div>
+                    <div class="text-xs text-orange-700">Your opponent will receive a notification and can confirm your new proposal.</div>
+                  </div>
+                  <form onsubmit="submitBooking(event, {{ m.id }}, '{{ team.access_token }}')">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                        <input type="date" name="date" required
+                               class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-sm"
+                               min="{{ (None or '2025-01-01') }}">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                        <select name="time" required
+                                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-sm">
+                          <option value="">Select time</option>
+                          {% for hour in range(6, 23) %}
+                            {% for minute in ['00', '30'] %}
+                              <option value="{{ '%02d:%s' | format(hour, minute) }}">{{ '%02d:%s' | format(hour, minute) }}</option>
+                            {% endfor %}
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="text-xs text-gray-600 bg-white p-2 rounded mt-2">
+                      <strong>Court:</strong> Assigned on arrival
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                      <button type="submit"
+                              class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                        Submit New Proposal
+                      </button>
+                      <button type="button" onclick="toggleBookingForm({{ m.id }})"
+                              class="px-4 bg-gray-500 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              {% else %}
+              <!-- Show Initial Booking Form -->
+              <form id="booking-form-{{ m.id }}" class="space-y-3" onsubmit="submitBooking(event, {{ m.id }}, '{{ team.access_token }}')">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                    <input type="date" name="date" required
+                           class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+                           min="{{ (None or '2025-01-01') }}">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                    <select name="time" required
+                            class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm">
+                      <option value="">Select time</option>
+                      {% for hour in range(6, 23) %}
+                        {% for minute in ['00', '30'] %}
+                          <option value="{{ '%02d:%s' | format(hour, minute) }}">{{ '%02d:%s' | format(hour, minute) }}</option>
+                        {% endfor %}
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="text-xs text-gray-600 bg-white p-2 rounded">
+                  <strong>Court:</strong> Assigned on arrival
+                </div>
+                <button type="submit"
+                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                  Submit Booking
+                </button>
+              </form>
+              {% endif %}
+              <div id="booking-message-{{ m.id }}" class="text-sm"></div>
+            {% endif %}
+          </div>
+          
+          <!-- Score Submission Section -->
+          <div class="mt-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
+            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+              </svg>
+              Submit Match Score
+            </h4>
+            
+            <!-- Score Status Display -->
+            <div id="score-status-{{ m.id }}" class="mb-4">
+              {% if m.verified %}
+              <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                  <div>
+                    <div class="text-sm font-semibold text-green-800">✓ Verified</div>
+                    <div class="text-sm text-green-700 mt-1">Score: {{ m.score_a }}</div>
+                  </div>
+                </div>
+              </div>
+              {% elif detail.is_team_a and m.score_submitted_by_a %}
+              <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+                <div class="text-sm font-semibold text-yellow-800">⏳ Your score submitted</div>
+                <div class="text-sm text-yellow-700 mt-1">Waiting for {{ opp.team_name }} to confirm: {{ m.score_submission_a }}</div>
+              </div>
+              {% elif not detail.is_team_a and m.score_submitted_by_b %}
+              <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+                <div class="text-sm font-semibold text-yellow-800">⏳ Your score submitted</div>
+                <div class="text-sm text-yellow-700 mt-1">Waiting for {{ opp.team_name }} to confirm: {{ m.score_submission_b }}</div>
+              </div>
+              {% elif detail.is_team_a and m.score_submitted_by_b %}
+              <div class="p-3 bg-orange-100 rounded border-l-4 border-orange-500">
+                <div class="text-sm font-semibold text-orange-800">⚠️ Opponent submitted a score</div>
+                <div class="text-sm text-orange-700 mt-1">{{ opp.team_name }} submitted: {{ m.score_submission_b }}</div>
+                <div class="text-xs text-orange-600 mt-1">Please confirm or dispute below</div>
+              </div>
+              {% elif not detail.is_team_a and m.score_submitted_by_a %}
+              <div class="p-3 bg-orange-100 rounded border-l-4 border-orange-500">
+                <div class="text-sm font-semibold text-orange-800">⚠️ Opponent submitted a score</div>
+                <div class="text-sm text-orange-700 mt-1">{{ opp.team_name }} submitted: {{ m.score_submission_a }}</div>
+                <div class="text-xs text-orange-600 mt-1">Please confirm or dispute below</div>
+              </div>
+              {% else %}
+              <div class="p-3 bg-gray-100 rounded border-l-4 border-gray-400">
+                <div class="text-sm text-gray-600">Match not played yet</div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Score Confirmation Interface -->
+            {% if not m.verified and ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
+            <div class="space-y-3">
+              {% set opponent_score = m.score_submission_b if detail.is_team_a else m.score_submission_a %}
+              {% set winner_name = opp.team_name %}
+              {% set winner_score = opponent_score %}
+              <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div class="text-sm font-medium text-green-900 mb-2">🏆 Match Result Submitted</div>
+                <div class="text-sm text-green-800 mb-1"><strong>Winner:</strong> {{ winner_name }}</div>
+                <div class="text-sm text-green-800"><strong>Score:</strong> {{ winner_score }}</div>
+              </div>
+              
+              <div class="flex gap-3">
+                <!-- Confirm Button -->
+                <button type="button" onclick="confirmScore({{ m.id }}, '{{ team.access_token }}', 'confirm')"
+                        class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                  ✓ Confirm This Score
+                </button>
+                
+                <!-- Dispute Button -->
+                <button type="button" onclick="confirmScore({{ m.id }}, '{{ team.access_token }}', 'dispute')"
+                        class="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                  ⚠️ Dispute This Score
+                </button>
+              </div>
+              
+              <div class="text-xs text-gray-600 bg-white p-2 rounded">
+                <strong>💡 Tip:</strong> If you dispute, admin will contact both teams to resolve the score dispute.
+              </div>
+              
+              <!-- Message div for score confirmation -->
+              <div id="score-message-{{ m.id }}" class="text-sm"></div>
+            </div>
+            {% endif %}
+            
+            <!-- Score Form -->
+            {% if not m.verified and not ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
+            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="submitScore(event, {{ m.id }}, '{{ team.access_token }}')">
+              <div class="space-y-2">
+                <div class="grid grid-cols-3 gap-2 items-center">
+                  <label class="text-xs font-semibold text-gray-700">Set 1 *</label>
+                  <input type="text" name="set1" required placeholder="6-4"
+                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-2 items-center">
+                  <label class="text-xs font-semibold text-gray-700">Set 2 *</label>
+                  <input type="text" name="set2" required placeholder="6-3"
+                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-2 items-center">
+                  <label class="text-xs font-semibold text-gray-700">Set 3</label>
+                  <input type="text" name="set3" placeholder="10-8 (if played)"
+                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
+                </div>
+              </div>
+              <div class="text-xs text-gray-600 bg-white p-2 rounded">
+                <strong>Format:</strong> Enter scores from YOUR team's perspective (e.g., "6-4" means you won 6-4)
+              </div>
+              <button type="submit"
+                      class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                Submit Score
+              </button>
+              <div id="score-message-{{ m.id }}" class="text-sm"></div>
+            </form>
+            {% endif %}
+          </div>
+          
+          <!-- Reschedule Request Section -->
+          <div class="mt-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border-2 border-orange-200">
+            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+              Request Reschedule
+            </h4>
+            
+            <div class="mb-3 text-xs text-gray-600 bg-white p-2 rounded">
+              <strong>Usage:</strong> {{ team.reschedules_used }}/2 reschedules used
+            </div>
+            
+            <form id="reschedule-form-{{ m.id }}" class="space-y-3" onsubmit="submitReschedule(event, {{ m.id }}, '{{ team.access_token }}')">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Date (Mon-Wed Next Week)</label>
+                  <input type="date" name="date" required
+                         class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-sm"
+                         id="reschedule-date-{{ m.id }}">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                  <select name="time" required
+                          class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-sm">
+                    <option value="">Select time</option>
+                    {% for hour in range(6, 23) %}
+                      {% for minute in ['00', '30'] %}
+                        <option value="{{ '%02d:%s' | format(hour, minute) }}">{{ '%02d:%s' | format(hour, minute) }}</option>
+                      {% endfor %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="text-xs text-orange-700 bg-orange-50 p-3 rounded border border-orange-200">
+                <div class="font-semibold mb-2">📅 Reschedule Policy:</div>
+                <div class="mb-1">• <strong>Request Deadline:</strong> Must request by Wednesday of current round</div>
+                <div class="mb-1">• <strong>Reschedule Window:</strong> Monday-Wednesday of following week ONLY</div>
+                <div class="mb-1">• <strong>Match Deadline:</strong> Makeup match MUST be completed by Wednesday 23:59</div>
+                <div class="mb-1">• <strong>Two Matches:</strong> You'll play makeup match + regular next round match (2 matches in one week)</div>
+                <div class="mb-1">• <strong>Penalty:</strong> If not completed by Wednesday 23:59, automatic walkover to opponent</div>
+                <div class="font-semibold mt-2 text-red-700">⚠️ Regular round matches must be completed by Sunday 23:59.</div>
+                <div class="text-xs mt-1 text-gray-600">Admin can override walkovers in emergency situations only.</div>
+              </div>
+              <button type="submit"
+                      class="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                      {% if team.reschedules_used >= 2 %}disabled title="Maximum reschedules reached"{% endif %}>
+                {{ 'Max Reschedules Reached' if team.reschedules_used >= 2 else 'Submit Reschedule Request' }}
+              </button>
+              <div id="reschedule-message-{{ m.id }}" class="text-sm"></div>
+            </form>
+          </div>
+          
+          <!-- Substitute Request Section -->
+          <div class="mt-6 p-5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+            <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
+              </svg>
+              Request Substitute
+            </h4>
+            
+            <div class="mb-3 text-xs text-gray-600 bg-white p-2 rounded">
+              <strong>Usage:</strong> {{ team.subs_used }}/2 substitutes used
+            </div>
+            
+            <form id="substitute-form-{{ m.id }}" class="space-y-3" onsubmit="submitSubstitute(event, {{ m.id }}, '{{ team.access_token }}')">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Substitute Name</label>
+                <input type="text" name="sub_name" required placeholder="Full name"
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Substitute Phone</label>
+                <input type="tel" name="sub_phone" required placeholder="e.g., 8801XXXXXXXXX"
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Substitute Email</label>
+                <input type="email" name="sub_email" required placeholder="substitute@example.com"
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-sm">
+              </div>
+              <div class="text-xs text-gray-600 bg-white p-2 rounded">
+                <strong>Note:</strong> Admin will review and approve/deny your substitute request. All parties will receive email notifications.
+              </div>
+              <button type="submit"
+                      class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                      {% if team.subs_used >= 2 %}disabled title="Maximum substitutes reached"{% endif %}>
+                {{ 'Max Substitutes Reached' if team.subs_used >= 2 else 'Submit Substitute Request' }}
+              </button>
+              <div id="substitute-message-{{ m.id }}" class="text-sm"></div>
+            </form>
+          </div>
+          {% endif %}
+
+          {% endif %} <!-- end if not bye -->
+          
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Instructions -->
+    <div class="mt-8 bg-white/90 backdrop-blur-lg rounded-xl shadow-lg p-6">
+      <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        How It Works
+      </h3>
+      <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-700">
+        <div class="p-4 bg-purple-50 rounded-lg">
+          <div class="font-semibold text-purple-900 mb-2">1️⃣ Coordinate Match</div>
+          <p>Contact your opponents using their WhatsApp numbers shown above to agree on match time and court.</p>
+        </div>
+        <div class="p-4 bg-pink-50 rounded-lg">
+          <div class="font-semibold text-pink-900 mb-2">2️⃣ Play & Record</div>
+          <p>Play your match and both teams submit the score via WhatsApp for verification.</p>
+        </div>
+        <div class="p-4 bg-orange-50 rounded-lg">
+          <div class="font-semibold text-orange-900 mb-2">3️⃣ Track Progress</div>
+          <p>Check this page anytime to see your results and upcoming matches!</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Booking submission with AJAX
+function submitBooking(event, matchId, token) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  const messageDiv = document.getElementById(`booking-message-${matchId}`);
+  const statusDiv = document.getElementById(`booking-status-${matchId}`);
+  
+  // Get form data
+  const formData = new FormData(form);
+  const data = {
+    match_id: matchId,
+    date: formData.get('date'),
+    time: formData.get('time')
+  };
+  
+  // Disable button
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+  messageDiv.innerHTML = '';
+  
+  // Submit via AJAX
+  fetch(`/submit-booking/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      // Show success message
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      
+      // Update status display
+      if (result.confirmed) {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <div class="text-sm font-semibold text-green-800">✓ Confirmed by both teams</div>
+                <div class="text-sm text-green-700 mt-1 whitespace-pre-line">${result.booking_details}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        form.style.display = 'none';
+      } else {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+            <div class="text-sm font-semibold text-yellow-800">⏳ Waiting for confirmation</div>
+            <div class="text-sm text-yellow-700 mt-1 whitespace-pre-line">${result.booking_details}</div>
+          </div>
+        `;
+      }
+      
+      // Reset form if not confirmed (allow re-submission with different time)
+      if (!result.confirmed) {
+        button.disabled = false;
+        button.textContent = 'Submit Booking';
+      }
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      button.disabled = false;
+      button.textContent = 'Submit Booking';
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    button.disabled = false;
+    button.textContent = 'Submit Booking';
+  });
+}
+
+// Score submission with AJAX
+function submitScore(event, matchId, token) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  const messageDiv = document.getElementById(`score-message-${matchId}`);
+  const statusDiv = document.getElementById(`score-status-${matchId}`);
+  
+  // Get form data
+  const formData = new FormData(form);
+  const data = {
+    match_id: matchId,
+    set1: formData.get('set1'),
+    set2: formData.get('set2'),
+    set3: formData.get('set3')
+  };
+  
+  // Disable button
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+  messageDiv.innerHTML = '';
+  
+  // Submit via AJAX
+  fetch(`/submit-score/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      // Show success message
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      
+      // Update status display
+      if (result.verified) {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <div class="text-sm font-semibold text-green-800">✓ Verified - ${result.winner}</div>
+                <div class="text-sm text-green-700 mt-1">Score: ${result.score}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        form.style.display = 'none';
+        
+        // Reload page after 2 seconds to show updated match card
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+            <div class="text-sm font-semibold text-yellow-800">⏳ Your score submitted</div>
+            <div class="text-sm text-yellow-700 mt-1">Waiting for opponent to confirm: ${result.your_score}</div>
+          </div>
+        `;
+        form.style.display = 'none';
+      }
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      button.disabled = false;
+      button.textContent = 'Submit Score';
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    button.disabled = false;
+    button.textContent = 'Submit Score';
+  });
+}
+
+// Reschedule request submission with AJAX
+function submitReschedule(event, matchId, token) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  const messageDiv = document.getElementById(`reschedule-message-${matchId}`);
+  
+  // Get form data
+  const formData = new FormData(form);
+  const date = formData.get('date');
+  const time = formData.get('time');
+  
+  // Validate date is Monday-Wednesday of next week
+  const selectedDate = new Date(date);
+  const today = new Date();
+  
+  // Calculate next Monday (start of following week)
+  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  let daysToAdd;
+  
+  if (currentDay === 1) {
+    // If today is Monday, next Monday is 7 days away
+    daysToAdd = 7;
+  } else {
+    // Calculate days until next Monday
+    daysToAdd = (8 - currentDay) % 7;
+    if (daysToAdd === 0) daysToAdd = 7;
+  }
+  
+  const nextMonday = new Date(today);
+  nextMonday.setDate(today.getDate() + daysToAdd);
+  
+  // Calculate next Wednesday (CHANGED from Sunday to Wednesday)
+  const nextWednesday = new Date(nextMonday);
+  nextWednesday.setDate(nextMonday.getDate() + 2);
+  
+  // Validate it's between Monday-Wednesday
+  if (selectedDate < nextMonday || selectedDate > nextWednesday) {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Please select Monday-Wednesday of next week only (${nextMonday.toISOString().split('T')[0]} to ${nextWednesday.toISOString().split('T')[0]})</div>`;
+    return;
+  }
+  
+  // Additional check: Selected date must be Mon, Tue, or Wed
+  const selectedDay = selectedDate.getDay();
+  if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Match must be scheduled on Monday, Tuesday, or Wednesday only.</div>`;
+    return;
+  }
+  
+  const data = {
+    match_id: matchId,
+    date: date,
+    time: time
+  };
+  
+  // Disable button
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+  messageDiv.innerHTML = '';
+  
+  // Submit via AJAX
+  fetch(`/submit-reschedule/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      form.reset();
+      button.disabled = false;
+      button.textContent = 'Submit Reschedule Request';
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      button.disabled = false;
+      button.textContent = 'Submit Reschedule Request';
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    button.disabled = false;
+    button.textContent = 'Submit Reschedule Request';
+  });
+}
+
+// Substitute request submission with AJAX
+function submitSubstitute(event, matchId, token) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  const messageDiv = document.getElementById(`substitute-message-${matchId}`);
+  
+  // Get form data
+  const formData = new FormData(form);
+  const data = {
+    match_id: matchId,
+    sub_name: formData.get('sub_name'),
+    sub_phone: formData.get('sub_phone'),
+    sub_email: formData.get('sub_email')
+  };
+  
+  // Disable button
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+  messageDiv.innerHTML = '';
+  
+  // Submit via AJAX
+  fetch(`/submit-substitute/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      form.reset();
+      button.disabled = false;
+      button.textContent = 'Submit Substitute Request';
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      button.disabled = false;
+      button.textContent = 'Submit Substitute Request';
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    button.disabled = false;
+    button.textContent = 'Submit Substitute Request';
+  });
+}
+
+// Booking confirmation (no form needed)
+function confirmBooking(matchId, token) {
+  const messageDiv = document.getElementById(`booking-message-${matchId}`);
+  const statusDiv = document.getElementById(`booking-status-${matchId}`);
+  
+  // Show loading state
+  messageDiv.innerHTML = '<div class="p-3 bg-blue-100 text-blue-800 rounded border-l-4 border-blue-500">Confirming...</div>';
+  
+  // Submit confirmation
+  fetch(`/confirm-booking/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ match_id: matchId })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      // Show success message
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      
+      // Update status display
+      statusDiv.innerHTML = `
+        <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+              <div class="text-sm font-semibold text-green-800">✓ Confirmed by both teams</div>
+              <div class="text-sm text-green-700 mt-1 whitespace-pre-line">${result.booking_details}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Hide the booking form section
+      const bookingSection = document.querySelector(`#booking-form-${matchId}`).parentElement;
+      bookingSection.style.display = 'none';
+      
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+  });
+}
+
+// Toggle booking form visibility
+function toggleBookingForm(matchId) {
+  const form = document.getElementById(`booking-form-${matchId}`);
+  if (form.classList.contains('hidden')) {
+    form.classList.remove('hidden');
+  } else {
+    form.classList.add('hidden');
+  }
+}
+
+// Score confirmation (confirm or dispute)
+function confirmScore(matchId, token, action) {
+  const messageDiv = document.getElementById(`score-message-${matchId}`);
+  const statusDiv = document.getElementById(`score-status-${matchId}`);
+  
+  if (!messageDiv) {
+    console.error('Message div not found:', `score-message-${matchId}`);
+    return;
+  }
+  
+  if (!statusDiv) {
+    console.error('Status div not found:', `score-status-${matchId}`);
+    return;
+  }
+  
+  // Show loading state
+  const loadingText = action === 'confirm' ? 'Confirming score...' : 'Submitting dispute...';
+  messageDiv.innerHTML = `<div class="p-3 bg-blue-100 text-blue-800 rounded border-l-4 border-blue-500">${loadingText}</div>`;
+  
+  // Submit confirmation/dispute
+  fetch(`/confirm-score/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      match_id: matchId,
+      action: action
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      if (action === 'confirm') {
+        // Show success message for confirmation
+        messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+        
+        // Update status display
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <div class="text-sm font-semibold text-green-800">✓ Verified - ${result.winner}</div>
+                <div class="text-sm text-green-700 mt-1">Score: ${result.score}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+      // Hide the score confirmation section if present
+      const scoreConfirm = document.getElementById(`score-confirmation-${matchId}`);
+      if (scoreConfirm) scoreConfirm.style.display = 'none';
+        
+        // Reload page after 2 seconds to show updated match card
+        setTimeout(() => window.location.reload(), 2000);
+        
+      } else {
+        // Show success message for dispute
+        messageDiv.innerHTML = `<div class="p-3 bg-orange-100 text-orange-800 rounded border-l-4 border-orange-500">${result.message}</div>`;
+        
+        // Update status display
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-orange-100 rounded border-l-4 border-orange-500">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-orange-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <div class="text-sm font-semibold text-orange-800">⚠️ Score Disputed</div>
+                <div class="text-sm text-orange-700 mt-1">Admin will review and contact both teams to resolve</div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Hide the score confirmation section if present
+        const scoreConfirm = document.getElementById(`score-confirmation-${matchId}`);
+        if (scoreConfirm) scoreConfirm.style.display = 'none';
+      }
+      
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+  });
+}
+
+// Set date restrictions for booking and reschedule forms
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  // Set minimum date to today for booking forms
+  document.querySelectorAll('input[type="date"]:not([id^="reschedule-date-"])').forEach(input => {
+    input.setAttribute('min', todayStr);
+  });
+  
+  // Set date restrictions for reschedule forms (Monday-Wednesday of next week ONLY)
+  // Calculate next Monday (start of following week)
+  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  let daysToAdd;
+  
+  if (currentDay === 1) {
+    // If today is Monday, next Monday is 7 days away
+    daysToAdd = 7;
+  } else {
+    // Calculate days until next Monday
+    daysToAdd = (8 - currentDay) % 7;
+    if (daysToAdd === 0) daysToAdd = 7;
+  }
+  
+  const nextMonday = new Date(today);
+  nextMonday.setDate(today.getDate() + daysToAdd);
+  
+  // Calculate next Wednesday (CHANGED from Sunday to Wednesday)
+  const nextWednesday = new Date(nextMonday);
+  nextWednesday.setDate(nextMonday.getDate() + 2);
+  
+  const nextMondayStr = nextMonday.toISOString().split('T')[0];
+  const nextWednesdayStr = nextWednesday.toISOString().split('T')[0];
+  
+  // Debug: log the calculated dates
+  console.log(`Today: ${todayStr}, Next Monday: ${nextMondayStr}, Next Wednesday: ${nextWednesdayStr}`);
+  
+  document.querySelectorAll('input[id^="reschedule-date-"]').forEach(input => {
+    input.setAttribute('min', nextMondayStr);
+    input.setAttribute('max', nextWednesdayStr);
+    console.log(`Set reschedule date input min: ${nextMondayStr}, max: ${nextWednesdayStr}`);
+    
+    // Add custom validation to only allow Mon/Tue/Wed
+    input.addEventListener('input', function() {
+      const selectedDate = new Date(this.value);
+      const selectedDay = selectedDate.getDay();
+      if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
+        this.setCustomValidity('Only Monday, Tuesday, or Wednesday are allowed');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}
+
+

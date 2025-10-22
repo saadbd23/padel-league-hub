@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Confirm Team Partnership{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full">
+    
+    {% if already_confirmed %}
+    <!-- Already Confirmed Message -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Already Confirmed!</h2>
+        <p class="text-gray-600 mb-6">
+          Your partnership for team <strong>"{{ team.team_name }}"</strong> has already been confirmed.
+        </p>
+        
+        <div class="bg-blue-50 rounded-lg p-4 mb-6">
+          <p class="text-sm text-blue-900 font-semibold mb-2">Team Members:</p>
+          <div class="text-sm text-blue-800 space-y-1">
+            <div>🎾 {{ team.player1_name }}</div>
+            <div>🎾 {{ team.player2_name }}</div>
+          </div>
+        </div>
+        
+        <a href="/my-matches/{{ team.access_token }}" 
+           class="inline-block w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+          View Your Team Page
+        </a>
+      </div>
+    </div>
+    
+    {% else %}
+    <!-- Confirmation Form -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+        </div>
+        
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Confirm Your Partnership</h2>
+        <p class="text-gray-600">
+          You've been invited to join a team!
+        </p>
+      </div>
+      
+      <!-- Team Details -->
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6 border-2 border-purple-200">
+        <div class="text-center mb-4">
+          <div class="text-2xl font-bold text-gray-900 mb-3">{{ team.team_name }}</div>
+        </div>
+        
+        <div class="space-y-3">
+          <div class="flex items-center justify-between bg-white rounded-lg p-3">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              <span class="text-sm font-semibold text-gray-700">Player 1:</span>
+            </div>
+            <span class="text-sm text-gray-900 font-medium">{{ team.player1_name }}</span>
+          </div>
+          
+          <div class="flex items-center justify-between bg-white rounded-lg p-3">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-pink-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              <span class="text-sm font-semibold text-gray-700">Player 2:</span>
+            </div>
+            <span class="text-sm text-gray-900 font-medium">{{ team.player2_name }} (You)</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Info Box -->
+      <div class="bg-blue-50 rounded-lg p-4 mb-6 border-l-4 border-blue-400">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          <div class="text-xs text-blue-800">
+            <strong>By confirming, you agree to:</strong>
+            <ul class="mt-2 space-y-1 list-disc list-inside">
+              <li>Partner with {{ team.player1_name }} in the league</li>
+              <li>Participate in scheduled matches</li>
+              <li>Receive match notifications and reminders</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Confirmation Form -->
+      <form method="POST" class="space-y-4">
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+          ✅ Confirm Partnership
+        </button>
+        
+        <a href="/" 
+           class="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
+          Cancel
+        </a>
+      </form>
+      
+      <!-- WhatsApp Alternative -->
+      <div class="mt-6 text-center">
+        <p class="text-xs text-gray-500">
+          You can also confirm by texting: <code class="bg-gray-100 px-2 py-1 rounded">confirm TEAM{{ team.id }}</code>
+        </p>
+      </div>
+    </div>
+    {% endif %}
+    
+  </div>
+</div>
+{% endblock %}
+
+
+
+

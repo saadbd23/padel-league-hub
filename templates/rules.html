@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12">
+    <h2 class="text-4xl font-bold text-gray-900 mb-8 text-center">League Rules</h2>
+
+    <div class="space-y-8">
+      <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+        <h3 class="text-xl font-bold text-purple-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">🎾</span>
+          Match Format
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          All matches are best of 3 sets. Matches are typically played within a 90-minute court booking but may continue if extended time is available.
+        </p>
+      </div>
+
+      <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+        <h3 class="text-xl font-bold text-blue-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">📅</span>
+          Rescheduling Policy
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          Teams get <strong>2 reschedules</strong> for the entire league stage. Request deadline: <strong>Wednesday 23:59</strong> of current round. Makeup matches must be completed by <strong>Wednesday 23:59</strong> of the following week. Teams will play 2 matches in one week (makeup + regular).
+        </p>
+      </div>
+
+      <div class="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+        <h3 class="text-xl font-bold text-green-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">👥</span>
+          Substitute Players
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          Each team may use <strong>2 substitutes</strong> during the league stage (no substitutes in playoffs). Must provide substitute's name, phone, and email. Admin approval required. Email notifications sent to all 3 parties (both team members + substitute) when requested and when approved/denied.
+        </p>
+      </div>
+
+      <div class="bg-amber-50 rounded-xl p-6 border-2 border-amber-200">
+        <h3 class="text-xl font-bold text-amber-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">⭐</span>
+          Free Agent Registration
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          Don't have a partner? No problem! Register as a <strong>Free Agent</strong> and we'll match you with another solo player of similar skill level. Admin will make best efforts to pair players fairly based on self-reported skill levels.
+        </p>
+      </div>
+
+      <div class="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
+        <h3 class="text-xl font-bold text-yellow-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">⚖️</span>
+          Fair Play
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          All players are expected to demonstrate good sportsmanship. Disputes should be resolved amicably, with the league administrator available for mediation if needed.
+        </p>
+      </div>
+
+      <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+        <h3 class="text-xl font-bold text-red-900 mb-3 flex items-center">
+          <span class="text-2xl mr-3">📊</span>
+          Standings & Rankings
+        </h3>
+        <p class="text-gray-700 leading-relaxed">
+          Teams are ranked by wins first, then by set difference (sets won minus sets lost). In case of a tie, head-to-head results determine the ranking.
+        </p>
+      </div>
+
+      <!-- Complete Rulebook Section -->
+      <div class="mt-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 border-2 border-indigo-300">
+        <h3 class="text-3xl font-bold text-indigo-900 mb-6 text-center flex items-center justify-center">
+          <span class="text-3xl mr-3">📖</span>
+          Complete Rulebook
+        </h3>
+        
+        <!-- Table of Contents -->
+        <div class="bg-white rounded-lg p-6 mb-8 shadow-md">
+          <h4 class="text-xl font-bold text-gray-900 mb-4">Table of Contents</h4>
+          <ol class="list-decimal list-inside space-y-2 text-gray-700">
+            <li><a href="#league-structure" class="text-indigo-600 hover:underline">League Structure & Format</a></li>
+            <li><a href="#registration" class="text-indigo-600 hover:underline">Team & Free Agent Registration</a></li>
+            <li><a href="#match-scheduling" class="text-indigo-600 hover:underline">Match Scheduling & Deadlines</a></li>
+            <li><a href="#match-format" class="text-indigo-600 hover:underline">Match Format & Scoring</a></li>
+            <li><a href="#reschedule-policy" class="text-indigo-600 hover:underline">Reschedule Policy</a></li>
+            <li><a href="#substitute-policy" class="text-indigo-600 hover:underline">Substitute Player Policy</a></li>
+            <li><a href="#score-submission" class="text-indigo-600 hover:underline">Score Submission & Confirmation</a></li>
+            <li><a href="#standings" class="text-indigo-600 hover:underline">Standings & Rankings</a></li>
+            <li><a href="#walkovers" class="text-indigo-600 hover:underline">Walkovers & No-Shows</a></li>
+            <li><a href="#fair-play" class="text-indigo-600 hover:underline">Fair Play & Conduct</a></li>
+            <li><a href="#disputes" class="text-indigo-600 hover:underline">Disputes & Resolution</a></li>
+            <li><a href="#admin-contact" class="text-indigo-600 hover:underline">Admin Contact & Support</a></li>
+          </ol>
+        </div>
+
+        <!-- Detailed Rules Sections -->
+        <div class="space-y-8">
+          
+          <!-- 1. League Structure -->
+          <div id="league-structure" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">1</span>
+              League Structure & Format
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Swiss Format:</strong> The league uses a Swiss tournament format where teams are paired based on their current standings and performance.</p>
+              
+              <p><strong>Round Structure:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Each round lasts <strong>one week</strong> (Monday to Sunday)</li>
+                <li>New rounds are generated every <strong>Monday morning</strong> by the admin</li>
+                <li>Round 1 starts on <strong>Monday, January 6, 2025</strong></li>
+                <li>Teams play one match per round against different opponents</li>
+              </ul>
+
+              <p><strong>Pairing System:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Teams are paired based on similar records (wins/losses)</li>
+                <li>No team plays the same opponent twice in league stage</li>
+                <li>Byes may be given if there's an odd number of teams</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 2. Registration -->
+          <div id="registration" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">2</span>
+              Team & Free Agent Registration
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Team Registration:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Register as a complete team (2 players)</li>
+                <li>Provide team name, both players' names, phone numbers, and emails</li>
+                <li>Player 2 must confirm participation via SMS/WhatsApp link</li>
+                <li>Admin reviews and confirms team registration</li>
+              </ul>
+
+              <p><strong>Free Agent Registration:</strong></p>
+              <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mt-2 mb-2">
+                <p class="font-semibold text-amber-900">⭐ Solo Players Welcome!</p>
+                <p class="text-sm text-amber-800 mt-1">Don't have a partner? Register as a Free Agent and we'll match you with another solo player.</p>
+              </div>
+
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Register individually with your name, phone, email, and skill level</li>
+                <li><strong>Skill Level Selection:</strong> Beginner, Intermediate, or Advanced</li>
+                <li>Admin will pair you with another free agent of similar skill level</li>
+                <li>Matched pairs are automatically converted into teams</li>
+              </ul>
+
+              <p><strong>Skill Level Honesty:</strong></p>
+              <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-2 mb-2">
+                <p class="font-semibold text-blue-900">🎯 Be Honest About Your Skill Level</p>
+                <p class="text-sm text-blue-800 mt-1">
+                  Admin will make best efforts to match skill levels fairly. Accurate self-assessment ensures better matches and more enjoyable games for everyone. 
+                  If you overstate your level, you and your partner may struggle unnecessarily. If you understate it, matches may be too easy.
+                </p>
+              </div>
+
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li><strong>Beginner:</strong> New to padel or less than 6 months experience</li>
+                <li><strong>Intermediate:</strong> 6 months to 2 years, comfortable with basic shots and strategy</li>
+                <li><strong>Advanced:</strong> 2+ years, compete regularly, strong technical skills</li>
+              </ul>
+
+              <p><strong>Pairing Process:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Free agents are listed in the admin panel</li>
+                <li>Admin pairs players based on skill level and availability</li>
+                <li>Both players are notified when paired</li>
+                <li>New team must confirm and choose a team name</li>
+                <li>Once confirmed, team enters the league like any other team</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 3. Match Scheduling -->
+          <div id="match-scheduling" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">3</span>
+              Match Scheduling & Deadlines
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Weekly Timeline:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li><strong>Monday 9:00 AM:</strong> New round generated by admin</li>
+                <li><strong>Monday-Sunday:</strong> Teams coordinate and play their match</li>
+                <li><strong>Sunday 23:59:</strong> Match deadline (must be completed and score submitted)</li>
+              </ul>
+
+              <p><strong>Booking Matches:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Team A proposes a date/time for the match</li>
+                <li>Team B can confirm with one click or suggest a different time</li>
+                <li>Both teams should coordinate via WhatsApp/phone before proposing</li>
+                <li>Matches can be scheduled any day Monday-Sunday</li>
+              </ul>
+
+              <p><strong>Important Deadlines:</strong></p>
+              <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-2">
+                <p class="font-semibold text-yellow-900">⚠️ Regular Matches: Sunday 23:59</p>
+                <p class="text-sm text-yellow-800">If not completed by Sunday 23:59, automatic walkover will be awarded</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Match Format -->
+          <div id="match-format" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">4</span>
+              Match Format & Scoring
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Match Format:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Best of 3 sets</li>
+                <li>Standard padel scoring (games to 6, tie-break at 6-6)</li>
+                <li>Win by 2 sets (e.g., 6-4, 6-3 or 6-4, 3-6, 6-2)</li>
+              </ul>
+
+              <p><strong>Court Booking:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Typical booking: 90 minutes</li>
+                <li>Matches may extend if court availability permits</li>
+                <li>Teams should arrive 10 minutes early for warm-up</li>
+              </ul>
+
+              <p><strong>Equipment:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Each player must bring their own paddle</li>
+                <li>Balls are typically provided by the venue</li>
+                <li>Appropriate court shoes required</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 5. Reschedule Policy -->
+          <div id="reschedule-policy" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">5</span>
+              Reschedule Policy
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Reschedule Allowance:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Each team gets <strong>2 reschedules</strong> for the entire league stage</li>
+                <li>No reschedules allowed in playoffs</li>
+                <li>Reschedules are tracked per team, not per match</li>
+              </ul>
+
+              <p><strong>Request Deadline:</strong></p>
+              <div class="bg-orange-50 border-l-4 border-orange-500 p-4 mt-2 mb-2">
+                <p class="font-semibold text-orange-900">📅 Must request by Wednesday 23:59 of the current round</p>
+                <p class="text-sm text-orange-800">After Wednesday, reschedule requests are not accepted for that round</p>
+              </div>
+
+              <p><strong>Reschedule Window:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Can only reschedule to <strong>Monday-Wednesday of the following week</strong></li>
+                <li>Thursday-Sunday dates are not available for reschedules</li>
+                <li>Date picker will only show valid dates</li>
+              </ul>
+
+              <p><strong>Makeup Match Deadline:</strong></p>
+              <div class="bg-red-50 border-l-4 border-red-500 p-4 mt-2 mb-2">
+                <p class="font-semibold text-red-900">⚠️ Wednesday 23:59 of the following week</p>
+                <p class="text-sm text-red-800">If makeup match is not completed by this deadline, automatic walkover is awarded to opponent</p>
+              </div>
+
+              <p><strong>Two Matches in One Week:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Teams with rescheduled matches will play <strong>2 matches in one week</strong></li>
+                <li>One makeup match (from previous round) + one regular match (current round)</li>
+                <li>Both matches count towards standings</li>
+              </ul>
+
+              <p><strong>Admin Review:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>All reschedule requests require admin approval</li>
+                <li>Admin will notify opponent team of the reschedule</li>
+                <li>Emergency situations can be discussed with admin</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 6. Substitute Policy -->
+          <div id="substitute-policy" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">6</span>
+              Substitute Player Policy
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Substitute Allowance:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Each team may use <strong>2 substitutes</strong> during the league stage</li>
+                <li>No substitutes allowed in playoffs</li>
+                <li>Substitutes are tracked per team</li>
+              </ul>
+
+              <p><strong>Substitute Requirements:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Must provide substitute's full name, phone, and email</li>
+                <li>Substitute must be approved by admin before the match</li>
+                <li>Request must be submitted in advance (not day of match)</li>
+              </ul>
+
+              <p><strong>Email Notifications:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>When request submitted: All 3 parties receive notification (Player 1, Player 2, Substitute)</li>
+                <li>When admin approves: All 3 parties receive confirmation</li>
+                <li>When admin denies: All 3 parties receive denial notice</li>
+              </ul>
+
+              <p><strong>Substitute Restrictions:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Substitutes cannot be registered players on other teams</li>
+                <li>Same substitute can be used multiple times (counts as 1 sub per use)</li>
+                <li>Both team members cannot be substituted in the same match</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 7. Score Submission -->
+          <div id="score-submission" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">7</span>
+              Score Submission & Confirmation
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Score Submission Process:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>After match completion, winning team submits the score first</li>
+                <li>Score must be entered from your team's perspective</li>
+                <li>Format: Set 1, Set 2, Set 3 (if played)</li>
+                <li>Example: If you won 6-4, 6-3, enter exactly that</li>
+              </ul>
+
+              <p><strong>Score Confirmation:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Opponent team receives notification to confirm score</li>
+                <li>They see the result with winner name and score</li>
+                <li>One-click confirmation to approve</li>
+                <li>If score is incorrect, they can click "Dispute"</li>
+              </ul>
+
+              <p><strong>Disputed Scores:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Admin is notified immediately</li>
+                <li>Admin will contact both teams to resolve</li>
+                <li>Admin enters the correct score after verification</li>
+                <li>Match remains "pending" until resolved</li>
+              </ul>
+
+              <p><strong>Statistics Update:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Once both teams confirm, stats are automatically updated</li>
+                <li>Team standings: wins, losses, sets, games, points</li>
+                <li>Individual player stats: matches played, wins, losses</li>
+                <li>Leaderboards update in real-time</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 8. Standings -->
+          <div id="standings" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">8</span>
+              Standings & Rankings
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Ranking Criteria (in order):</strong></p>
+              <ol class="list-decimal list-inside ml-4 space-y-1">
+                <li><strong>Points:</strong> Win = 3 points, Draw = 1 point, Loss = 0 points</li>
+                <li><strong>Head-to-Head:</strong> If tied on points, head-to-head result decides</li>
+                <li><strong>Set Difference:</strong> Sets won minus sets lost</li>
+                <li><strong>Game Difference:</strong> Games won minus games lost</li>
+                <li><strong>Sets Won:</strong> Total sets won</li>
+                <li><strong>Games Won:</strong> Total games won</li>
+              </ol>
+
+              <p><strong>Leaderboards:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li><strong>Team Leaderboard:</strong> Overall team rankings</li>
+                <li><strong>Player Leaderboard:</strong> Individual player statistics</li>
+                <li>Both update automatically after each confirmed match</li>
+                <li>Separate stats tabs available for detailed analysis</li>
+              </ul>
+
+              <p><strong>Playoff Qualification:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Top teams qualify for playoffs (exact number determined by total teams)</li>
+                <li>Playoff format announced after league stage completion</li>
+                <li>Tiebreakers strictly follow the ranking criteria above</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 9. Walkovers -->
+          <div id="walkovers" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">9</span>
+              Walkovers & No-Shows
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Automatic Walkovers:</strong></p>
+              <div class="bg-red-50 border-l-4 border-red-500 p-4 mt-2 mb-2">
+                <p class="font-semibold text-red-900">System automatically awards walkovers for:</p>
+                <ul class="list-disc list-inside ml-4 space-y-1 text-sm text-red-800 mt-2">
+                  <li>Regular match not completed by Sunday 23:59</li>
+                  <li>Makeup match not completed by Wednesday 23:59</li>
+                </ul>
+              </div>
+
+              <p><strong>Walkover Score:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Default score: <strong>6-0, 6-0</strong> to the team who was ready to play</li>
+                <li>Full 3 points awarded to walkover winner</li>
+                <li>Stats updated automatically (2 sets, 12 games for winner)</li>
+              </ul>
+
+              <p><strong>Admin Override:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Admin can manually reverse walkovers in emergency situations</li>
+                <li>Must be genuine emergency (hospitalization, family emergency, etc.)</li>
+                <li>Contact admin immediately if emergency occurs</li>
+              </ul>
+
+              <p><strong>No-Show Policy:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>If a team doesn't show up for a scheduled match: Walkover to opponent</li>
+                <li>Repeated no-shows may result in team disqualification</li>
+                <li>Always communicate with opponent if unable to make scheduled time</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 10. Fair Play -->
+          <div id="fair-play" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">10</span>
+              Fair Play & Conduct
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Expected Behavior:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Demonstrate good sportsmanship at all times</li>
+                <li>Respect opponents, venue staff, and other players</li>
+                <li>Make fair line calls; give benefit of doubt to opponent</li>
+                <li>Keep matches moving at a reasonable pace</li>
+              </ul>
+
+              <p><strong>Communication:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Respond to opponent's booking requests within 24 hours</li>
+                <li>Notify opponent immediately if you need to reschedule</li>
+                <li>Be punctual for scheduled matches</li>
+                <li>Use WhatsApp group or direct contact for coordination</li>
+              </ul>
+
+              <p><strong>Prohibited Conduct:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Unsportsmanlike behavior or verbal abuse</li>
+                <li>Intentional gamesmanship or time-wasting</li>
+                <li>Making consistently bad line calls</li>
+                <li>Damaging venue property or equipment</li>
+              </ul>
+
+              <p><strong>Penalties:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>First offense: Warning from admin</li>
+                <li>Second offense: Point deduction or match forfeit</li>
+                <li>Severe offense: Team disqualification from league</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 11. Disputes -->
+          <div id="disputes" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">11</span>
+              Disputes & Resolution
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>Types of Disputes:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Score disagreements</li>
+                <li>Line call disputes during match</li>
+                <li>Scheduling conflicts</li>
+                <li>Conduct complaints</li>
+              </ul>
+
+              <p><strong>Resolution Process:</strong></p>
+              <ol class="list-decimal list-inside ml-4 space-y-1">
+                <li><strong>Attempt to resolve directly:</strong> Talk to opponent first</li>
+                <li><strong>Use dispute button:</strong> For score disagreements, click "Dispute" instead of confirm</li>
+                <li><strong>Contact admin:</strong> Use contact form or WhatsApp for other disputes</li>
+                <li><strong>Admin decision:</strong> Admin reviews evidence and makes final decision</li>
+              </ol>
+
+              <p><strong>Evidence:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Photos of scoreboards (if available)</li>
+                <li>WhatsApp conversation screenshots</li>
+                <li>Witness statements from other players</li>
+                <li>Video evidence (if available)</li>
+              </ul>
+
+              <p><strong>Admin Decision:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Admin decision is final</li>
+                <li>Both teams will be notified of the outcome</li>
+                <li>Admin may impose penalties if dispute was frivolous</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 12. Admin Contact -->
+          <div id="admin-contact" class="bg-white rounded-xl p-6 shadow-md">
+            <h4 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+              <span class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-lg">12</span>
+              Admin Contact & Support
+            </h4>
+            <div class="space-y-3 text-gray-700 leading-relaxed">
+              <p><strong>When to Contact Admin:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Emergency situations preventing match completion</li>
+                <li>Disputes that cannot be resolved directly</li>
+                <li>Technical issues with the platform</li>
+                <li>Questions about rules or league operations</li>
+                <li>Substitute or reschedule approval status</li>
+              </ul>
+
+              <p><strong>Contact Methods:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li><strong>Email:</strong> league@example.com</li>
+                <li><strong>WhatsApp:</strong> Use league WhatsApp group</li>
+                <li><strong>Platform:</strong> Admin panel contact form</li>
+              </ul>
+
+              <p><strong>Response Time:</strong></p>
+              <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Urgent issues (match day problems): Within 2 hours</li>
+                <li>Reschedule/substitute requests: Within 24 hours</li>
+                <li>General questions: Within 48 hours</li>
+              </ul>
+
+              <div class="mt-6 text-center">
+                <a href="{{ url_for('index') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                  Return to Home
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Rules Summary Footer -->
+        <div class="mt-10 bg-gradient-to-r from-purple-600 to-indigo-700 rounded-xl p-6 text-white text-center">
+          <p class="text-lg font-semibold mb-2">📋 Rules Summary</p>
+          <p class="text-sm opacity-90">
+            These rules ensure fair play and smooth league operations. All participants are expected to read and follow these rules. 
+            Admin reserves the right to update rules as needed for the benefit of the league.
+          </p>
+          <p class="text-xs mt-4 opacity-75">Last Updated: October 2025 | Version 2.0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+

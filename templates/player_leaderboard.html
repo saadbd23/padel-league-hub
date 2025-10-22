@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-4xl font-bold text-white">Player Leaderboard</h2>
+    <a href="{{ url_for('leaderboard') }}" class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg font-semibold transition">
+      Team Leaderboard
+    </a>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden">
+    <div class="p-6 bg-gradient-to-r from-purple-600 to-indigo-700">
+      <p class="text-white text-sm">
+        <strong>Individual Stats:</strong> Based on matches each player actually participated in. 
+        Stats differ between teammates if substitutions were made.
+      </p>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+          <tr>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Player</th>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Current Team</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Played</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Points</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">W-D-L</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Win %</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Sets</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Set Diff</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Games</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Game Diff</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% if not players %}
+          <tr>
+            <td colspan="11" class="px-4 py-8 text-center text-gray-500">
+              No player statistics available yet. Complete some matches to see individual stats!
+            </td>
+          </tr>
+          {% endif %}
+          
+          {% for p in players %}
+          <tr class="hover:bg-purple-50 transition-colors duration-200 {% if loop.index <= 3 %}bg-yellow-50/30{% endif %}">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center">
+                {% if loop.index == 1 %}
+                  <span class="text-2xl">🥇</span>
+                {% elif loop.index == 2 %}
+                  <span class="text-2xl">🥈</span>
+                {% elif loop.index == 3 %}
+                  <span class="text-2xl">🥉</span>
+                {% else %}
+                  <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('player_profile', player_id=p.id) }}" 
+                 class="text-base font-bold text-indigo-700 hover:underline">
+                {{ p.name }}
+              </a>
+            </td>
+            <td class="px-4 py-4">
+              {% if p.current_team_id %}
+              {% set team = [] %}
+              {% for t in [] %}{% endfor %}
+              {% set team = namespace() %}
+              {% for t in range(1) %}
+                {% set team.obj = p.current_team_id %}
+              {% endfor %}
+              <span class="text-sm text-gray-700">Team #{{ p.current_team_id }}</span>
+              {% else %}
+              <span class="text-xs text-gray-400">Free agent</span>
+              {% endif %}
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm font-semibold text-gray-900">{{ p.matches_played }}</span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 font-bold rounded-lg">
+                {{ p.points }}
+              </span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <div class="text-sm">
+                <span class="text-green-600 font-semibold">{{ p.wins }}</span>-<span class="text-gray-600">{{ p.draws }}</span>-<span class="text-red-600 font-semibold">{{ p.losses }}</span>
+              </div>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm font-semibold 
+                {% if p.win_percentage >= 60 %}text-green-600
+                {% elif p.win_percentage >= 40 %}text-yellow-600
+                {% else %}text-red-600{% endif %}">
+                {{ p.win_percentage }}%
+              </span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm text-gray-700">{{ p.sets_for }}-{{ p.sets_against }}</span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm font-semibold 
+                {% if p.sets_diff > 0 %}text-green-600
+                {% elif p.sets_diff < 0 %}text-red-600
+                {% else %}text-gray-600{% endif %}">
+                {{ "+%d" | format(p.sets_diff) if p.sets_diff > 0 else p.sets_diff }}
+              </span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm text-gray-700">{{ p.games_for }}-{{ p.games_against }}</span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <span class="text-sm font-semibold 
+                {% if p.games_diff > 0 %}text-green-600
+                {% elif p.games_diff < 0 %}text-red-600
+                {% else %}text-gray-600{% endif %}">
+                {{ "+%d" | format(p.games_diff) if p.games_diff > 0 else p.games_diff }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Info Box -->
+  <div class="mt-8 bg-white/90 backdrop-blur-lg rounded-xl shadow-lg p-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">How Individual Stats Work</h3>
+    <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-700">
+      <div class="p-4 bg-purple-50 rounded-lg">
+        <div class="font-semibold text-purple-900 mb-2">📊 Based on Participation</div>
+        <p>Stats are calculated only from matches you actually played in. If you were substituted out, that match doesn't count toward your stats.</p>
+      </div>
+      <div class="p-4 bg-pink-50 rounded-lg">
+        <div class="font-semibold text-pink-900 mb-2">🔄 Different from Team Stats</div>
+        <p>Two players on the same team may have different stats if one was substituted in some matches. This reflects each player's individual performance.</p>
+      </div>
+      <div class="p-4 bg-orange-50 rounded-lg">
+        <div class="font-semibold text-orange-900 mb-2">🎯 Ranking Criteria</div>
+        <p>Players are ranked by: Points > Wins > Matches Played > Set Difference > Game Difference</p>
+      </div>
+      <div class="p-4 bg-blue-50 rounded-lg">
+        <div class="font-semibold text-blue-900 mb-2">💯 Win Percentage</div>
+        <p>Calculated as (Wins ÷ Matches Played) × 100. A higher percentage indicates more consistent performance.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

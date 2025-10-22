@@ -1,0 +1,25 @@
+# Core Framework
+flask==3.0.0
+flask-sqlalchemy==3.1.1
+flask-login==0.6.3
+
+# WSGI Server for Production
+gunicorn==21.2.0
+
+# Database
+psycopg2-binary==2.9.9  # PostgreSQL adapter for production
+
+# Scheduler & Background Tasks
+apscheduler==3.10.4
+
+# HTTP Requests
+requests==2.31.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Optional: Error Monitoring (recommended for production)
+# sentry-sdk[flask]==1.38.0
+
+# Optional: Performance Monitoring
+# flask-compress==1.14

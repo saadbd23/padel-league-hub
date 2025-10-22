@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}{{ player.name }} - Player Profile{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  
+  <!-- Player Header -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <div class="flex items-start justify-between">
+      <div class="flex-1">
+        <div class="flex items-center space-x-4 mb-4">
+          <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+            {{ player.name[0].upper() }}
+          </div>
+          <div>
+            <h1 class="text-4xl font-bold text-gray-900">{{ player.name }}</h1>
+            {% if current_team %}
+            <p class="text-lg text-gray-600 mt-1">
+              <a href="{{ url_for('team_profile', team_id=current_team.id) }}" class="text-indigo-600 hover:underline">
+                {{ current_team.team_name }}
+              </a>
+            </p>
+            {% else %}
+            <p class="text-lg text-gray-500 mt-1">Free Agent</p>
+            {% endif %}
+          </div>
+        </div>
+        
+        {% if recent_form %}
+        <div class="flex items-center space-x-2 mt-4">
+          <span class="text-sm font-semibold text-gray-600">Recent Form:</span>
+          {% for result in recent_form %}
+            <span class="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold text-sm
+              {% if result == 'W' %}bg-green-500
+              {% elif result == 'D' %}bg-gray-400
+              {% else %}bg-red-500{% endif %}">
+              {{ result }}
+            </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      
+      <!-- Quick Stats Card -->
+      <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 ml-8">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-indigo-600 mb-2">{{ player.win_percentage }}%</div>
+          <div class="text-sm text-gray-600">Win Rate</div>
+        </div>
+        <div class="mt-4 text-center">
+          <div class="text-2xl font-bold text-gray-900">{{ player.wins }}-{{ player.draws }}-{{ player.losses }}</div>
+          <div class="text-xs text-gray-500">W-D-L</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Statistics -->
+  <div class="grid md:grid-cols-3 gap-6 mb-8">
+    <!-- Match Stats -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+        </svg>
+        Match Statistics
+      </h3>
+      <dl class="space-y-3">
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Matches Played:</dt>
+          <dd class="text-sm font-bold text-gray-900">{{ player.matches_played }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Wins:</dt>
+          <dd class="text-sm font-bold text-green-600">{{ player.wins }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Draws:</dt>
+          <dd class="text-sm font-bold text-gray-600">{{ player.draws }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Losses:</dt>
+          <dd class="text-sm font-bold text-red-600">{{ player.losses }}</dd>
+        </div>
+        <div class="flex justify-between pt-3 border-t border-gray-200">
+          <dt class="text-sm font-semibold text-gray-900">Total Points:</dt>
+          <dd class="text-sm font-bold text-indigo-600">{{ player.points }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Set Stats -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        Set Statistics
+      </h3>
+      <dl class="space-y-3">
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Sets Won:</dt>
+          <dd class="text-sm font-bold text-green-600">{{ player.sets_for }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Sets Lost:</dt>
+          <dd class="text-sm font-bold text-red-600">{{ player.sets_against }}</dd>
+        </div>
+        <div class="flex justify-between pt-3 border-t border-gray-200">
+          <dt class="text-sm font-semibold text-gray-900">Set Difference:</dt>
+          <dd class="text-sm font-bold 
+            {% if player.sets_diff > 0 %}text-green-600
+            {% elif player.sets_diff < 0 %}text-red-600
+            {% else %}text-gray-600{% endif %}">
+            {{ "+%d" | format(player.sets_diff) if player.sets_diff > 0 else player.sets_diff }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Game Stats -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        Game Statistics
+      </h3>
+      <dl class="space-y-3">
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Games Won:</dt>
+          <dd class="text-sm font-bold text-green-600">{{ player.games_for }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-sm text-gray-600">Games Lost:</dt>
+          <dd class="text-sm font-bold text-red-600">{{ player.games_against }}</dd>
+        </div>
+        <div class="flex justify-between pt-3 border-t border-gray-200">
+          <dt class="text-sm font-semibold text-gray-900">Game Difference:</dt>
+          <dd class="text-sm font-bold 
+            {% if player.games_diff > 0 %}text-green-600
+            {% elif player.games_diff < 0 %}text-red-600
+            {% else %}text-gray-600{% endif %}">
+            {{ "+%d" | format(player.games_diff) if player.games_diff > 0 else player.games_diff }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Match History -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4">
+      <h3 class="text-xl font-bold text-white">Match History</h3>
+    </div>
+    
+    <div class="p-6">
+      {% if not match_details %}
+      <div class="text-center py-8 text-gray-500">
+        No match history available yet. Start playing to build your record!
+      </div>
+      {% else %}
+      <div class="space-y-4">
+        {% for detail in match_details %}
+        <div class="border-2 rounded-lg p-4
+          {% if detail.won %}border-green-300 bg-green-50
+          {% elif detail.match.winner_id is none %}border-gray-300 bg-gray-50
+          {% else %}border-red-300 bg-red-50{% endif %}">
+          
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <span class="text-sm font-semibold text-gray-600">Round {{ detail.match.round }}</span>
+                {% if detail.won %}
+                <span class="inline-block px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full">WIN</span>
+                {% elif detail.match.winner_id is none %}
+                <span class="inline-block px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded-full">DRAW</span>
+                {% else %}
+                <span class="inline-block px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">LOSS</span>
+                {% endif %}
+              </div>
+              
+              <div class="text-sm text-gray-700 mb-1">
+                <strong>{{ detail.player_team.team_name }}</strong> vs {{ detail.opponent_team.team_name }}
+              </div>
+              
+              {% if detail.partner %}
+              <div class="text-xs text-gray-500">
+                Partner: 
+                <a href="{{ url_for('player_profile', player_id=detail.partner.id) }}" class="text-indigo-600 hover:underline">
+                  {{ detail.partner.name }}
+                </a>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="text-right">
+              <div class="text-2xl font-bold 
+                {% if detail.won %}text-green-600
+                {% elif detail.match.winner_id is none %}text-gray-600
+                {% else %}text-red-600{% endif %}">
+                {{ detail.score }}
+              </div>
+              {% if detail.match.match_date %}
+              <div class="text-xs text-gray-500 mt-1">{{ detail.match.match_date }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

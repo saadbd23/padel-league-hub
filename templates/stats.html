@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <h2 class="text-4xl font-bold text-white text-center mb-12">League Statistics</h2>
+
+  <!-- Current Streaks Section -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Current Streaks</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Current Streak</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Type</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for team in teams_by_streak %}
+          {% set streak_info = team_streaks[team.id] %}
+          <tr class="hover:bg-purple-50 transition-colors duration-200">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
+              <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700 hover:underline">{{ team.team_name }}</a>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-2xl font-bold {% if streak_info.type == 'W' %}text-green-600{% elif streak_info.type == 'L' %}text-red-600{% elif streak_info.type == 'D' %}text-yellow-600{% else %}text-gray-600{% endif %}">
+                {{ streak_info.streak }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {% if streak_info.type == 'W' %}bg-green-100 text-green-800{% elif streak_info.type == 'L' %}bg-red-100 text-red-800{% elif streak_info.type == 'D' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                {% if streak_info.type == 'W' %}Winning{% elif streak_info.type == 'L' %}Losing{% elif streak_info.type == 'D' %}Drawing{% else %}No Streak{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Points Leaders -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Points Leaders</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-green-600 to-emerald-700 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Points</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">W-D-L</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for team in teams_by_points %}
+          <tr class="hover:bg-green-50 transition-colors duration-200">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
+              <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700 hover:underline">{{ team.team_name }}</a>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="inline-flex items-center justify-center w-12 h-8 rounded-lg text-base font-bold bg-gradient-to-r from-green-600 to-emerald-700 text-white shadow-md">
+                {{ team.points }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm font-semibold text-gray-900">
+                <span class="text-green-600">{{ team.wins }}</span>-<span class="text-gray-500">{{ team.draws }}</span>-<span class="text-red-600">{{ team.losses }}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sets Differential Leaders -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Sets Differential Leaders</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-blue-600 to-cyan-700 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Sets For</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Sets Against</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Differential</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for team in teams_by_sets_diff %}
+          {% set sets_diff = team.sets_for - team.sets_against %}
+          <tr class="hover:bg-blue-50 transition-colors duration-200">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
+              <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700 hover:underline">{{ team.team_name }}</a>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold text-gray-900">{{ team.sets_for }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold text-gray-900">{{ team.sets_against }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold {% if sets_diff > 0 %}text-green-600{% elif sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if sets_diff > 0 %}+{% endif %}{{ sets_diff }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Games Differential Leaders -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Games Differential Leaders</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-orange-600 to-red-700 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Games For</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Games Against</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Differential</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for team in teams_by_games_diff %}
+          {% set games_diff = team.games_for - team.games_against %}
+          <tr class="hover:bg-orange-50 transition-colors duration-200">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
+              <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700 hover:underline">{{ team.team_name }}</a>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold text-gray-900">{{ team.games_for }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold text-gray-900">{{ team.games_against }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold {% if games_diff > 0 %}text-green-600{% elif games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if games_diff > 0 %}+{% endif %}{{ games_diff }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Win Leaders -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Win Leaders</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-purple-600 to-pink-700 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Wins</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Win Rate</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for team in teams_by_wins %}
+          {% set total_matches = team.wins + team.draws + team.losses %}
+          {% set win_rate = (team.wins / total_matches * 100) if total_matches > 0 else 0 %}
+          <tr class="hover:bg-purple-50 transition-colors duration-200">
+            <td class="px-4 py-4 whitespace-nowrap text-center">
+              <span class="text-base font-bold text-gray-600">{{ loop.index }}</span>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700 hover:underline">{{ team.team_name }}</a>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-2xl font-bold text-green-600">{{ team.wins }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-bold text-gray-900">{{ "%.1f"|format(win_rate) }}%</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

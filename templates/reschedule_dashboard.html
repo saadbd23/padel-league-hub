@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Reschedule Management - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12">
+  <div class="max-w-6xl mx-auto px-4">
+    
+    <!-- Header -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">📅 Reschedule Management</h1>
+          <p class="text-lg text-gray-600">Manage pending reschedule requests</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <form method="POST" action="{{ url_for('check_deadlines') }}" class="inline">
+            <button type="submit" 
+                    class="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              ⏰ Check Deadlines
+            </button>
+          </form>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-gray-900">{{ total_pending }}</div>
+            <div class="text-sm text-gray-600">Pending Requests</div>
+            <div class="text-xs text-gray-500 mt-1">Max: {{ max_allowed }} per round</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Status Indicators -->
+      <div class="mt-6 grid grid-cols-3 gap-4">
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-blue-600">{{ total_pending }}</div>
+          <div class="text-sm text-blue-800">Pending</div>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-green-600">{{ max_allowed - total_pending }}</div>
+          <div class="text-sm text-green-800">Slots Available</div>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-4 text-center">
+          <div class="text-2xl font-bold text-orange-600">{{ max_allowed }}</div>
+          <div class="text-sm text-orange-800">Round Limit</div>
+        </div>
+      </div>
+      
+      <!-- Deadline Information -->
+      <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+        <div class="text-sm text-blue-900">
+          <div class="font-semibold mb-2">⏰ Deadline System:</div>
+          <div class="mb-1">• <strong>Regular Matches:</strong> Sunday 23:59 of the round week</div>
+          <div class="mb-1">• <strong>Makeup Matches:</strong> Wednesday 23:59 of the following week</div>
+          <div class="mb-1">• <strong>Reschedule Requests:</strong> Must be submitted by Wednesday of current round</div>
+          <div class="mt-2 text-xs text-blue-700">💡 Click "Check Deadlines" to process violations and apply automatic walkovers.</div>
+        </div>
+      </div>
+      
+      <!-- Warning if limit reached -->
+      {% if total_pending >= max_allowed %}
+      <div class="mt-6 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-orange-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <div class="text-sm text-orange-800">
+            <strong>⚠️ High Reschedule Count!</strong> Consider processing some reschedules before generating new rounds.
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Reschedule Requests -->
+    {% if reschedule_details %}
+    <div class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900">Pending Reschedule Requests</h2>
+      
+      {% for detail in reschedule_details %}
+      <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden border-2 border-orange-200">
+        <div class="bg-gradient-to-r from-orange-500 to-amber-600 text-white px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-bold">Reschedule Request #{{ detail.reschedule.id }}</h3>
+              <p class="text-sm opacity-90">Round {{ detail.match.round if detail.match else 'N/A' }}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-sm opacity-90">Requested</div>
+              <div class="text-sm font-semibold">{{ detail.reschedule.created_at }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Match Details -->
+            <div>
+              <h4 class="text-lg font-bold text-gray-900 mb-3">Match Details</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Round:</span>
+                  <span class="font-semibold">{{ detail.match.round if detail.match else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Teams:</span>
+                  <span class="font-semibold">
+                    {{ detail.requester_team.team_name if detail.requester_team else 'Unknown' }} vs 
+                    {{ detail.opponent_team.team_name if detail.opponent_team else 'Unknown' }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Original Date:</span>
+                  <span class="font-semibold">{{ detail.match.match_date if detail.match else 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Reschedule Details -->
+            <div>
+              <h4 class="text-lg font-bold text-gray-900 mb-3">Reschedule Request</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Requested by:</span>
+                  <span class="font-semibold">{{ detail.requester_team.team_name if detail.requester_team else 'Unknown' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Proposed Time:</span>
+                  <span class="font-semibold text-orange-600">{{ detail.reschedule.proposed_time }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Team Reschedules Used:</span>
+                  <span class="font-semibold">{{ detail.requester_team.reschedules_used if detail.requester_team else 0 }}/2</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="mt-6 flex flex-wrap gap-3 justify-end">
+            <form method="POST" action="{{ url_for('reject_reschedule', reschedule_id=detail.reschedule.id) }}" class="inline">
+              <button type="submit" 
+                      class="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200"
+                      onclick="return confirm('Are you sure you want to reject this reschedule request?')">
+                ❌ Reject
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('approve_reschedule', reschedule_id=detail.reschedule.id) }}" class="inline">
+              <button type="submit" 
+                      class="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200"
+                      onclick="return confirm('Are you sure you want to approve this reschedule request?')">
+                ✅ Approve
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white/90 backdrop-blur-lg rounded-xl shadow-lg p-8 text-center">
+      <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">No Pending Reschedule Requests</h3>
+      <p class="text-gray-600">All reschedule requests have been processed.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Navigation -->
+    <div class="mt-8 flex justify-center">
+      <a href="{{ url_for('admin_panel') }}" 
+         class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors duration-200">
+        ← Back to Admin Panel
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
