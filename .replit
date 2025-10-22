@@ -1,6 +1,6 @@
 # Replit configuration for Padel League Hub
 # Uses Nix to provide Python 3.11 and Postgres client
-run = "bash -lc 'pip install -r requirements.txt && python -c \"import os; open(\'instance/.keep\', \'a\').close()\" && gunicorn app:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT'"
+run = "bash -lc \"pip install -r requirements.txt && mkdir -p instance && touch instance/.keep && gunicorn app:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT\""
 
 language = "python3"
 
