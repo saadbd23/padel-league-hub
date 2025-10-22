@@ -45,26 +45,10 @@ services:
         fromDatabase:
           name: padel-league-db
           property: connectionString
-      - key: ADMIN_PASSWORD
-        fromService:
-          type: web
-          name: padel-league-hub
-          property: envVar
-          envVarKey: ADMIN_PASSWORD
-      - key: VERIFY_TOKEN
-        fromService:
-          type: web
-          name: padel-league-hub
-          property: envVar
-          envVarKey: VERIFY_TOKEN
-      - key: SECRET_KEY
-        fromService:
-          type: web
-          name: padel-league-hub
-          property: envVar
-          envVarKey: SECRET_KEY
       - key: TESTING_MODE
         value: false
+      # Note: ADMIN_PASSWORD, VERIFY_TOKEN, SECRET_KEY will be set manually
+      # in the Render dashboard to match the web service values
     autoDeploy: true
 
 databases:
