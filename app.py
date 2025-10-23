@@ -24,8 +24,14 @@ load_dotenv(override=True)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 # Database Configuration
-# Supports both DATABASE_URL (Render/Heroku) and DATABASE_URI (legacy)
-database_url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URI", "sqlite:///instance/league.db")
+# Supports both DATABASE_URL (Replit/Render/Heroku) and DATABASE_URI (legacy)
+database_url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URI")
+
+# Fallback to SQLite only if no database URL is provided
+if not database_url:
+    database_url = "sqlite:///instance/league.db"
+    import logging
+    logging.warning("No DATABASE_URL found, using SQLite fallback")
 
 # Fix for Render: postgres:// -> postgresql://
 if database_url.startswith("postgres://"):
@@ -36,6 +42,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,  # Verify connections before using
     "pool_recycle": 300,     # Recycle connections after 5 minutes
+    "connect_args": {
+        "connect_timeout": 10,  # 10 second connection timeout
+    } if database_url.startswith("postgresql://") else {}
 }
 
 db.init_app(app)
@@ -2572,20 +2581,32 @@ def init_db():
                 app.logger.info("Database tables created")
         else:
             app.logger.info(f"Database already initialized with {len(existing_tables)} tables")
+        return True
     except Exception as e:
-        app.logger.warning(f"Database initialization check: {e}")
+        app.logger.error(f"Database initialization failed: {e}")
+        app.logger.error("Application will continue but database features may not work")
+        return False
 
 # Initialize DB in background on first request (non-blocking for health checks)
 _db_initialized = False
+_db_available = True
 
 @app.before_request
 def ensure_db_initialized():
     """Ensure database is initialized before processing requests"""
-    global _db_initialized
-    if not _db_initialized and request.endpoint != 'health':
-        with app.app_context():
-            init_db()
+    global _db_initialized, _db_available
+    
+    # Skip health check - it must work without database
+    if request.endpoint == 'health':
+        return
+    
+    # Try to initialize database on first non-health request
+    if not _db_initialized:
+        _db_available = init_db()
         _db_initialized = True
+        
+        if not _db_available:
+            app.logger.warning("Database not available - some features will not work")
 
 if __name__ == "__main__":
     # Development mode only

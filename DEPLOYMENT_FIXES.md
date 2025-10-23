@@ -84,11 +84,39 @@ Expected output:
    - Separated build and run commands
    - Configured for autoscale deployment
 
+## Database Configuration
+
+### ✅ Database Connection Optimization
+
+The app is configured to handle database connections robustly:
+
+1. **Environment Variables:**
+   - Uses `DATABASE_URL` (automatically provided by Replit)
+   - Falls back to `DATABASE_URI` if needed
+   - SQLite fallback for local development
+
+2. **Connection Pool Settings:**
+   - Connection timeout: 10 seconds
+   - Pool pre-ping enabled (detects stale connections)
+   - Pool recycling every 5 minutes
+
+3. **Lazy Initialization:**
+   - Database setup happens AFTER health checks pass
+   - Health endpoint works even if database is unavailable
+   - Graceful error handling with logging
+
+### Important Notes
+
+- **DATABASE_URL is automatically available** in Replit deployments
+- **No manual database configuration needed** - it's already set up
+- See `DEPLOYMENT_DATABASE_GUIDE.md` for detailed database documentation
+
 ## Next Steps
 
 1. **Deploy your application** using the Replit Deploy button
-2. **Configure health check** to use `/health` endpoint in deployment settings
-3. **Monitor logs** to ensure smooth startup and operation
+2. **Configure health check** to use `/health` endpoint in deployment settings  
+3. **Verify DATABASE_URL** is accessible in deployment environment (it should be automatic)
+4. **Monitor logs** to ensure smooth startup and operation
 
 ## Verification
 
