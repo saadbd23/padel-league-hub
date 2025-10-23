@@ -502,8 +502,9 @@ def register_team():
         
         db.session.commit()
         
-        # Generate secure access link
-        base_url = os.environ.get("APP_BASE_URL", "http://localhost:5000")
+        # Generate secure access link using Replit URL
+        # Get Replit URL from environment or construct from REPL metadata
+        base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
         access_link = f"{base_url}/my-matches/{access_token}"
         confirmation_link = f"{base_url}/confirm-team/{new_team.id}/{player2_confirmation_token}"
         
@@ -842,6 +843,7 @@ See you on the court! 🎾
         db.session.commit()
         
         # Notify opponent
+        base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
         notification_body = f"""Hi!
 
 {team.team_name} has proposed a match booking:
@@ -850,7 +852,7 @@ Date & Time: {formatted_datetime}
 Court: Assigned on arrival
 
 Please log in to confirm or propose a different time:
-{os.environ.get('APP_BASE_URL', 'http://localhost:5000')}/my-matches/{opponent.access_token}
+{base_url}/my-matches/{opponent.access_token}
 
 - BD Padel League
 """
@@ -1256,6 +1258,7 @@ Check the leaderboard for updated standings!
             db.session.commit()
             
             # Notify opponent
+            base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
             notification_body = f"""Hi!
 
 {team.team_name} has submitted their match score:
@@ -1263,7 +1266,7 @@ Check the leaderboard for updated standings!
 Score: {normalized_score}
 
 Please log in to confirm the score:
-{os.environ.get('APP_BASE_URL', 'http://localhost:5000')}/my-matches/{opponent.access_token}
+{base_url}/my-matches/{opponent.access_token}
 
 - BD Padel League
 """
