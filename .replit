@@ -3,10 +3,45 @@
 run = "bash -lc \"pip install -r requirements.txt && mkdir -p instance && touch instance/.keep && gunicorn app:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT\""
 
 language = "python3"
+modules = ["web", "python-3.12", "nix"]
 
 [env]
 FLASK_ENV = "production"
 PYTHONUNBUFFERED = "1"
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Server"
+
+[[workflows.workflow]]
+name = "Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt && gunicorn app:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:5000"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[agent]
+expertMode = true
 # Replit provides $PORT automatically
 # Set your secrets in the Replit Secrets panel:
 # - SECRET_KEY

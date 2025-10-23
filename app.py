@@ -3016,14 +3016,28 @@ def setup_production():
     #     )
     #     app.logger.info('Sentry error monitoring initialized')
 
-# Initialize DB if first run
+# Initialize DB if first run (safe for existing databases)
 with app.app_context():
-    db.create_all()
+    try:
+        # Check if tables exist before creating
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        
+        # Only create tables if database is empty
+        if not existing_tables:
+            db.create_all()
+            app.logger.info("Database tables created")
+        else:
+            app.logger.info(f"Database already initialized with {len(existing_tables)} tables")
+    except Exception as e:
+        app.logger.warning(f"Database initialization check: {e}")
+    
     setup_production()
 
 if __name__ == "__main__":
     # Development mode only
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT") or 5000)
     debug = os.environ.get("FLASK_ENV") == "development"
     app.run(host="0.0.0.0", port=port, debug=debug)
 
