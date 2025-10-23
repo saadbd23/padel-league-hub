@@ -574,25 +574,35 @@ def register_team():
         access_link = f"{base_url}/my-matches/{access_token}"
         confirmation_link = f"{base_url}/confirm-team/{new_team.id}/{player2_confirmation_token}"
         
-        # Send welcome email to Player 1
+        # Send confirmation email to Player 1 (registrant)
         if p1_email:
             from utils import send_email_notification
             email_body = f"""Hi {p1_name},
 
-Welcome to BD Padel League! Your team "{team_name}" has been registered.
+✅ Your team "{team_name}" has been successfully registered!
 
-⏳ Waiting for {p2_name} to confirm the partnership.
+📋 Registration Details:
+- Team Name: {team_name}
+- Player 1: {p1_name} (You)
+- Player 2: {p2_name}
+
+⏳ Next Step: Waiting for {p2_name} to confirm the partnership
+We've sent a confirmation link to {p2_name}'s email ({p2_email}). Once they confirm, your team will be active and ready to compete!
 
 🔗 Your Team Access Link:
 {access_link}
 
-Bookmark this link to view your matches and opponent contact info!
+Bookmark this link to:
+- View your match schedule
+- See opponent contact information
+- Submit match scores
+- Request reschedules or substitutes
 
-Good luck! 🎾
+Good luck in the league! 🎾
 
 - BD Padel League
 """
-            send_email_notification(p1_email, f"Welcome to BD Padel League - Team {team_name}", email_body)
+            send_email_notification(p1_email, f"Team Registered - Awaiting Partner Confirmation", email_body)
         
         # Send confirmation email to Player 2 if email provided
         if p2_email:
@@ -720,6 +730,36 @@ def register_freeagent():
                        skill_level=skill, playstyle=style, availability=avail)
         db.session.add(fa)
         db.session.commit()
+        
+        # Send welcome email to free agent
+        if email:
+            from utils import send_email_notification
+            email_body = f"""Hi {name},
+
+✅ Welcome to BD Padel League! Your free agent registration has been confirmed.
+
+📋 Your Profile:
+- Name: {name}
+- Skill Level: {skill}
+- Playstyle: {style}
+- Availability: {avail}
+
+🤝 What's Next?
+Our admin team will review all free agent registrations and pair you with another player of similar skill level. Once paired, you'll receive:
+- A confirmation email with your team details
+- Your partner's contact information
+- Access to your team page to view matches
+
+⏳ This process typically takes 1-3 days, depending on the number of free agents.
+
+If you have any questions or want to update your profile, please contact the admin.
+
+Thank you for joining the league! 🎾
+
+- BD Padel League
+"""
+            send_email_notification(email, f"Free Agent Registration Confirmed - BD Padel League", email_body)
+        
         flash("Free Agent registered successfully!")
         return redirect(url_for("index"))
     return render_template("register_freeagent.html")
