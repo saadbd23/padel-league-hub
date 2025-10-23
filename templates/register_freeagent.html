@@ -4,8 +4,8 @@
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12">
     <h2 class="text-4xl font-bold text-gray-900 mb-2 text-center">Free Agent Registration</h2>
     <p class="text-gray-600 text-center mb-4">Looking for a partner? Register as a free agent and we'll match you!</p>
-    
-    <!-- WhatsApp Requirements Notice -->
+
+    <!-- Email Requirements Notice -->
     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg">
       <div class="flex">
         <div class="flex-shrink-0">
@@ -14,12 +14,11 @@
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-semibold text-blue-800 mb-2">📱 WhatsApp Required</h3>
+          <h3 class="text-sm font-semibold text-blue-800 mb-2">📧 Email Required</h3>
           <ul class="text-xs text-blue-700 space-y-1">
-            <li>• <strong>All confirmations and notifications are sent via WhatsApp</strong></li>
-            <li>• Enter your <strong>WhatsApp-enabled phone number</strong> (not regular SMS)</li>
-            <li>• Use <strong>international format</strong>: Country code + number (e.g., 8801712345678)</li>
-            <li>• If you use WhatsApp on a foreign number, enter that number (not your local SIM)</li>
+            <li>• <strong>All confirmations and notifications are sent via email</strong></li>
+            <li>• Enter a valid email address to receive updates</li>
+            <li>• Phone number is for contact purposes only</li>
           </ul>
         </div>
       </div>
@@ -37,14 +36,22 @@
       </div>
 
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number *</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+        <input
+          type="email"
+          name="email"
+          required
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+          placeholder="your.email@example.com">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
         <input
           type="tel"
           name="phone"
-          required
           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
-          placeholder="e.g., 8801712345678">
-        <p class="text-xs text-gray-500 mt-1">International format: Country code + number (no + or spaces)</p>
+          placeholder="Optional: for contact purposes">
       </div>
 
       <div>
@@ -94,5 +101,3 @@
   </div>
 </div>
 {% endblock %}
-
-

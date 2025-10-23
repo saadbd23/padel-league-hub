@@ -467,10 +467,19 @@
   </div>
   {% endif %}
 
-  <!-- WhatsApp Test Sender -->
+  <!-- Email-Only Mode -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">WhatsApp Test Send</h3>
-    <form method="POST" action="{{ url_for('admin_test_send') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">📧 Email Notifications</h3>
+    <p class="text-gray-600">All notifications are now sent via email only. Players will receive email confirmations for:</p>
+    <ul class="list-disc ml-6 mt-2 text-gray-700">
+      <li>Team registration and partnership confirmation</li>
+      <li>Match bookings and confirmations</li>
+      <li>Score submissions and disputes</li>
+      <li>Reschedule and substitute requests</li>
+    </ul>
+  </div>
+
+  <!-- Removed WhatsApp/SMS Test Section --> grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label class="block text-xs font-semibold text-gray-700 mb-1">Recipient (digits only with country code)</label>
         <input type="text" name="to_number" placeholder="15551234567" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-sm outline-none">
@@ -485,15 +494,7 @@
     </form>
   </div>
 
-  <!-- WhatsApp Templates & Notifications Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">WhatsApp Templates & Notifications</h3>
-    
-    <!-- Template Testing -->
-    <div class="mb-8">
-      <h4 class="text-lg font-semibold text-gray-800 mb-4">Test Templates</h4>
-      <div class="bg-gray-50 rounded-lg p-6">
-        <form method="POST" action="{{ url_for('test_template') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+  1 md:grid-cols-3 gap-4 items-end">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Template Type</label>
             <select name="template_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
