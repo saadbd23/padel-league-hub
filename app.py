@@ -439,14 +439,14 @@ def register_team():
         # Require emails for both players
         if not p1_email or not p2_email:
             flash("Email is required for both players.", "error")
-            return redirect(url_for("register_team"))
+            return render_template("register_team.html", form_data=request.form)
 
         # Enforce unique team names using canonical form
         canonical = normalize_team_name(team_name)
         existing = Team.query.filter_by(team_name_canonical=canonical).first()
         if existing:
             flash("A team with a similar name already exists. Please choose a unique name.", "error")
-            return redirect(url_for("register_team"))
+            return render_template("register_team.html", form_data=request.form)
 
         # Generate unique access token for this team
         access_token = secrets.token_urlsafe(32)
@@ -532,7 +532,7 @@ Good luck! 🎾
             from utils import send_email_notification
             email_body = f"""Hi {p2_name},
 
-You've been invited to join the BD Padel League team "{team_name}" by {registrant_name}.
+You've been invited to join the BD Padel League team "{team_name}" by {p1_name}.
 
 Please confirm your partnership by clicking the link below:
 {confirmation_link}
