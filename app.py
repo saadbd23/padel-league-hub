@@ -419,6 +419,11 @@ def find_team_by_phone(phone_digits: str) -> Team | None:
             return t
     return None
 
+@app.route("/health")
+def health():
+    """Fast health check endpoint for deployment monitoring"""
+    return {"status": "ok"}, 200
+
 @app.route("/")
 def index():
     teams = Team.query.count()
@@ -2509,24 +2514,38 @@ def setup_production():
     #     )
     #     app.logger.info('Sentry error monitoring initialized')
 
-# Initialize DB if first run (safe for existing databases)
-with app.app_context():
+# Initialize production setup (non-blocking)
+setup_production()
+
+# Lazy database initialization - only run when needed
+def init_db():
+    """Initialize database tables if needed (safe for existing databases)"""
     try:
-        # Check if tables exist before creating
         from sqlalchemy import inspect
         inspector = inspect(db.engine)
         existing_tables = inspector.get_table_names()
         
         # Only create tables if database is empty
         if not existing_tables:
-            db.create_all()
-            app.logger.info("Database tables created")
+            with app.app_context():
+                db.create_all()
+                app.logger.info("Database tables created")
         else:
             app.logger.info(f"Database already initialized with {len(existing_tables)} tables")
     except Exception as e:
         app.logger.warning(f"Database initialization check: {e}")
-    
-    setup_production()
+
+# Initialize DB in background on first request (non-blocking for health checks)
+_db_initialized = False
+
+@app.before_request
+def ensure_db_initialized():
+    """Ensure database is initialized before processing requests"""
+    global _db_initialized
+    if not _db_initialized and request.endpoint != 'health':
+        with app.app_context():
+            init_db()
+        _db_initialized = True
 
 if __name__ == "__main__":
     # Development mode only
