@@ -89,6 +89,7 @@ class FreeAgent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
+    email = db.Column(db.String(120))
     skill_level = db.Column(db.String(20))
     playstyle = db.Column(db.String(50))
     availability = db.Column(db.String(100))

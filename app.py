@@ -441,6 +441,63 @@ def register_team():
             flash("Email is required for both players.", "error")
             return render_template("register_team.html", form_data=request.form)
 
+        # Check if Player 1 and Player 2 have the same email or phone number
+        if p1_email.lower() == p2_email.lower():
+            flash("Player 1 and Player 2 cannot have the same email address.", "error")
+            return render_template("register_team.html", form_data=request.form)
+        
+        if normalize_phone_number(p1_phone) == normalize_phone_number(p2_phone):
+            flash("Player 1 and Player 2 cannot have the same WhatsApp number.", "error")
+            return render_template("register_team.html", form_data=request.form)
+
+        # Check if Player 1's email or phone is already registered in another team
+        existing_team_p1_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == p1_email,
+                Team.player2_email == p1_email
+            )
+        ).first()
+        
+        if existing_team_p1_email:
+            flash(f"Player 1's email ({p1_email}) is already registered in team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("register_team.html", form_data=request.form)
+        
+        p1_phone_normalized = normalize_phone_number(p1_phone)
+        existing_team_p1_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == p1_phone_normalized,
+                Team.player2_phone == p1_phone_normalized
+            )
+        ).first()
+        
+        if existing_team_p1_phone:
+            flash(f"Player 1's WhatsApp number is already registered in team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("register_team.html", form_data=request.form)
+
+        # Check if Player 2's email or phone is already registered in another team
+        existing_team_p2_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == p2_email,
+                Team.player2_email == p2_email
+            )
+        ).first()
+        
+        if existing_team_p2_email:
+            flash(f"Player 2's email ({p2_email}) is already registered in team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("register_team.html", form_data=request.form)
+        
+        p2_phone_normalized = normalize_phone_number(p2_phone)
+        existing_team_p2_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == p2_phone_normalized,
+                Team.player2_phone == p2_phone_normalized
+            )
+        ).first()
+        
+        if existing_team_p2_phone:
+            flash(f"Player 2's WhatsApp number is already registered in team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("register_team.html", form_data=request.form)
+
         # Enforce unique team names using canonical form
         canonical = normalize_team_name(team_name)
         existing = Team.query.filter_by(team_name_canonical=canonical).first()
@@ -453,9 +510,13 @@ def register_team():
         # Generate confirmation token for Player 2
         player2_confirmation_token = secrets.token_urlsafe(32)
         
+        # Normalize phone numbers before storing
+        p1_phone_normalized = normalize_phone_number(p1_phone)
+        p2_phone_normalized = normalize_phone_number(p2_phone)
+        
         new_team = Team(team_name=team_name, team_name_canonical=canonical,
-                        player1_name=p1_name, player1_phone=p1_phone, player1_email=p1_email,
-                        player2_name=p2_name, player2_phone=p2_phone, player2_email=p2_email,
+                        player1_name=p1_name, player1_phone=p1_phone_normalized, player1_email=p1_email,
+                        player2_name=p2_name, player2_phone=p2_phone_normalized, player2_email=p2_email,
                         access_token=access_token,
                         player2_confirmation_token=player2_confirmation_token,
                         player2_confirmed=False)  # Player 2 needs to confirm
@@ -602,11 +663,55 @@ def register_freeagent():
     if request.method == "POST":
         name = request.form["name"]
         phone = request.form["phone"]
+        email = request.form.get("email", "").strip()
         skill = request.form["skill_level"]
         style = request.form["playstyle"]
         avail = request.form["availability"]
 
-        fa = FreeAgent(name=name, phone=phone,
+        # Require email
+        if not email:
+            flash("Email is required for free agent registration.", "error")
+            return render_template("register_freeagent.html", form_data=request.form)
+
+        # Normalize phone number
+        phone_normalized = normalize_phone_number(phone)
+
+        # Check if email is already registered in a team
+        existing_team_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == email,
+                Team.player2_email == email
+            )
+        ).first()
+        
+        if existing_team_email:
+            flash(f"This email ({email}) is already registered in team '{existing_team_email.team_name}'. Please use a different email.", "error")
+            return render_template("register_freeagent.html", form_data=request.form)
+
+        # Check if phone number is already registered in a team
+        existing_team_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == phone_normalized,
+                Team.player2_phone == phone_normalized
+            )
+        ).first()
+        
+        if existing_team_phone:
+            flash(f"This WhatsApp number is already registered in team '{existing_team_phone.team_name}'. Please use a different number.", "error")
+            return render_template("register_freeagent.html", form_data=request.form)
+
+        # Check if email or phone is already registered as a free agent
+        existing_fa_email = FreeAgent.query.filter_by(email=email).first()
+        if existing_fa_email:
+            flash(f"This email is already registered as a free agent. Please use a different email.", "error")
+            return render_template("register_freeagent.html", form_data=request.form)
+
+        existing_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
+        if existing_fa_phone:
+            flash(f"This WhatsApp number is already registered as a free agent. Please use a different number.", "error")
+            return render_template("register_freeagent.html", form_data=request.form)
+
+        fa = FreeAgent(name=name, phone=phone_normalized, email=email,
                        skill_level=skill, playstyle=style, availability=avail)
         db.session.add(fa)
         db.session.commit()
