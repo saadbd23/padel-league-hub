@@ -65,7 +65,8 @@ Key models tracked in `models.py`:
 - **Interactive Elements**: Hover effects, transitions, status badges
 
 ## Deployment Configuration
-- **Production Platform**: Designed for Render/Replit deployment
+- **Production Platform**: Deployed on Replit with custom domain
+- **Custom Domain**: goeclectic.xyz (configured October 2025)
 - **Database Pooling**: Connection pre-ping, 5-minute recycling, 10-second timeout
 - **Health Checks**: Dedicated `/health` endpoint (no database queries)
 - **Build/Run Separation**: Dependencies installed during build phase, not runtime
@@ -104,7 +105,7 @@ Core packages from `requirements.txt`:
 - `ADMIN_PASSWORD` - Admin panel access
 - `VERIFY_TOKEN` - Webhook security
 - `DATABASE_URL` - PostgreSQL connection string (auto-injected on Replit/Render)
-- `APP_BASE_URL` - Application base URL for email links
+- `APP_BASE_URL` - Application base URL for email links (set to https://goeclectic.xyz)
 
 ## CDN Dependencies
 - Tailwind CSS - Styling framework (loaded via CDN)
