@@ -1567,6 +1567,53 @@ def submit_reschedule(token):
         
         deadline_text = f"⚠️ MAKEUP MATCH DEADLINE: Wednesday {wednesday_deadline.strftime('%B %d')} 23:59"
         
+        # Send email notifications to both teams
+        from utils import send_email_notification
+        opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
+        opponent = Team.query.get(opponent_id)
+        
+        # Email to requester team
+        requester_body = f"""Hi {team.team_name},
+
+Your reschedule request has been submitted and is awaiting admin approval.
+
+Match Details:
+- Round: {match.round}
+- Opponent: {opponent.team_name if opponent else 'Unknown'}
+- Proposed Time: {proposed_time_formatted}
+- Deadline: {deadline_text}
+
+Admin will review your request. Both teams will be notified once approved/denied.
+
+Team Reschedules Used: {team.reschedules_used}/2
+
+- BD Padel League
+"""
+        if team.player1_email:
+            send_email_notification(team.player1_email, f"Reschedule Request Submitted - Round {match.round}", requester_body)
+        if team.player2_email:
+            send_email_notification(team.player2_email, f"Reschedule Request Submitted - Round {match.round}", requester_body)
+        
+        # Email to opponent team
+        if opponent:
+            opponent_body = f"""Hi {opponent.team_name},
+
+{team.team_name} has submitted a reschedule request for your match.
+
+Match Details:
+- Round: {match.round}
+- Proposed Time: {proposed_time_formatted}
+- Deadline: {deadline_text}
+
+Admin will review this request. You'll be notified once approved/denied.
+
+- BD Padel League
+"""
+            if opponent.player1_email:
+                send_email_notification(opponent.player1_email, f"Reschedule Request - Round {match.round}", opponent_body)
+            if opponent.player2_email:
+                send_email_notification(opponent.player2_email, f"Reschedule Request - Round {match.round}", opponent_body)
+        
         return {
             "success": True,
             "message": f"✅ Reschedule submitted for {proposed_time_formatted}! {deadline_text}. If not completed by deadline, automatic walkover to opponent. You'll play 2 matches in the following week (makeup + regular round match). ({team.reschedules_used}/2 used)",
@@ -1918,6 +1965,102 @@ def generate_round():
         # Add round date information to matches
         for match in matches:
             match.round_dates = get_round_date_range(round_number)
+        
+        # Send email notifications to all teams about new round pairings
+        from utils import send_email_notification
+        round_dates = get_round_date_range(round_number)
+        
+        for match in matches:
+            if match.status == "bye":
+                # Notify bye team
+                bye_team = Team.query.get(match.team_a_id)
+                if bye_team:
+                    bye_body = f"""Hi {bye_team.team_name},
+
+Round {round_number} has been generated!
+
+🏖️ You have a BYE this round - no match to play.
+
+Round Dates: {round_dates}
+
+You'll automatically advance to the next round. Enjoy your break!
+
+- BD Padel League
+"""
+                    if bye_team.player1_email:
+                        send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body)
+                    if bye_team.player2_email:
+                        send_email_notification(bye_team.player2_email, f"Round {round_number} - BYE Week", bye_body)
+            else:
+                # Notify both teams
+                team_a = Team.query.get(match.team_a_id)
+                team_b = Team.query.get(match.team_b_id)
+                
+                if team_a and team_b:
+                    # Access link for each team
+                    base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+                    
+                    # Team A notification
+                    team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
+                    team_a_body = f"""Hi {team_a.team_name},
+
+Round {round_number} has been generated!
+
+🎾 Your Match:
+- Opponent: {team_b.team_name}
+- Round Dates: {round_dates}
+- Deadline: Sunday 23:59
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before Sunday 23:59
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_a_link}
+
+Opponent Contact:
+- {team_b.player1_name}: {team_b.player1_email or team_b.player1_phone}
+- {team_b.player2_name}: {team_b.player2_email or team_b.player2_phone}
+
+Good luck! 🎾
+
+- BD Padel League
+"""
+                    if team_a.player1_email:
+                        send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
+                    if team_a.player2_email:
+                        send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
+                    
+                    # Team B notification
+                    team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
+                    team_b_body = f"""Hi {team_b.team_name},
+
+Round {round_number} has been generated!
+
+🎾 Your Match:
+- Opponent: {team_a.team_name}
+- Round Dates: {round_dates}
+- Deadline: Sunday 23:59
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before Sunday 23:59
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_b_link}
+
+Opponent Contact:
+- {team_a.player1_name}: {team_a.player1_email or team_a.player1_phone}
+- {team_a.player2_name}: {team_a.player2_email or team_a.player2_phone}
+
+Good luck! 🎾
+
+- BD Padel League
+"""
+                    if team_b.player1_email:
+                        send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
+                    if team_b.player2_email:
+                        send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
             
     except Exception as e:
         flash(f"Error generating round: {str(e)}", "error")
@@ -1990,6 +2133,54 @@ def approve_reschedule(reschedule_id):
             
             db.session.commit()
             
+            # Send approval notifications
+            from utils import send_email_notification
+            opponent_id = match.team_b_id if match.team_a_id == requester_team.id else match.team_a_id
+            opponent = Team.query.get(opponent_id)
+            
+            approval_body = f"""Hi!
+
+✅ Your reschedule request has been APPROVED by admin.
+
+Match Details:
+- Round: {match.round}
+- Opponent: {opponent.team_name if opponent else 'Unknown'}
+- New Time: {reschedule.proposed_time}
+- DEADLINE: Wednesday 23:59 (absolute deadline for makeup matches)
+
+⚠️ IMPORTANT: This is now a MAKEUP MATCH. You must complete it by Wednesday 23:59 or automatic walkover will be awarded to your opponent.
+
+Team Reschedules Used: {requester_team.reschedules_used}/2
+
+- BD Padel League
+"""
+            # Notify requester team
+            if requester_team.player1_email:
+                send_email_notification(requester_team.player1_email, f"Reschedule APPROVED - Round {match.round}", approval_body)
+            if requester_team.player2_email:
+                send_email_notification(requester_team.player2_email, f"Reschedule APPROVED - Round {match.round}", approval_body)
+            
+            # Notify opponent team
+            if opponent:
+                opponent_approval_body = f"""Hi {opponent.team_name},
+
+The reschedule request for your match has been APPROVED by admin.
+
+Match Details:
+- Round: {match.round}
+- Opponent: {requester_team.team_name}
+- New Time: {reschedule.proposed_time}
+- DEADLINE: Wednesday 23:59 (absolute deadline for makeup matches)
+
+⚠️ IMPORTANT: This is now a MAKEUP MATCH. You must complete it by Wednesday 23:59 or automatic walkover will be awarded to {requester_team.team_name}.
+
+- BD Padel League
+"""
+                if opponent.player1_email:
+                    send_email_notification(opponent.player1_email, f"Reschedule APPROVED - Round {match.round}", opponent_approval_body)
+                if opponent.player2_email:
+                    send_email_notification(opponent.player2_email, f"Reschedule APPROVED - Round {match.round}", opponent_approval_body)
+            
             flash(f"Reschedule approved for {requester_team.team_name if requester_team else 'Unknown team'}", "success")
         else:
             flash("Associated match not found", "error")
@@ -2019,7 +2210,56 @@ def reject_reschedule(reschedule_id):
         
         db.session.commit()
         
+        # Send rejection notifications
+        from utils import send_email_notification
         requester_team = Team.query.get(reschedule.requester_team_id)
+        match = Match.query.get(reschedule.match_id) if reschedule.match_id else None
+        
+        if requester_team and match:
+            opponent_id = match.team_b_id if match.team_a_id == requester_team.id else match.team_a_id
+            opponent = Team.query.get(opponent_id)
+            
+            rejection_body = f"""Hi {requester_team.team_name},
+
+❌ Your reschedule request has been REJECTED by admin.
+
+Match Details:
+- Round: {match.round}
+- Opponent: {opponent.team_name if opponent else 'Unknown'}
+- Requested Time: {reschedule.proposed_time}
+
+Your match remains scheduled for the original round deadline (Sunday 23:59).
+
+If you need assistance, please contact the admin.
+
+Team Reschedules Used: {requester_team.reschedules_used}/2
+
+- BD Padel League
+"""
+            if requester_team.player1_email:
+                send_email_notification(requester_team.player1_email, f"Reschedule REJECTED - Round {match.round}", rejection_body)
+            if requester_team.player2_email:
+                send_email_notification(requester_team.player2_email, f"Reschedule REJECTED - Round {match.round}", rejection_body)
+            
+            # Notify opponent team
+            if opponent:
+                opponent_rejection_body = f"""Hi {opponent.team_name},
+
+The reschedule request from {requester_team.team_name} has been REJECTED by admin.
+
+Match Details:
+- Round: {match.round}
+- Original Deadline: Sunday 23:59
+
+Your match remains scheduled for the original deadline.
+
+- BD Padel League
+"""
+                if opponent.player1_email:
+                    send_email_notification(opponent.player1_email, f"Reschedule REJECTED - Round {match.round}", opponent_rejection_body)
+                if opponent.player2_email:
+                    send_email_notification(opponent.player2_email, f"Reschedule REJECTED - Round {match.round}", opponent_rejection_body)
+        
         flash(f"Reschedule rejected for {requester_team.team_name if requester_team else 'Unknown team'}", "success")
         
     except Exception as e:
@@ -2494,6 +2734,48 @@ def override_match(match_id):
             stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
             match.notes = (match.notes + " \n" if match.notes else "") + f"[Override {stamp}] {note}"
         db.session.commit()
+        
+        # Send email notifications about admin override
+        from utils import send_email_notification
+        team_a = Team.query.get(match.team_a_id)
+        team_b = Team.query.get(match.team_b_id)
+        
+        if team_a and team_b:
+            action_text = ""
+            if action == "completed":
+                action_text = f"manually set as COMPLETED with score {score_a_str} - {score_b_str}"
+            elif action == "walkover_a":
+                action_text = f"marked as WALKOVER - {team_a.team_name} wins"
+            elif action == "walkover_b":
+                action_text = f"marked as WALKOVER - {team_b.team_name} wins"
+            elif action == "void":
+                action_text = "VOIDED and reset to scheduled status"
+            
+            override_body = f"""Hi!
+
+⚠️ ADMIN OVERRIDE NOTIFICATION
+
+Your match has been {action_text} by the admin.
+
+Match Details:
+- Round: {match.round}
+- Teams: {team_a.team_name} vs {team_b.team_name}
+- Admin Note: {note if note else 'No note provided'}
+
+This action was performed by league administration. If you have questions, please contact admin.
+
+- BD Padel League
+"""
+            # Notify both teams
+            if team_a.player1_email:
+                send_email_notification(team_a.player1_email, f"Admin Override - Round {match.round}", override_body)
+            if team_a.player2_email:
+                send_email_notification(team_a.player2_email, f"Admin Override - Round {match.round}", override_body)
+            if team_b.player1_email:
+                send_email_notification(team_b.player1_email, f"Admin Override - Round {match.round}", override_body)
+            if team_b.player2_email:
+                send_email_notification(team_b.player2_email, f"Admin Override - Round {match.round}", override_body)
+        
         flash("Match overridden successfully.", "success")
     except Exception as e:
         db.session.rollback()
