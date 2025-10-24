@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <h2 class="text-4xl font-bold text-white text-center mb-12">League Statistics</h2>
+  <h2 class="text-3xl sm:text-4xl font-bold text-white text-center mb-8 sm:mb-12">League Statistics</h2>
 
   <!-- Current Streaks Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Current Streaks</h3>
-    <div class="overflow-x-auto">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Current Streaks</h3>
+    
+    <!-- Desktop Table -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
           <tr>
@@ -41,12 +43,37 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      {% for team in teams_by_streak %}
+      {% set streak_info = team_streaks[team.id] %}
+      <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border-2 border-purple-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-xs text-gray-500 mb-1">#{{ loop.index }}</div>
+            <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700">{{ team.team_name }}</a>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold {% if streak_info.type == 'W' %}text-green-600{% elif streak_info.type == 'L' %}text-red-600{% elif streak_info.type == 'D' %}text-yellow-600{% else %}text-gray-600{% endif %}">
+              {{ streak_info.streak }}
+            </div>
+            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold {% if streak_info.type == 'W' %}bg-green-100 text-green-800{% elif streak_info.type == 'L' %}bg-red-100 text-red-800{% elif streak_info.type == 'D' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+              {% if streak_info.type == 'W' %}Winning{% elif streak_info.type == 'L' %}Losing{% elif streak_info.type == 'D' %}Drawing{% else %}No Streak{% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 
   <!-- Points Leaders -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Points Leaders</h3>
-    <div class="overflow-x-auto">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Points Leaders</h3>
+    
+    <!-- Desktop Table -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead class="bg-gradient-to-r from-green-600 to-emerald-700 text-white">
           <tr>
@@ -80,12 +107,37 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      {% for team in teams_by_points %}
+      <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-xs text-gray-500 mb-1">#{{ loop.index }}</div>
+            <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700">{{ team.team_name }}</a>
+            <div class="text-sm font-semibold text-gray-700 mt-2">
+              <span class="text-green-600">{{ team.wins }}</span>-<span class="text-gray-500">{{ team.draws }}</span>-<span class="text-red-600">{{ team.losses }}</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold text-2xl shadow-md">
+              {{ team.points }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">points</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 
   <!-- Sets Differential Leaders -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Sets Differential Leaders</h3>
-    <div class="overflow-x-auto">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Sets Differential Leaders</h3>
+    
+    <!-- Desktop Table -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead class="bg-gradient-to-r from-blue-600 to-cyan-700 text-white">
           <tr>
@@ -122,12 +174,38 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      {% for team in teams_by_sets_diff %}
+      {% set sets_diff = team.sets_for - team.sets_against %}
+      <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 border-2 border-blue-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-xs text-gray-500 mb-1">#{{ loop.index }}</div>
+            <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700">{{ team.team_name }}</a>
+            <div class="text-sm text-gray-600 mt-2">
+              Sets: <span class="font-semibold">{{ team.sets_for }}</span> - <span class="font-semibold">{{ team.sets_against }}</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Diff</div>
+            <div class="text-3xl font-bold {% if sets_diff > 0 %}text-green-600{% elif sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+              {% if sets_diff > 0 %}+{% endif %}{{ sets_diff }}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 
   <!-- Games Differential Leaders -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Games Differential Leaders</h3>
-    <div class="overflow-x-auto">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Games Differential Leaders</h3>
+    
+    <!-- Desktop Table -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead class="bg-gradient-to-r from-orange-600 to-red-700 text-white">
           <tr>
@@ -164,12 +242,38 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      {% for team in teams_by_games_diff %}
+      {% set games_diff = team.games_for - team.games_against %}
+      <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4 border-2 border-orange-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-xs text-gray-500 mb-1">#{{ loop.index }}</div>
+            <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700">{{ team.team_name }}</a>
+            <div class="text-sm text-gray-600 mt-2">
+              Games: <span class="font-semibold">{{ team.games_for }}</span> - <span class="font-semibold">{{ team.games_against }}</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Diff</div>
+            <div class="text-3xl font-bold {% if games_diff > 0 %}text-green-600{% elif games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+              {% if games_diff > 0 %}+{% endif %}{{ games_diff }}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 
   <!-- Win Leaders -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Win Leaders</h3>
-    <div class="overflow-x-auto">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Win Leaders</h3>
+    
+    <!-- Desktop Table -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead class="bg-gradient-to-r from-purple-600 to-pink-700 text-white">
           <tr>
@@ -201,12 +305,29 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      {% for team in teams_by_wins %}
+      {% set total_matches = team.wins + team.draws + team.losses %}
+      {% set win_rate = (team.wins / total_matches * 100) if total_matches > 0 else 0 %}
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-xs text-gray-500 mb-1">#{{ loop.index }}</div>
+            <a href="{{ url_for('team_profile', team_id=team.id) }}" class="text-base font-bold text-indigo-700">{{ team.team_name }}</a>
+            <div class="text-sm text-gray-600 mt-2">
+              Win Rate: <span class="font-semibold">{{ "%.1f"|format(win_rate) }}%</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Wins</div>
+            <div class="text-4xl font-bold text-green-600">{{ team.wins }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endblock %}
-
-
-
-
-
-
