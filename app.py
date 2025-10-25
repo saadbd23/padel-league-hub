@@ -1968,6 +1968,97 @@ def generate_playoff_preview_route():
     return redirect(url_for("playoff_approval_page"))
 
 
+@app.route("/admin/playoff-approval")
+@require_admin_auth
+def playoff_approval_page():
+    """Show playoff approval page with Top 8 teams and bracket preview"""
+    import json
+    
+    settings = LeagueSettings.query.first()
+    if not settings or settings.current_phase != "playoff_preview":
+        flash("No playoff preview available", "warning")
+        return redirect(url_for("admin_panel"))
+    
+    # Get qualified team IDs
+    if not settings.qualified_team_ids:
+        flash("No qualified teams found", "error")
+        return redirect(url_for("admin_panel"))
+    
+    team_ids = json.loads(settings.qualified_team_ids)
+    
+    # Get team objects and build qualified teams list
+    qualified_teams = []
+    for idx, team_id in enumerate(team_ids, start=1):
+        team = Team.query.get(team_id)
+        if team:
+            qualified_teams.append({
+                'team': team,
+                'seed': idx,
+                'points': team.points,
+                'sets_diff': team.sets_diff,
+                'games_diff': team.games_diff
+            })
+    
+    # Build bracket preview
+    bracket_preview = []
+    if len(qualified_teams) >= 8:
+        bracket_preview = [
+            {'match': 'QF1', 'seed1': 1, 'team1': qualified_teams[0]['team'].team_name, 'seed8': 8, 'team8': qualified_teams[7]['team'].team_name},
+            {'match': 'QF2', 'seed2': 2, 'team2': qualified_teams[1]['team'].team_name, 'seed7': 7, 'team7': qualified_teams[6]['team'].team_name},
+            {'match': 'QF3', 'seed3': 3, 'team3': qualified_teams[2]['team'].team_name, 'seed6': 6, 'team6': qualified_teams[5]['team'].team_name},
+            {'match': 'QF4', 'seed4': 4, 'team4': qualified_teams[3]['team'].team_name, 'seed5': 5, 'team5': qualified_teams[4]['team'].team_name},
+        ]
+    elif len(qualified_teams) >= 4:
+        bracket_preview = [
+            {'match': 'SF1', 'seed1': 1, 'team1': qualified_teams[0]['team'].team_name, 'seed4': 4, 'team4': qualified_teams[3]['team'].team_name},
+            {'match': 'SF2', 'seed2': 2, 'team2': qualified_teams[1]['team'].team_name, 'seed3': 3, 'team3': qualified_teams[2]['team'].team_name},
+        ]
+    
+    return render_template(
+        "playoff_approval.html",
+        qualified_teams=qualified_teams,
+        bracket_preview=bracket_preview,
+        settings=settings
+    )
+
+
+@app.route("/admin/approve-playoffs", methods=["POST"])
+@require_admin_auth
+def approve_playoffs():
+    """Approve playoffs and generate quarterfinals"""
+    settings = LeagueSettings.query.first()
+    if not settings or settings.current_phase != "playoff_preview":
+        flash("Cannot approve playoffs at this time", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Mark playoffs as approved
+    settings.playoffs_approved = True
+    settings.current_phase = "playoffs"
+    db.session.commit()
+    
+    flash("✅ Playoffs approved! You can now generate playoff rounds.", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/reject-playoffs", methods=["POST"])
+@require_admin_auth
+def reject_playoffs():
+    """Reject playoff preview and return to Swiss phase"""
+    settings = LeagueSettings.query.first()
+    if not settings:
+        flash("Settings not found", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Reset to Swiss phase
+    settings.current_phase = "swiss"
+    settings.qualified_team_ids = None
+    settings.playoffs_approved = False
+    db.session.commit()
+    
+    flash("Playoff preview rejected. You can regenerate it when ready.", "info")
+    return redirect(url_for("admin_panel"))
+
+
 @app.route("/admin/pair-agents", methods=["POST"])
 @require_admin_auth
 def pair_agents():
