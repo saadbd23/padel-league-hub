@@ -1,0 +1,271 @@
+# Task: Implement Swiss Format to Playoff Knockout Transition
+
+## Context
+I have a Padel League management system built with Flask, SQLAlchemy, and SQLite. Currently, it only supports Swiss format round generation with no playoff/knockout functionality. I need to add automatic transition from Swiss rounds to playoff brackets.
+
+## Current System Overview
+- **Framework**: Flask with SQLAlchemy ORM
+- **Database Models** (models.py): Team, Player, Match, FreeAgent, Reschedule, Substitute
+- **Key Files**:
+  - `app.py`: Main Flask routes including `/admin/generate-round`
+  - `models.py`: Database models
+  - `utils.py`: Helper functions including `generate_round_pairings()` for Swiss format
+  - `templates/`: Jinja2 templates for UI
+
+## Requirements
+
+### 1. Database Schema Changes
+
+**Add to models.py:**
+
+```python
+class LeagueSettings(db.Model):
+    """Store league configuration"""
+    id = db.Column(db.Integer, primary_key=True)
+    swiss_rounds_count = db.Column(db.Integer, default=5)
+    playoff_teams_count = db.Column(db.Integer, default=8)
+    current_phase = db.Column(db.String(20), default="swiss")  # swiss, playoffs, complete
+```
+
+**Modify Match model in models.py:**
+Add this field:
+```python
+phase = db.Column(db.String(20), default="swiss")
+# Values: "swiss", "quarterfinal", "semifinal", "third_place", "final"
+```
+
+**Create migration script** (e.g., `migrate_add_playoffs.py`):
+- Add `phase` column to existing Match table (default "swiss")
+- Create LeagueSettings table
+- Insert default LeagueSettings row (swiss_rounds_count=5, playoff_teams_count=8)
+
+### 2. Core Functions in utils.py
+
+**a) Enhanced Tiebreaker with Head-to-Head:**
+```python
+def get_team_rankings_with_tiebreaker():
+    """
+    Rank all teams with complete tiebreaker logic:
+    1. Points (descending)
+    2. Sets differential (descending)
+    3. Games differential (descending)
+    4. Head-to-head record (if 2 teams tied, who won their match)
+    5. Team ID (registration order)
+    
+    Returns: List of teams sorted by ranking
+    """
+```
+
+**b) Swiss Completion Detection:**
+```python
+def check_swiss_completion():
+    """
+    Check if all Swiss rounds are complete.
+    Returns: (bool: complete, int: completed_rounds, int: total_swiss_rounds)
+    """
+```
+
+**c) Auto-scaling Swiss Rounds:**
+```python
+def calculate_optimal_swiss_rounds(team_count):
+    """
+    Recommend Swiss rounds based on team count:
+    - 4-7 teams: 4 rounds, Top 4 playoffs (no quarters)
+    - 8-15 teams: 5 rounds, Top 8 playoffs
+    - 16+ teams: 6-7 rounds, Top 8 playoffs
+    
+    Returns: (swiss_rounds, playoff_teams_count, has_quarters)
+    """
+```
+
+**d) Playoff Bracket Generation:**
+```python
+def generate_playoff_bracket(round_number, phase_type):
+    """
+    Generate playoff matches based on phase:
+    
+    - "quarterfinal": Top 8 teams, seeded 1v8, 2v7, 3v6, 4v5
+    - "semifinal": Winners from quarters (QF1 winner vs QF2 winner, QF3 vs QF4)
+    - "third_place": Losers from semi-finals
+    - "final": Winners from semi-finals
+    
+    Creates Match records with phase field set appropriately.
+    Returns: List of created matches
+    """
+```
+
+**e) Playoff Bracket Data for UI:**
+```python
+def get_playoff_bracket_data():
+    """
+    Return structured playoff bracket data for template rendering:
+    {
+        'quarterfinals': [match objects],
+        'semifinals': [match objects],
+        'third_place': match object,
+        'final': match object
+    }
+    """
+```
+
+### 3. Modify Generate Round Route in app.py
+
+Update the `/admin/generate-round` POST route:
+
+```python
+@app.route("/admin/generate-round", methods=["POST"])
+def generate_round():
+    round_number = request.form.get("round_number", type=int)
+    
+    # Get league settings
+    settings = LeagueSettings.query.first()
+    if not settings:
+        # Create default settings if none exist
+        settings = LeagueSettings(swiss_rounds_count=5, playoff_teams_count=8)
+        db.session.add(settings)
+        db.session.commit()
+    
+    # Check if Swiss rounds are complete
+    swiss_complete, completed_rounds, total_swiss = check_swiss_completion()
+    
+    if swiss_complete and round_number > total_swiss:
+        # PLAYOFF GENERATION MODE
+        # Determine which playoff phase to generate
+        playoff_round_offset = round_number - total_swiss
+        
+        if playoff_round_offset == 1:
+            # Generate Quarter-finals (or Semi-finals if <8 teams)
+            team_count = Team.query.filter_by(confirmed=True).count()
+            if team_count >= 8:
+                matches = generate_playoff_bracket(round_number, "quarterfinal")
+                flash(f"✅ Quarter-finals generated! Top 8 teams seeded.", "success")
+            else:
+                matches = generate_playoff_bracket(round_number, "semifinal")
+                flash(f"✅ Semi-finals generated! Top 4 teams advance.", "success")
+        
+        elif playoff_round_offset == 2:
+            # Generate Semi-finals (if quarters existed) or Finals
+            # Logic to determine based on previous round
+            # ...
+        
+        # Continue for 3rd place and final
+        
+    else:
+        # SWISS ROUND GENERATION MODE
+        matches = generate_round_pairings(round_number)
+        
+        # Warn if this is the last Swiss round
+        if round_number == settings.swiss_rounds_count:
+            flash(f"⚠️ This is the LAST Swiss round ({round_number}/{settings.swiss_rounds_count}). Next round will start playoffs!", "warning")
+        
+        flash(f"✅ Round {round_number} generated with {len(matches)} matches!", "success")
+    
+    return redirect(url_for('admin_panel'))
+```
+
+### 4. Admin Settings Page
+
+**New route in app.py:**
+```python
+@app.route("/admin/league-settings", methods=["GET", "POST"])
+def league_settings():
+    """Admin page to configure Swiss rounds and playoff settings"""
+    # Handle POST to update settings
+    # Display current settings with recommended values based on team count
+```
+
+**New template:** `templates/admin_league_settings.html`
+- Form to adjust `swiss_rounds_count`
+- Display current phase and completed rounds
+- Show recommendation based on team count
+- Preview playoff format
+
+### 5. UI Updates
+
+**Update templates/admin.html:**
+Add status indicator at top of "Generate Round Pairings" section:
+```html
+<div class="mb-4 p-4 bg-blue-50 rounded-lg">
+  <div class="font-semibold">Current Phase: {{ current_phase }}</div>
+  <div class="text-sm">Swiss Rounds: {{ completed_swiss }}/{{ total_swiss }}</div>
+  {% if completed_swiss == total_swiss %}
+    <div class="text-sm text-green-700 font-semibold">✅ Swiss complete! Next round generates playoffs.</div>
+  {% endif %}
+</div>
+```
+
+**Update templates/rounds.html:**
+Separate Swiss and Playoff sections:
+```html
+<!-- Swiss Rounds Section -->
+<div class="mb-12">
+  <h3 class="text-3xl font-bold mb-6">Swiss Format Rounds</h3>
+  <!-- Display rounds 1-N where phase="swiss" -->
+</div>
+
+<!-- Playoff Bracket Section -->
+{% if playoff_matches_exist %}
+<div class="mb-12">
+  <h3 class="text-3xl font-bold mb-6 text-yellow-600">🏆 Playoff Bracket</h3>
+  
+  <!-- Quarter-finals -->
+  <div class="mb-8">
+    <h4 class="text-2xl font-semibold mb-4">Quarter-finals</h4>
+    <!-- Display quarterfinal matches -->
+  </div>
+  
+  <!-- Semi-finals -->
+  <!-- 3rd Place -->
+  <!-- Final -->
+</div>
+{% endif %}
+```
+
+**Update templates/leaderboard.html:**
+After Swiss rounds complete, show playoff qualification:
+```html
+{% if team.rank <= playoff_teams_count %}
+  <span class="badge bg-green-100 text-green-800">✅ Qualified - Seed #{{ team.rank }}</span>
+{% else %}
+  <span class="badge bg-gray-100 text-gray-600">Eliminated</span>
+{% endif %}
+```
+
+### 6. Edge Cases to Handle
+
+1. **Fewer than 8 teams**: Auto-adjust to Top 4 playoffs (skip quarters, go straight to semis)
+2. **Incomplete Swiss rounds**: Prevent playoff generation until all Swiss matches are completed
+3. **Head-to-head tiebreaker**: If teams haven't played each other, skip to next tiebreaker
+4. **Bye rounds**: Count properly in Swiss completion check
+
+### 7. Testing Checklist
+
+After implementation, verify:
+- [ ] Migration script runs successfully on existing database
+- [ ] Swiss rounds 1-5 generate normally
+- [ ] Warning appears when generating round 5
+- [ ] Round 6 auto-generates quarter-finals with proper seeding (1v8, 2v7, 3v6, 4v5)
+- [ ] Head-to-head tiebreaker works for tied teams
+- [ ] Playoff bracket displays correctly in rounds.html
+- [ ] Leaderboard shows qualification badges
+- [ ] Settings page allows changing swiss_rounds_count
+- [ ] System works with <8 teams (Top 4 playoffs)
+
+## Implementation Order
+
+1. **Database first**: Add models and run migration
+2. **Core logic**: Implement all utils.py functions
+3. **Admin integration**: Modify generate_round route
+4. **Settings page**: Create league settings management
+5. **UI polish**: Update all templates
+6. **Testing**: Verify with test data
+
+## Important Notes
+
+- Maintain existing Swiss round functionality (don't break current system)
+- All playoff matches use best-of-3 sets (same as Swiss)
+- Use existing score submission and verification workflows for playoff matches
+- Keep the same tiebreaker display in leaderboard (points, sets diff, games diff)
+- Preserve all existing features (reschedules, substitutes, walkovers, etc.)
+
+Please implement this complete feature set, ensuring backward compatibility with existing data and functionality.
