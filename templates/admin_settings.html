@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="flex items-center justify-between mb-12">
+    <h2 class="text-4xl font-bold text-white text-center flex-1">⚙️ League Settings</h2>
+    <a href="{{ url_for('admin_panel') }}" 
+       class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-700 transition-all duration-200 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Admin
+    </a>
+  </div>
+
+  <!-- Settings Form -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">League Configuration</h3>
+    
+    <!-- Current Phase Info -->
+    <div class="mb-6 p-4 {% if settings.current_phase == 'swiss' %}bg-blue-50 border-l-4 border-blue-500{% elif settings.current_phase == 'playoff_preview' %}bg-yellow-50 border-l-4 border-yellow-500{% else %}bg-purple-50 border-l-4 border-purple-500{% endif %} rounded-lg">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">
+          {% if settings.current_phase == 'swiss' %}📅
+          {% elif settings.current_phase == 'playoff_preview' %}⏳
+          {% else %}🏆
+          {% endif %}
+        </div>
+        <div>
+          <div class="font-semibold {% if settings.current_phase == 'swiss' %}text-blue-900{% elif settings.current_phase == 'playoff_preview' %}text-yellow-900{% else %}text-purple-900{% endif %}">
+            Current Phase: 
+            {% if settings.current_phase == 'swiss' %}
+              Swiss Rounds
+            {% elif settings.current_phase == 'playoff_preview' %}
+              Playoff Preview (Awaiting Approval)
+            {% elif settings.current_phase == 'playoffs' %}
+              Playoffs Active
+            {% else %}
+              Complete
+            {% endif %}
+          </div>
+          <div class="text-sm {% if settings.current_phase == 'swiss' %}text-blue-700{% elif settings.current_phase == 'playoff_preview' %}text-yellow-700{% else %}text-purple-700{% endif %} mt-1">
+            {% if settings.current_phase == 'swiss' %}
+              Settings can be modified during Swiss phase
+            {% else %}
+              Settings are locked once playoffs begin
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_settings') }}">
+      <div class="space-y-6">
+        <!-- Swiss Rounds Count -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Number of Swiss Rounds
+            <span class="text-gray-500 font-normal ml-2">(before playoffs begin)</span>
+          </label>
+          <div class="flex items-center gap-4">
+            <input 
+              type="number" 
+              name="swiss_rounds_count" 
+              value="{{ settings.swiss_rounds_count }}" 
+              min="1" 
+              max="10"
+              {% if settings.current_phase != 'swiss' %}disabled{% endif %}
+              class="w-32 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none {% if settings.current_phase != 'swiss' %}bg-gray-100 cursor-not-allowed{% endif %}"
+            >
+            <span class="text-sm text-gray-600">
+              Teams play {{ settings.swiss_rounds_count }} rounds before Top {{ settings.playoff_teams_count }} qualify for playoffs
+            </span>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            💡 Recommended: 5-7 rounds for balanced competition
+          </p>
+        </div>
+
+        <!-- Playoff Teams Count -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Number of Playoff Teams
+            <span class="text-gray-500 font-normal ml-2">(Top X teams qualify)</span>
+          </label>
+          <div class="flex gap-4">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input 
+                type="radio" 
+                name="playoff_teams_count" 
+                value="4" 
+                {% if settings.playoff_teams_count == 4 %}checked{% endif %}
+                {% if settings.current_phase != 'swiss' %}disabled{% endif %}
+                class="w-5 h-5 text-purple-600 focus:ring-purple-500 {% if settings.current_phase != 'swiss' %}cursor-not-allowed{% endif %}"
+              >
+              <div>
+                <div class="font-semibold text-gray-900">Top 4 Teams</div>
+                <div class="text-xs text-gray-600">Semifinals → Finals (no quarterfinals)</div>
+              </div>
+            </label>
+            
+            <label class="flex items-center space-x-3 cursor-pointer ml-8">
+              <input 
+                type="radio" 
+                name="playoff_teams_count" 
+                value="8" 
+                {% if settings.playoff_teams_count == 8 %}checked{% endif %}
+                {% if settings.current_phase != 'swiss' %}disabled{% endif %}
+                class="w-5 h-5 text-purple-600 focus:ring-purple-500 {% if settings.current_phase != 'swiss' %}cursor-not-allowed{% endif %}"
+              >
+              <div>
+                <div class="font-semibold text-gray-900">Top 8 Teams</div>
+                <div class="text-xs text-gray-600">Quarterfinals → Semifinals → Finals</div>
+              </div>
+            </label>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            💡 Recommended: Top 8 for larger leagues (10+ teams), Top 4 for smaller leagues
+          </p>
+        </div>
+
+        <!-- Save Button -->
+        <div class="pt-4 border-t border-gray-200">
+          {% if settings.current_phase == 'swiss' %}
+          <button 
+            type="submit" 
+            class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Save Settings
+          </button>
+          {% else %}
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                  Settings cannot be changed once playoffs have started. To modify settings, you would need to reset the league.
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Settings Summary -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Current Configuration Summary</h3>
+    
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center text-white text-xl font-bold">
+            {{ settings.swiss_rounds_count }}
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Swiss Rounds</div>
+            <div class="text-xl font-bold text-gray-900">{{ settings.swiss_rounds_count }} Rounds</div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700">
+          Each team plays {{ settings.swiss_rounds_count }} matches in Swiss format using Swiss system pairing
+        </p>
+      </div>
+
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-700 flex items-center justify-center text-white text-xl font-bold">
+            {{ settings.playoff_teams_count }}
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Playoff Teams</div>
+            <div class="text-xl font-bold text-gray-900">Top {{ settings.playoff_teams_count }} Teams</div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700">
+          {% if settings.playoff_teams_count == 8 %}
+          Single elimination: Quarterfinals (4 matches) → Semifinals (2 matches) → Finals (2 matches: 3rd place + Championship)
+          {% else %}
+          Single elimination: Semifinals (2 matches) → Finals (2 matches: 3rd place + Championship)
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="mt-6 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-4 border border-gray-200">
+      <div class="text-sm text-gray-700 space-y-2">
+        <p><strong>🎯 How It Works:</strong></p>
+        <ol class="list-decimal list-inside space-y-1 ml-4">
+          <li>Teams compete in {{ settings.swiss_rounds_count }} Swiss format rounds</li>
+          <li>Top {{ settings.playoff_teams_count }} teams (by points, then tiebreakers) qualify for playoffs</li>
+          <li>Admin reviews and approves the playoff bracket</li>
+          <li>Single elimination playoff rounds begin</li>
+          <li>Winner crowned as league champion! 🏆</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

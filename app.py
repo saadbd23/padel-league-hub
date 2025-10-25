@@ -1944,6 +1944,54 @@ def admin_panel():
     )
 
 
+@app.route("/admin/settings", methods=["GET", "POST"])
+@require_admin_auth
+def admin_settings():
+    """Admin settings page for league configuration"""
+    # Get or create settings
+    settings = LeagueSettings.query.first()
+    if not settings:
+        settings = LeagueSettings(swiss_rounds_count=5, playoff_teams_count=8)
+        db.session.add(settings)
+        db.session.commit()
+    
+    if request.method == "POST":
+        try:
+            # Update settings
+            swiss_rounds = request.form.get("swiss_rounds_count", type=int)
+            playoff_teams = request.form.get("playoff_teams_count", type=int)
+            
+            # Validation
+            if swiss_rounds and swiss_rounds < 1:
+                flash("Swiss rounds must be at least 1", "error")
+                return redirect(url_for("admin_settings"))
+            
+            if playoff_teams and playoff_teams not in [4, 8]:
+                flash("Playoff teams must be 4 or 8", "error")
+                return redirect(url_for("admin_settings"))
+            
+            # Only allow changes if playoffs haven't started
+            if settings.current_phase != "swiss":
+                flash("Cannot change settings - playoffs have already started!", "error")
+                return redirect(url_for("admin_settings"))
+            
+            # Update settings
+            if swiss_rounds:
+                settings.swiss_rounds_count = swiss_rounds
+            if playoff_teams:
+                settings.playoff_teams_count = playoff_teams
+            
+            db.session.commit()
+            flash("✅ League settings updated successfully!", "success")
+            return redirect(url_for("admin_settings"))
+        
+        except Exception as e:
+            flash(f"Error updating settings: {str(e)}", "error")
+            return redirect(url_for("admin_settings"))
+    
+    return render_template("admin_settings.html", settings=settings)
+
+
 @app.route("/admin/generate-playoff-preview", methods=["POST"])
 @require_admin_auth
 def generate_playoff_preview_route():
