@@ -1872,10 +1872,30 @@ def admin_panel():
     pending_reschedules_count = len(reschedules)
     max_reschedules = get_max_reschedules_per_round()
     
+    # Check for free agent duplicates (already in teams)
+    free_agent_status = []
+    for fa in free_agents:
+        # Check if this free agent's phone or email exists in Team table
+        existing_team = Team.query.filter(
+            db.or_(
+                Team.player1_phone == fa.phone,
+                Team.player2_phone == fa.phone,
+                Team.player1_email == fa.email,
+                Team.player2_email == fa.email
+            )
+        ).first()
+        
+        free_agent_status.append({
+            'free_agent': fa,
+            'in_team': existing_team,
+            'status': 'duplicate' if existing_team else 'available'
+        })
+    
     return render_template(
         "admin.html",
         teams=teams,
         free_agents=free_agents,
+        free_agent_status=free_agent_status,
         matches=matches,
         reschedules=reschedules,
         substitutes=substitutes,
@@ -2724,6 +2744,68 @@ def override_match(match_id):
             match.sets_a = 0
             match.sets_b = 0
             match.games_a = 0
+
+
+@app.route("/admin/remove-freeagent/<int:freeagent_id>", methods=["POST"])
+@require_admin_auth
+def remove_freeagent(freeagent_id):
+    """Remove a single free agent from the list"""
+    free_agent = FreeAgent.query.get_or_404(freeagent_id)
+    
+    # Check if this free agent was admin-paired (has partner_id)
+    if free_agent.partner_id:
+        # Keep history by marking as paired
+        free_agent.paired = True
+        flash(f"Free agent {free_agent.name} marked as paired (history preserved).", "success")
+    else:
+        # No partner, safe to delete
+        name = free_agent.name
+        db.session.delete(free_agent)
+        flash(f"Free agent {name} removed from the list.", "success")
+    
+    db.session.commit()
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/cleanup-duplicate-freeagents", methods=["POST"])
+@require_admin_auth
+def cleanup_duplicate_freeagents():
+    """Bulk remove all free agents who are already in teams"""
+    free_agents = FreeAgent.query.filter_by(paired=False).all()
+    removed_count = 0
+    preserved_count = 0
+    
+    for fa in free_agents:
+        # Check if this free agent exists in a team
+        existing_team = Team.query.filter(
+            db.or_(
+                Team.player1_phone == fa.phone,
+                Team.player2_phone == fa.phone,
+                Team.player1_email == fa.email,
+                Team.player2_email == fa.email
+            )
+        ).first()
+        
+        if existing_team:
+            # Check if admin-paired (has partner_id)
+            if fa.partner_id:
+                # Keep history
+                fa.paired = True
+                preserved_count += 1
+            else:
+                # Remove from list
+                db.session.delete(fa)
+                removed_count += 1
+    
+    db.session.commit()
+    
+    if removed_count > 0 or preserved_count > 0:
+        flash(f"Cleanup complete: {removed_count} free agent(s) removed, {preserved_count} marked as paired (history preserved).", "success")
+    else:
+        flash("No duplicate free agents found.", "info")
+    
+    return redirect(url_for("admin_panel"))
+
             match.games_b = 0
             match.status = "scheduled"
             match.winner_id = None
