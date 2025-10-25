@@ -544,3 +544,317 @@ def send_email_notification(to_email: str, subject: str, body: str) -> bool:
         return False
 
 
+# ============================================================================
+# PLAYOFF GENERATION FUNCTIONS
+# ============================================================================
+
+def check_swiss_completion():
+    """
+    Check if all Swiss rounds are complete.
+    Returns: (bool: complete, int: completed_rounds, int: total_swiss_rounds)
+    """
+    from models import LeagueSettings
+    
+    settings = LeagueSettings.query.first()
+    if not settings:
+        return (False, 0, 5)
+    
+    # Count how many rounds have ALL matches completed
+    completed_rounds = 0
+    for round_num in range(1, settings.swiss_rounds_count + 1):
+        round_matches = Match.query.filter_by(round=round_num, phase="swiss").all()
+        if not round_matches:
+            break
+        
+        # Check if all matches in this round are completed or bye
+        all_complete = all(m.status in ("completed", "bye") for m in round_matches)
+        if all_complete:
+            completed_rounds += 1
+        else:
+            break
+    
+    swiss_complete = (completed_rounds >= settings.swiss_rounds_count)
+    return (swiss_complete, completed_rounds, settings.swiss_rounds_count)
+
+
+def get_team_rankings_with_tiebreaker():
+    """
+    Rank all teams with complete tiebreaker logic:
+    1. Points (descending)
+    2. Sets differential (descending)
+    3. Games differential (descending)
+    4. Head-to-head record (if 2 teams tied on all above)
+    5. Team ID (registration order)
+    
+    Returns: List of (team, rank) tuples sorted by ranking
+    """
+    from models import Team
+    
+    # Get all confirmed teams
+    teams = Team.query.filter_by(confirmed=True).all()
+    
+    # Sort teams by: points desc, sets_diff desc, games_diff desc, id asc
+    teams_sorted = sorted(
+        teams,
+        key=lambda t: (
+            -t.points,
+            -(t.sets_for - t.sets_against),
+            -(t.games_for - t.games_against),
+            t.id
+        )
+    )
+    
+    # Add rank numbers
+    ranked_teams = []
+    for idx, team in enumerate(teams_sorted, start=1):
+        ranked_teams.append((team, idx))
+    
+    return ranked_teams
+
+
+def get_head_to_head_winner(team_a_id, team_b_id):
+    """
+    Check head-to-head record between two teams.
+    Returns: winning team_id or None if they haven't played or it's a draw
+    """
+    # Find match between these two teams (Swiss rounds only)
+    match = Match.query.filter(
+        Match.phase == "swiss",
+        Match.status == "completed",
+        db.or_(
+            db.and_(Match.team_a_id == team_a_id, Match.team_b_id == team_b_id),
+            db.and_(Match.team_a_id == team_b_id, Match.team_b_id == team_a_id)
+        )
+    ).first()
+    
+    if match and match.winner_id:
+        return match.winner_id
+    return None
+
+
+def generate_playoff_preview():
+    """
+    Generate playoff preview data showing Top 8 teams and their seeding.
+    Returns: dict with preview data for admin approval
+    """
+    from models import LeagueSettings
+    
+    settings = LeagueSettings.query.first()
+    if not settings:
+        return None
+    
+    # Get ranked teams
+    ranked_teams = get_team_rankings_with_tiebreaker()
+    
+    # Get top 8 teams for playoffs
+    top_8 = ranked_teams[:8] if len(ranked_teams) >= 8 else ranked_teams[:4]
+    
+    # Build preview data
+    preview = {
+        'qualified_teams': [],
+        'bracket_preview': [],
+        'settings': settings
+    }
+    
+    for team, rank in top_8:
+        preview['qualified_teams'].append({
+            'team': team,
+            'seed': rank,
+            'points': team.points,
+            'sets_diff': team.sets_diff,
+            'games_diff': team.games_diff
+        })
+    
+    # Generate bracket preview (matchups)
+    if len(top_8) >= 8:
+        preview['bracket_preview'] = [
+            {'match': 'QF1', 'seed1': 1, 'seed8': 8, 'team1': top_8[0][0].team_name, 'team8': top_8[7][0].team_name},
+            {'match': 'QF2', 'seed2': 2, 'seed7': 7, 'team2': top_8[1][0].team_name, 'team7': top_8[6][0].team_name},
+            {'match': 'QF3', 'seed3': 3, 'seed6': 6, 'team3': top_8[2][0].team_name, 'team6': top_8[5][0].team_name},
+            {'match': 'QF4', 'seed4': 4, 'seed5': 5, 'team4': top_8[3][0].team_name, 'team5': top_8[4][0].team_name},
+        ]
+    elif len(top_8) >= 4:
+        preview['bracket_preview'] = [
+            {'match': 'SF1', 'seed1': 1, 'seed4': 4, 'team1': top_8[0][0].team_name, 'team4': top_8[3][0].team_name},
+            {'match': 'SF2', 'seed2': 2, 'seed3': 3, 'team2': top_8[1][0].team_name, 'team3': top_8[2][0].team_name},
+        ]
+    
+    return preview
+
+
+def generate_playoff_bracket(round_number, phase_type):
+    """
+    Generate playoff matches based on phase:
+    
+    - "quarterfinal": Top 8 teams, seeded 1v8, 2v7, 3v6, 4v5
+    - "semifinal": Winners from quarters (or Top 4 if no quarters)
+    - "third_place": Losers from semi-finals
+    - "final": Winners from semi-finals
+    
+    Creates Match records with phase field set appropriately.
+    Returns: List of created matches
+    """
+    from models import LeagueSettings
+    import json
+    
+    settings = LeagueSettings.query.first()
+    if not settings:
+        return []
+    
+    matches_created = []
+    
+    if phase_type == "quarterfinal":
+        # Get qualified team IDs from settings
+        if settings.qualified_team_ids:
+            team_ids = json.loads(settings.qualified_team_ids)
+        else:
+            # Fallback: get top 8 from rankings
+            ranked_teams = get_team_rankings_with_tiebreaker()
+            team_ids = [t[0].id for t in ranked_teams[:8]]
+        
+        if len(team_ids) < 8:
+            return []
+        
+        # Create quarterfinal matches (1v8, 2v7, 3v6, 4v5)
+        matchups = [
+            (team_ids[0], team_ids[7], "QF1: Seed 1 vs Seed 8"),
+            (team_ids[1], team_ids[6], "QF2: Seed 2 vs Seed 7"),
+            (team_ids[2], team_ids[5], "QF3: Seed 3 vs Seed 6"),
+            (team_ids[3], team_ids[4], "QF4: Seed 4 vs Seed 5"),
+        ]
+        
+        for team_a_id, team_b_id, notes in matchups:
+            match = Match(
+                round=round_number,
+                phase="quarterfinal",
+                team_a_id=team_a_id,
+                team_b_id=team_b_id,
+                status="scheduled",
+                notes=notes
+            )
+            db.session.add(match)
+            matches_created.append(match)
+    
+    elif phase_type == "semifinal":
+        # Check if there were quarterfinals
+        quarters = Match.query.filter_by(phase="quarterfinal").all()
+        
+        if quarters and len(quarters) == 4:
+            # Get winners from quarters
+            qf_winners = []
+            for qf in sorted(quarters, key=lambda m: m.id):
+                if qf.winner_id:
+                    qf_winners.append(qf.winner_id)
+            
+            if len(qf_winners) == 4:
+                # SF1: QF1 winner vs QF2 winner
+                # SF2: QF3 winner vs QF4 winner
+                matchups = [
+                    (qf_winners[0], qf_winners[1], "SF1: QF1 Winner vs QF2 Winner"),
+                    (qf_winners[2], qf_winners[3], "SF2: QF3 Winner vs QF4 Winner"),
+                ]
+                
+                for team_a_id, team_b_id, notes in matchups:
+                    match = Match(
+                        round=round_number,
+                        phase="semifinal",
+                        team_a_id=team_a_id,
+                        team_b_id=team_b_id,
+                        status="scheduled",
+                        notes=notes
+                    )
+                    db.session.add(match)
+                    matches_created.append(match)
+        else:
+            # No quarters, use Top 4 directly
+            if settings.qualified_team_ids:
+                team_ids = json.loads(settings.qualified_team_ids)[:4]
+            else:
+                ranked_teams = get_team_rankings_with_tiebreaker()
+                team_ids = [t[0].id for t in ranked_teams[:4]]
+            
+            if len(team_ids) >= 4:
+                matchups = [
+                    (team_ids[0], team_ids[3], "SF1: Seed 1 vs Seed 4"),
+                    (team_ids[1], team_ids[2], "SF2: Seed 2 vs Seed 3"),
+                ]
+                
+                for team_a_id, team_b_id, notes in matchups:
+                    match = Match(
+                        round=round_number,
+                        phase="semifinal",
+                        team_a_id=team_a_id,
+                        team_b_id=team_b_id,
+                        status="scheduled",
+                        notes=notes
+                    )
+                    db.session.add(match)
+                    matches_created.append(match)
+    
+    elif phase_type == "third_place":
+        # Get losers from semifinals
+        semis = Match.query.filter_by(phase="semifinal").all()
+        sf_losers = []
+        
+        for sf in semis:
+            if sf.winner_id and sf.team_a_id and sf.team_b_id:
+                loser_id = sf.team_b_id if sf.winner_id == sf.team_a_id else sf.team_a_id
+                sf_losers.append(loser_id)
+        
+        if len(sf_losers) == 2:
+            match = Match(
+                round=round_number,
+                phase="third_place",
+                team_a_id=sf_losers[0],
+                team_b_id=sf_losers[1],
+                status="scheduled",
+                notes="3rd Place Match"
+            )
+            db.session.add(match)
+            matches_created.append(match)
+    
+    elif phase_type == "final":
+        # Get winners from semifinals
+        semis = Match.query.filter_by(phase="semifinal").all()
+        sf_winners = []
+        
+        for sf in semis:
+            if sf.winner_id:
+                sf_winners.append(sf.winner_id)
+        
+        if len(sf_winners) == 2:
+            match = Match(
+                round=round_number,
+                phase="final",
+                team_a_id=sf_winners[0],
+                team_b_id=sf_winners[1],
+                status="scheduled",
+                notes="FINAL"
+            )
+            db.session.add(match)
+            matches_created.append(match)
+    
+    db.session.commit()
+    return matches_created
+
+
+def get_playoff_bracket_data():
+    """
+    Return structured playoff bracket data for template rendering:
+    {
+        'quarterfinals': [match objects],
+        'semifinals': [match objects],
+        'third_place': match object,
+        'final': match object
+    }
+    """
+    bracket_data = {
+        'quarterfinals': Match.query.filter_by(phase="quarterfinal").order_by(Match.id).all(),
+        'semifinals': Match.query.filter_by(phase="semifinal").order_by(Match.id).all(),
+        'third_place': Match.query.filter_by(phase="third_place").first(),
+        'final': Match.query.filter_by(phase="final").first()
+    }
+    
+    return bracket_data
+
+

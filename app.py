@@ -2744,6 +2744,22 @@ def override_match(match_id):
             match.sets_a = 0
             match.sets_b = 0
             match.games_a = 0
+            match.games_b = 0
+            match.status = "scheduled"
+            match.stats_calculated = False
+            match.winner_id = None
+        
+        if note:
+            match.notes = note
+        
+        db.session.commit()
+        flash(f"Match {match_id} override applied: {action}", "success")
+        return redirect(url_for("admin_panel"))
+    
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error applying override: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
 
 
 @app.route("/admin/remove-freeagent/<int:freeagent_id>", methods=["POST"])
@@ -2806,64 +2822,6 @@ def cleanup_duplicate_freeagents():
     
     return redirect(url_for("admin_panel"))
 
-            match.games_b = 0
-            match.status = "scheduled"
-            match.winner_id = None
-            match.stats_calculated = False
-
-        if note:
-            from datetime import datetime
-            stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-            match.notes = (match.notes + " \n" if match.notes else "") + f"[Override {stamp}] {note}"
-        db.session.commit()
-        
-        # Send email notifications about admin override
-        from utils import send_email_notification
-        team_a = Team.query.get(match.team_a_id)
-        team_b = Team.query.get(match.team_b_id)
-        
-        if team_a and team_b:
-            action_text = ""
-            if action == "completed":
-                action_text = f"manually set as COMPLETED with score {score_a_str} - {score_b_str}"
-            elif action == "walkover_a":
-                action_text = f"marked as WALKOVER - {team_a.team_name} wins"
-            elif action == "walkover_b":
-                action_text = f"marked as WALKOVER - {team_b.team_name} wins"
-            elif action == "void":
-                action_text = "VOIDED and reset to scheduled status"
-            
-            override_body = f"""Hi!
-
-⚠️ ADMIN OVERRIDE NOTIFICATION
-
-Your match has been {action_text} by the admin.
-
-Match Details:
-- Round: {match.round}
-- Teams: {team_a.team_name} vs {team_b.team_name}
-- Admin Note: {note if note else 'No note provided'}
-
-This action was performed by league administration. If you have questions, please contact admin.
-
-- BD Padel League
-"""
-            # Notify both teams
-            if team_a.player1_email:
-                send_email_notification(team_a.player1_email, f"Admin Override - Round {match.round}", override_body)
-            if team_a.player2_email:
-                send_email_notification(team_a.player2_email, f"Admin Override - Round {match.round}", override_body)
-            if team_b.player1_email:
-                send_email_notification(team_b.player1_email, f"Admin Override - Round {match.round}", override_body)
-            if team_b.player2_email:
-                send_email_notification(team_b.player2_email, f"Admin Override - Round {match.round}", override_body)
-        
-        flash("Match overridden successfully.", "success")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Override failed: {e}", "error")
-
-    return redirect(url_for("admin_panel"))
 
 @app.route("/rounds")
 def rounds():
