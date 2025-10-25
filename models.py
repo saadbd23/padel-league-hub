@@ -99,6 +99,7 @@ class FreeAgent(db.Model):
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round = db.Column(db.Integer)
+    phase = db.Column(db.String(20), default="swiss")  # swiss, quarterfinal, semifinal, third_place, final
     team_a_id = db.Column(db.Integer)
     team_b_id = db.Column(db.Integer, nullable=True)  # Nullable for bye rounds
     
@@ -160,5 +161,15 @@ class Substitute(db.Model):
     replaces_player_number = db.Column(db.Integer, nullable=True)  # 1 or 2 (which team player they're replacing)
     status = db.Column(db.String(20), default="pending")  # pending/approved/denied
     created_at = db.Column(db.String(50))
+
+
+class LeagueSettings(db.Model):
+    """Store league configuration and playoff state"""
+    id = db.Column(db.Integer, primary_key=True)
+    swiss_rounds_count = db.Column(db.Integer, default=5)
+    playoff_teams_count = db.Column(db.Integer, default=8)
+    current_phase = db.Column(db.String(20), default="swiss")  # swiss, playoff_preview, playoffs, complete
+    playoffs_approved = db.Column(db.Boolean, default=False)
+    qualified_team_ids = db.Column(db.Text, nullable=True)  # JSON string of team IDs [1,2,3,4,5,6,7,8]
 
 

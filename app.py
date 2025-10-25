@@ -4,7 +4,7 @@ import secrets
 import re
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
-from models import db, Team, FreeAgent, Match, Reschedule, Substitute, Player
+from models import db, Team, FreeAgent, Match, Reschedule, Substitute, Player, LeagueSettings
 from utils import (
     generate_round_pairings,
     calculate_match_result,
