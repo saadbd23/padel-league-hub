@@ -2125,23 +2125,124 @@ def generate_round():
         final = Match.query.filter_by(phase="final").first()
         
         try:
+            phase_name = ""
             if not quarterfinals and settings.playoff_teams_count >= 8:
                 # Generate quarterfinals
                 matches = generate_playoff_bracket(round_number, "quarterfinal")
+                phase_name = "Quarterfinals"
                 flash(f"✅ Quarterfinals generated! {len(matches)} matches created.", "success")
             elif not semifinals and (quarterfinals or settings.playoff_teams_count < 8):
                 # Generate semifinals
                 matches = generate_playoff_bracket(round_number, "semifinal")
+                phase_name = "Semifinals"
                 flash(f"✅ Semifinals generated! {len(matches)} matches created.", "success")
             elif semifinals and not third_place and not final:
                 # Generate both third place and final (same round)
                 third_place_matches = generate_playoff_bracket(round_number, "third_place")
                 final_matches = generate_playoff_bracket(round_number, "final")
                 matches = third_place_matches + final_matches
+                phase_name = "Finals"
                 flash(f"✅ Finals generated! 3rd Place Match and Championship Final created.", "success")
             else:
                 flash("All playoff rounds have already been generated!", "warning")
                 return redirect(url_for("admin_panel"))
+            
+            # Send playoff email notifications
+            from utils import send_email_notification
+            base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+            
+            for match in matches:
+                team_a = Team.query.get(match.team_a_id)
+                team_b = Team.query.get(match.team_b_id)
+                
+                if not team_a or not team_b:
+                    continue
+                
+                # Determine playoff stage description
+                stage_emoji = "🏆"
+                stage_desc = ""
+                if match.phase == "quarterfinal":
+                    stage_emoji = "⚡"
+                    stage_desc = "QUARTERFINAL - Single Elimination"
+                elif match.phase == "semifinal":
+                    stage_emoji = "🔥"
+                    stage_desc = "SEMIFINAL - One Step From Glory"
+                elif match.phase == "third_place":
+                    stage_emoji = "🥉"
+                    stage_desc = "3RD PLACE MATCH - Battle for Bronze"
+                elif match.phase == "final":
+                    stage_emoji = "👑"
+                    stage_desc = "CHAMPIONSHIP FINAL - Winner Takes All"
+                
+                # Team A notification
+                team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
+                team_a_body = f"""Hi {team_a.team_name},
+
+{stage_emoji} PLAYOFF MATCH GENERATED {stage_emoji}
+
+🎯 {stage_desc}
+
+Your Match:
+- Opponent: {team_b.team_name}
+- Format: Best of 3 Sets (Win 2 Sets to Advance)
+- Round: {round_number}
+
+{"🏆 THIS IS IT! The Championship Final! Winner becomes the league champion!" if match.phase == "final" else "⚠️ This is single elimination - you must win to advance to the next round!" if match.phase in ["quarterfinal", "semifinal"] else ""}
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before the deadline
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_a_link}
+
+Opponent Contact:
+- {team_b.player1_name}: {team_b.player1_email or team_b.player1_phone}
+- {team_b.player2_name}: {team_b.player2_email or team_b.player2_phone}
+
+Good luck! May the best team win! 🏆
+
+- BD Padel League
+"""
+                if team_a.player1_email:
+                    send_email_notification(team_a.player1_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_a_body)
+                if team_a.player2_email:
+                    send_email_notification(team_a.player2_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_a_body)
+                
+                # Team B notification
+                team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
+                team_b_body = f"""Hi {team_b.team_name},
+
+{stage_emoji} PLAYOFF MATCH GENERATED {stage_emoji}
+
+🎯 {stage_desc}
+
+Your Match:
+- Opponent: {team_a.team_name}
+- Format: Best of 3 Sets (Win 2 Sets to Advance)
+- Round: {round_number}
+
+{"🏆 THIS IS IT! The Championship Final! Winner becomes the league champion!" if match.phase == "final" else "⚠️ This is single elimination - you must win to advance to the next round!" if match.phase in ["quarterfinal", "semifinal"] else ""}
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before the deadline
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_b_link}
+
+Opponent Contact:
+- {team_a.player1_name}: {team_a.player1_email or team_a.player1_phone}
+- {team_a.player2_name}: {team_a.player2_email or team_a.player2_phone}
+
+Good luck! May the best team win! 🏆
+
+- BD Padel League
+"""
+                if team_b.player1_email:
+                    send_email_notification(team_b.player1_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_b_body)
+                if team_b.player2_email:
+                    send_email_notification(team_b.player2_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_b_body)
             
             return redirect(url_for("admin_panel"))
         
