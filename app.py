@@ -795,7 +795,23 @@ def leaderboard():
         Team.wins.desc(),
         Team.team_name
     ).all()
-    return render_template("leaderboard.html", teams=teams)
+    
+    # Check playoff qualification status
+    settings = LeagueSettings.query.first()
+    qualified_team_ids = []
+    team_seeds = {}
+    
+    if settings and settings.qualified_team_ids:
+        import json
+        try:
+            qualified_team_ids = json.loads(settings.qualified_team_ids)
+            # Create a seed mapping (team_id -> seed number)
+            for seed, team_id in enumerate(qualified_team_ids, start=1):
+                team_seeds[team_id] = seed
+        except:
+            pass
+    
+    return render_template("leaderboard.html", teams=teams, team_seeds=team_seeds, playoff_phase=settings.current_phase if settings else "swiss")
 
 @app.route("/players")
 def player_leaderboard():
