@@ -3027,7 +3027,51 @@ def rounds():
             'team_a': team_a,
             'team_b': team_b
         })
-    return render_template("rounds.html", rounds_dict=rounds_dict)
+    
+    # Get playoff bracket data
+    playoff_matches = {}
+    quarterfinals = Match.query.filter_by(phase="quarterfinal").order_by(Match.id).all()
+    semifinals = Match.query.filter_by(phase="semifinal").order_by(Match.id).all()
+    third_place = Match.query.filter_by(phase="third_place").all()
+    final = Match.query.filter_by(phase="final").all()
+    
+    if quarterfinals:
+        playoff_matches['quarterfinals'] = []
+        for match in quarterfinals:
+            playoff_matches['quarterfinals'].append({
+                'match': match,
+                'team_a': Team.query.get(match.team_a_id),
+                'team_b': Team.query.get(match.team_b_id)
+            })
+    
+    if semifinals:
+        playoff_matches['semifinals'] = []
+        for match in semifinals:
+            playoff_matches['semifinals'].append({
+                'match': match,
+                'team_a': Team.query.get(match.team_a_id),
+                'team_b': Team.query.get(match.team_b_id)
+            })
+    
+    if third_place:
+        playoff_matches['third_place'] = []
+        for match in third_place:
+            playoff_matches['third_place'].append({
+                'match': match,
+                'team_a': Team.query.get(match.team_a_id),
+                'team_b': Team.query.get(match.team_b_id)
+            })
+    
+    if final:
+        playoff_matches['final'] = []
+        for match in final:
+            playoff_matches['final'].append({
+                'match': match,
+                'team_a': Team.query.get(match.team_a_id),
+                'team_b': Team.query.get(match.team_b_id)
+            })
+    
+    return render_template("rounds.html", rounds_dict=rounds_dict, playoff_matches=playoff_matches if playoff_matches else None)
 
 @app.route("/rules")
 def rules():

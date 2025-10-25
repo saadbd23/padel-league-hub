@@ -3,6 +3,190 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <h2 class="text-4xl font-bold text-white mb-12 text-center">Round Schedule</h2>
 
+  <!-- Playoff Bracket Visualization -->
+  {% if playoff_matches %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-12">
+    <div class="text-center mb-8">
+      <h3 class="text-3xl font-bold text-gray-900 mb-2">🏆 Playoff Bracket</h3>
+      <p class="text-gray-600">Single Elimination Tournament - Best of 3 Sets</p>
+    </div>
+
+    <!-- Bracket Structure -->
+    <div class="overflow-x-auto">
+      <div class="min-w-max flex justify-center gap-8 p-4">
+        
+        <!-- Quarterfinals Column (if 8 teams) -->
+        {% if playoff_matches.quarterfinals %}
+        <div class="flex flex-col justify-around min-w-[280px]">
+          <div class="text-center mb-4">
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-purple-600 text-white">
+              Quarterfinals
+            </span>
+          </div>
+          <div class="space-y-8">
+            {% for match_data in playoff_matches.quarterfinals %}
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-300 p-4 shadow-md hover:shadow-lg transition-all duration-200">
+              <div class="text-xs text-gray-500 text-center mb-2">Match {{ loop.index }}</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_a.id %}ring-2 ring-yellow-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_a.team_name if match_data.team_a else 'TBD' }}</span>
+                  {% if match_data.match.score_a %}
+                  <span class="font-bold text-purple-600">{{ match_data.match.score_a }}</span>
+                  {% endif %}
+                </div>
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_b.id %}ring-2 ring-yellow-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_b.team_name if match_data.team_b else 'TBD' }}</span>
+                  {% if match_data.match.score_b %}
+                  <span class="font-bold text-purple-600">{{ match_data.match.score_b }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="text-center mt-2">
+                {% if match_data.match.status == 'completed' %}
+                <span class="text-xs text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-xs text-gray-500">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Semifinals Column -->
+        {% if playoff_matches.semifinals %}
+        <div class="flex flex-col justify-around min-w-[280px]">
+          <div class="text-center mb-4">
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-indigo-600 text-white">
+              Semifinals
+            </span>
+          </div>
+          <div class="space-y-16">
+            {% for match_data in playoff_matches.semifinals %}
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border-2 border-indigo-300 p-4 shadow-md hover:shadow-lg transition-all duration-200">
+              <div class="text-xs text-gray-500 text-center mb-2">Semi {{ loop.index }}</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_a.id %}ring-2 ring-yellow-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_a.team_name if match_data.team_a else 'TBD' }}</span>
+                  {% if match_data.match.score_a %}
+                  <span class="font-bold text-indigo-600">{{ match_data.match.score_a }}</span>
+                  {% endif %}
+                </div>
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_b.id %}ring-2 ring-yellow-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_b.team_name if match_data.team_b else 'TBD' }}</span>
+                  {% if match_data.match.score_b %}
+                  <span class="font-bold text-indigo-600">{{ match_data.match.score_b }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="text-center mt-2">
+                {% if match_data.match.status == 'completed' %}
+                <span class="text-xs text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-xs text-gray-500">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Finals Column -->
+        <div class="flex flex-col justify-around min-w-[280px]">
+          <div class="text-center mb-4">
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-yellow-500 to-amber-600 text-white">
+              Finals
+            </span>
+          </div>
+          <div class="space-y-8">
+            <!-- 3rd Place Match -->
+            {% if playoff_matches.third_place %}
+            {% set match_data = playoff_matches.third_place[0] %}
+            <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border-2 border-orange-300 p-4 shadow-md hover:shadow-lg transition-all duration-200">
+              <div class="text-xs text-gray-500 text-center mb-2">3rd Place</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_a.id %}ring-2 ring-orange-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_a.team_name if match_data.team_a else 'TBD' }}</span>
+                  {% if match_data.match.score_a %}
+                  <span class="font-bold text-orange-600">{{ match_data.match.score_a }}</span>
+                  {% endif %}
+                </div>
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_b.id %}ring-2 ring-orange-400{% endif %}">
+                  <span class="font-semibold text-sm">{{ match_data.team_b.team_name if match_data.team_b else 'TBD' }}</span>
+                  {% if match_data.match.score_b %}
+                  <span class="font-bold text-orange-600">{{ match_data.match.score_b }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="text-center mt-2">
+                {% if match_data.match.status == 'completed' %}
+                <span class="text-xs text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-xs text-gray-500">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Championship Final -->
+            {% if playoff_matches.final %}
+            {% set match_data = playoff_matches.final[0] %}
+            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border-4 border-yellow-400 p-4 shadow-xl hover:shadow-2xl transition-all duration-200">
+              <div class="text-xs text-yellow-700 text-center mb-2 font-bold">🏆 CHAMPIONSHIP 🏆</div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_a.id %}ring-4 ring-yellow-500{% endif %}">
+                  <span class="font-bold text-sm">{{ match_data.team_a.team_name if match_data.team_a else 'TBD' }}</span>
+                  {% if match_data.match.score_a %}
+                  <span class="font-bold text-yellow-600 text-lg">{{ match_data.match.score_a }}</span>
+                  {% endif %}
+                </div>
+                <div class="flex items-center justify-between p-2 bg-white rounded {% if match_data.match.winner_id == match_data.team_b.id %}ring-4 ring-yellow-500{% endif %}">
+                  <span class="font-bold text-sm">{{ match_data.team_b.team_name if match_data.team_b else 'TBD' }}</span>
+                  {% if match_data.match.score_b %}
+                  <span class="font-bold text-yellow-600 text-lg">{{ match_data.match.score_b }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="text-center mt-2">
+                {% if match_data.match.status == 'completed' and match_data.match.winner_id %}
+                  {% set winner = match_data.team_a if match_data.match.winner_id == match_data.team_a.id else match_data.team_b %}
+                  <span class="text-sm text-yellow-700 font-bold">👑 Champion: {{ winner.team_name }}</span>
+                {% elif match_data.match.status == 'completed' %}
+                  <span class="text-xs text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                  <span class="text-xs text-gray-500">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bracket Legend -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+      <div class="flex flex-wrap justify-center gap-4 text-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-4 rounded ring-2 ring-yellow-400"></div>
+          <span class="text-gray-600">Winner</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-4 rounded bg-green-100"></div>
+          <span class="text-gray-600">Completed</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-4 rounded bg-gray-100"></div>
+          <span class="text-gray-600">Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Round-by-Round View -->
   {% if rounds_dict %}
     {% for round_num in rounds_dict|sort %}
     <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
