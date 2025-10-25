@@ -12,6 +12,11 @@ from utils import (
     normalize_score_string,
     normalize_phone_number,
     normalize_team_name,
+    check_swiss_completion,
+    generate_playoff_preview,
+    get_team_rankings_with_tiebreaker,
+    generate_playoff_bracket,
+    get_playoff_bracket_data,
 )
 
 app = Flask(__name__)
@@ -1891,6 +1896,18 @@ def admin_panel():
             'status': 'duplicate' if existing_team else 'available'
         })
     
+    # Check Swiss completion and playoff status
+    swiss_complete, completed_rounds, total_swiss = check_swiss_completion()
+    settings = LeagueSettings.query.first()
+    
+    # Determine if we should show playoff preview button
+    show_playoff_preview = (
+        swiss_complete and 
+        settings and 
+        settings.current_phase == "swiss" and 
+        not settings.playoffs_approved
+    )
+    
     return render_template(
         "admin.html",
         teams=teams,
@@ -1903,7 +1920,53 @@ def admin_panel():
         substitutes_history=substitutes_history,
         pending_reschedules_count=pending_reschedules_count,
         max_reschedules=max_reschedules,
+        swiss_complete=swiss_complete,
+        completed_rounds=completed_rounds,
+        total_swiss=total_swiss,
+        show_playoff_preview=show_playoff_preview,
+        settings=settings,
     )
+
+
+@app.route("/admin/generate-playoff-preview", methods=["POST"])
+@require_admin_auth
+def generate_playoff_preview_route():
+    """Generate playoff preview and transition to playoff_preview phase"""
+    import json
+    
+    # Check if Swiss is complete
+    swiss_complete, _, _ = check_swiss_completion()
+    if not swiss_complete:
+        flash("Cannot generate playoffs - Swiss rounds are not complete yet!", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Get or create settings
+    settings = LeagueSettings.query.first()
+    if not settings:
+        settings = LeagueSettings(swiss_rounds_count=5, playoff_teams_count=8)
+        db.session.add(settings)
+        db.session.commit()
+    
+    # Check if playoffs already approved
+    if settings.playoffs_approved:
+        flash("Playoffs have already been approved!", "warning")
+        return redirect(url_for("admin_panel"))
+    
+    # Generate preview
+    preview_data = generate_playoff_preview()
+    if not preview_data:
+        flash("Error generating playoff preview", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Save qualified team IDs to settings
+    qualified_ids = [team_data['team'].id for team_data in preview_data['qualified_teams']]
+    settings.qualified_team_ids = json.dumps(qualified_ids)
+    settings.current_phase = "playoff_preview"
+    db.session.commit()
+    
+    flash(f"✅ Playoff preview generated! Top {len(qualified_ids)} teams have qualified. Please review and approve.", "success")
+    return redirect(url_for("playoff_approval_page"))
+
 
 @app.route("/admin/pair-agents", methods=["POST"])
 @require_admin_auth
