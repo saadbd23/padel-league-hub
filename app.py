@@ -2098,6 +2098,42 @@ def generate_round():
         flash("Please provide a round number", "error")
         return redirect(url_for("admin_panel"))
     
+    # Check if playoffs are approved
+    settings = LeagueSettings.query.first()
+    if settings and settings.playoffs_approved and settings.current_phase == "playoffs":
+        # PLAYOFF GENERATION MODE
+        # Determine which playoff phase to generate
+        quarterfinals = Match.query.filter_by(phase="quarterfinal").all()
+        semifinals = Match.query.filter_by(phase="semifinal").all()
+        third_place = Match.query.filter_by(phase="third_place").first()
+        final = Match.query.filter_by(phase="final").first()
+        
+        try:
+            if not quarterfinals and settings.playoff_teams_count >= 8:
+                # Generate quarterfinals
+                matches = generate_playoff_bracket(round_number, "quarterfinal")
+                flash(f"✅ Quarterfinals generated! {len(matches)} matches created.", "success")
+            elif not semifinals and (quarterfinals or settings.playoff_teams_count < 8):
+                # Generate semifinals
+                matches = generate_playoff_bracket(round_number, "semifinal")
+                flash(f"✅ Semifinals generated! {len(matches)} matches created.", "success")
+            elif semifinals and not third_place and not final:
+                # Generate both third place and final (same round)
+                third_place_matches = generate_playoff_bracket(round_number, "third_place")
+                final_matches = generate_playoff_bracket(round_number, "final")
+                matches = third_place_matches + final_matches
+                flash(f"✅ Finals generated! 3rd Place Match and Championship Final created.", "success")
+            else:
+                flash("All playoff rounds have already been generated!", "warning")
+                return redirect(url_for("admin_panel"))
+            
+            return redirect(url_for("admin_panel"))
+        
+        except Exception as e:
+            flash(f"Error generating playoff round: {str(e)}", "error")
+            return redirect(url_for("admin_panel"))
+    
+    # SWISS ROUND GENERATION MODE
     # Check for deadline violations and apply walkovers
     walkovers = check_deadline_violations()
     
