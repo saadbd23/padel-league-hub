@@ -208,6 +208,8 @@ EMAIL_SENDER=your_email@example.com
 EMAIL_PASSWORD=your_email_password
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
+VERIFY_TOKEN=your_verify_token_here
+ADMIN_EMAIL=admin@yourleague.com  # Email to receive registration notifications
 ```
 
 ### Database
@@ -434,4 +436,3 @@ BD Padel League is designed to bring competitive padel to Bangladesh with:
 *Developed with ❤️ for the padel community*  
 *Version 2.0 - Production Ready*  
 *Last Updated: October 2025*
-

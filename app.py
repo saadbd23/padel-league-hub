@@ -441,8 +441,8 @@ def health():
 @app.route("/")
 def index():
     teams = Team.query.count()
-    matches = Match.query.count()
-    return render_template("index.html", teams=teams, matches=matches)
+    free_agents = FreeAgent.query.filter_by(paired=False).count()
+    return render_template("index.html", teams=teams, free_agents=free_agents)
 
 @app.route("/register-team", methods=["GET", "POST"])
 def register_team():
@@ -587,6 +587,31 @@ def register_team():
         base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
         access_link = f"{base_url}/my-matches/{access_token}"
         confirmation_link = f"{base_url}/confirm-team/{new_team.id}/{player2_confirmation_token}"
+        
+        # Send admin notification about new team registration
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            from utils import send_email_notification
+            admin_body = f"""🆕 NEW TEAM REGISTRATION
+
+Team Name: {team_name}
+
+Player 1:
+- Name: {p1_name}
+- Email: {p1_email}
+- Phone: {p1_phone}
+
+Player 2:
+- Name: {p2_name}
+- Email: {p2_email}
+- Phone: {p2_phone}
+
+Access Link: {access_link}
+Confirmation Link for Player 2: {confirmation_link}
+
+Please review and confirm this team in the admin panel.
+"""
+            send_email_notification(admin_email, f"New Team Registration: {team_name}", admin_body)
         
         # Send confirmation email to Player 1 (registrant)
         if p1_email:
@@ -744,6 +769,23 @@ def register_freeagent():
                        skill_level=skill, playstyle=style, availability=avail)
         db.session.add(fa)
         db.session.commit()
+        
+        # Send admin notification about new free agent registration
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            from utils import send_email_notification
+            admin_body = f"""🆕 NEW FREE AGENT REGISTRATION
+
+Name: {name}
+Email: {email}
+Phone: {phone}
+Skill Level: {skill}
+Playstyle: {style}
+Availability: {avail}
+
+Please review and pair this free agent in the admin panel.
+"""
+            send_email_notification(admin_email, f"New Free Agent: {name}", admin_body)
         
         # Send welcome email to free agent
         if email:
