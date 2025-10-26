@@ -125,6 +125,7 @@ class Match(db.Model):
     booking_details = db.Column(db.Text)  # Store court booking info from teams
     booking_confirmed = db.Column(db.Boolean, default=False)  # Both teams confirmed booking
     reminder_sent = db.Column(db.Boolean, default=False)  # 24h reminder sent flag
+    pairing_log = db.Column(db.Text, nullable=True)  # Swiss pairing algorithm decision log
     
     # Score submission tracking (two-team confirmation)
     score_submission_a = db.Column(db.Text)  # Team A's submitted score
