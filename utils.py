@@ -18,10 +18,11 @@ def normalize_team_name(name: str) -> str:
 
 def generate_round_pairings(round_number):
     """
-    Generates Swiss-format round pairings:
+    Generates Swiss-format round pairings with detailed logging:
     - Pairs teams with similar standings (wins, then sets differential)
     - Avoids repeat matchups when possible
     - Handles odd number of teams (lowest ranked gets bye)
+    - Logs all decision-making for admin transparency
     """
     # 1. Get teams sorted by standings (wins desc, then sets differential desc)
     teams = Team.query.order_by(
@@ -33,6 +34,20 @@ def generate_round_pairings(round_number):
     if len(teams) < 2:
         return []
     
+    # Create comprehensive pairing log
+    log_lines = []
+    log_lines.append(f"=== ROUND {round_number} PAIRING ALGORITHM ===\n")
+    log_lines.append(f"Total Teams: {len(teams)}\n")
+    log_lines.append("\n--- CURRENT STANDINGS ---")
+    
+    for idx, team in enumerate(teams, start=1):
+        sets_diff = team.sets_for - team.sets_against
+        games_diff = team.games_for - team.games_against
+        log_lines.append(
+            f"#{idx:2d} | {team.team_name:25s} | Record: {team.wins}-{team.losses}-{team.draws} | "
+            f"Points: {team.points:2d} | Sets Diff: {sets_diff:+3d} | Games Diff: {games_diff:+4d}"
+        )
+    
     # 2. Build a set of previous matchups to avoid repeats
     previous_matches = Match.query.filter(Match.round < round_number).all()
     already_played = set()
@@ -41,45 +56,87 @@ def generate_round_pairings(round_number):
         already_played.add((min(match.team_a_id, match.team_b_id), 
                           max(match.team_a_id, match.team_b_id)))
     
+    log_lines.append(f"\n--- PREVIOUS MATCHUPS ---")
+    log_lines.append(f"Total previous matchups to avoid: {len(already_played)}")
+    
     # 3. Track which teams have been paired
     paired = set()
     matches = []
+    
+    log_lines.append(f"\n--- PAIRING DECISIONS ---")
     
     # 4. Pair teams using Swiss system
     for i, team in enumerate(teams):
         if team.id in paired:
             continue
-            
+        
+        # Get team's standing info for logging
+        team_rank = i + 1
+        team_record = f"{team.wins}-{team.losses}-{team.draws}"
+        
+        log_lines.append(f"\n[Pairing #{team_rank}] {team.team_name} ({team_record}, {team.points} pts)")
+        
         # Find best opponent (closest in standings that hasn't played this team)
         opponent = None
+        skipped_candidates = []
+        
         for j in range(i + 1, len(teams)):
             candidate = teams[j]
+            candidate_rank = j + 1
+            candidate_record = f"{candidate.wins}-{candidate.losses}-{candidate.draws}"
             
             # Skip if already paired
             if candidate.id in paired:
+                skipped_candidates.append(
+                    f"  ❌ #{candidate_rank} {candidate.team_name} - Already paired in this round"
+                )
                 continue
             
             # Check if they've played before
             matchup = (min(team.id, candidate.id), max(team.id, candidate.id))
             if matchup not in already_played:
                 opponent = candidate
+                log_lines.append(
+                    f"  ✅ Matched with #{candidate_rank} {candidate.team_name} ({candidate_record}, {candidate.points} pts)"
+                )
+                log_lines.append(f"     Reason: Closest available opponent in standings, no previous matchup")
                 break
+            else:
+                skipped_candidates.append(
+                    f"  ⚠️  #{candidate_rank} {candidate.team_name} - Already played in previous round"
+                )
+        
+        # Log skipped candidates
+        if skipped_candidates and not opponent:
+            log_lines.append(f"  Candidates considered:")
+            for skip_msg in skipped_candidates:
+                log_lines.append(skip_msg)
         
         # If no fresh opponent found, pair with anyone available (fallback)
         if opponent is None:
+            log_lines.append(f"  ⚠️  WARNING: No fresh opponents available - using fallback (repeat matchup)")
             for j in range(i + 1, len(teams)):
                 candidate = teams[j]
                 if candidate.id not in paired:
                     opponent = candidate
+                    candidate_rank = j + 1
+                    candidate_record = f"{candidate.wins}-{candidate.losses}-{candidate.draws}"
+                    log_lines.append(
+                        f"  ⚡ FALLBACK: Matched with #{candidate_rank} {candidate.team_name} ({candidate_record}, {candidate.points} pts)"
+                    )
+                    log_lines.append(f"     Reason: Repeat matchup necessary (all fresh opponents unavailable)")
                     break
         
         # Create the match if we found an opponent
         if opponent:
+            pairing_log_text = "\n".join(log_lines)
+            
             match = Match(
                 round=round_number,
                 team_a_id=team.id,
                 team_b_id=opponent.id,
-                status="scheduled"
+                status="scheduled",
+                pairing_log=pairing_log_text
             )
             db.session.add(match)
             matches.append(match)
@@ -99,17 +156,27 @@ def generate_round_pairings(round_number):
         
         if bye_team_id:
             bye_team = Team.query.get(bye_team_id)
-            # Record bye as a win (optional - you can customize this)
-            # For now, just create a match record with status "bye"
+            bye_rank = teams.index(bye_team) + 1
+            
+            log_lines.append(f"\n--- BYE ASSIGNMENT ---")
+            log_lines.append(f"#{bye_rank} {bye_team.team_name} receives BYE (odd number of teams)")
+            log_lines.append(f"Reason: Lowest-ranked unpaired team in standings")
+            
+            pairing_log_text = "\n".join(log_lines)
+            
             match = Match(
                 round=round_number,
                 team_a_id=bye_team_id,
                 team_b_id=None,
                 status="bye",
-                notes="Bye round - automatic win"
+                notes="Bye round - automatic win",
+                pairing_log=pairing_log_text
             )
             db.session.add(match)
             matches.append(match)
+    
+    log_lines.append(f"\n--- PAIRING COMPLETE ---")
+    log_lines.append(f"Total matches created: {len(matches)}")
     
     db.session.commit()
     return matches
