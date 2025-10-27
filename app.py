@@ -637,6 +637,11 @@ Bookmark this link to:
 - Submit match scores
 - Request reschedules or substitutes
 
+💬 Join Our WhatsApp Community:
+https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
+
+Stay connected with other teams, get updates, and coordinate matches!
+
 Good luck in the league! 🎾
 
 - BD Padel League
@@ -657,6 +662,11 @@ Or visit your team page:
 {access_link}
 
 Once confirmed, you'll be able to participate in matches!
+
+💬 Join Our WhatsApp Community:
+https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
+
+Stay connected with other teams, get updates, and coordinate matches!
 
 - BD Padel League
 """
@@ -807,6 +817,11 @@ Our admin team will review all free agent registrations and pair you with anothe
 - Access to your team page to view matches
 
 ⏳ This process typically takes 1-3 days, depending on the number of free agents.
+
+💬 Join Our WhatsApp Community for Free Agents:
+https://chat.whatsapp.com/KCdAt3a5YbSCHF6wKauIQq
+
+Connect with other free agents, find potential partners, and stay updated!
 
 If you have any questions or want to update your profile, please contact the admin.
 
