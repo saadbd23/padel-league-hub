@@ -2190,12 +2190,20 @@ def pair_agents():
     agent2 = FreeAgent.query.get(agent2_id)
 
     if agent1 and agent2:
+        # Generate unique access token for this team
+        access_token = secrets.token_urlsafe(32)
+        
         new_team = Team(
             team_name=team_name,
             player1_name=agent1.name,
             player1_phone=agent1.phone,
+            player1_email=agent1.email,
             player2_name=agent2.name,
-            player2_phone=agent2.phone
+            player2_phone=agent2.phone,
+            player2_email=agent2.email,
+            access_token=access_token,
+            confirmed=True,
+            player2_confirmed=True
         )
         agent1.paired = True
         agent1.partner_id = agent2_id
@@ -2204,7 +2212,81 @@ def pair_agents():
 
         db.session.add(new_team)
         db.session.commit()
-        flash("Free agents paired successfully!", "success")
+        
+        # Send email notifications to both free agents
+        from utils import send_email_notification
+        base_url = "https://goeclectic.xyz"
+        access_link = f"{base_url}/my-matches/{access_token}"
+        
+        # Email to Agent 1
+        if agent1.email:
+            email_body1 = f"""Hi {agent1.name},
+
+🎉 GREAT NEWS! You've been paired with a partner!
+
+Team Details:
+- Team Name: {team_name}
+- Your Partner: {agent2.name}
+- Partner Email: {agent2.email}
+- Partner Phone: {agent2.phone}
+
+🔗 Your Team Access Link:
+{access_link}
+
+Use this link to:
+- View your match schedule
+- See opponent contact information
+- Submit match scores
+- Request reschedules or substitutes
+
+💬 Join Our WhatsApp Community:
+https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
+
+Stay connected with other teams, get updates, and coordinate matches!
+
+Please reach out to your partner to introduce yourself and get ready to compete!
+
+Good luck in the league! 🎾
+
+- BD Padel League
+"""
+            send_email_notification(agent1.email, f"You've Been Paired! - Team {team_name}", email_body1)
+        
+        # Email to Agent 2
+        if agent2.email:
+            email_body2 = f"""Hi {agent2.name},
+
+🎉 GREAT NEWS! You've been paired with a partner!
+
+Team Details:
+- Team Name: {team_name}
+- Your Partner: {agent1.name}
+- Partner Email: {agent1.email}
+- Partner Phone: {agent1.phone}
+
+🔗 Your Team Access Link:
+{access_link}
+
+Use this link to:
+- View your match schedule
+- See opponent contact information
+- Submit match scores
+- Request reschedules or substitutes
+
+💬 Join Our WhatsApp Community:
+https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
+
+Stay connected with other teams, get updates, and coordinate matches!
+
+Please reach out to your partner to introduce yourself and get ready to compete!
+
+Good luck in the league! 🎾
+
+- BD Padel League
+"""
+            send_email_notification(agent2.email, f"You've Been Paired! - Team {team_name}", email_body2)
+        
+        flash("Free agents paired successfully! Email notifications sent to both players.", "success")
     else:
         flash("Error pairing agents", "error")
 
