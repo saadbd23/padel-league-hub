@@ -582,9 +582,8 @@ def register_team():
         
         db.session.commit()
         
-        # Generate secure access link using Replit URL
-        # Get Replit URL from environment or construct from REPL metadata
-        base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+        # Generate secure access link using custom domain
+        base_url = "https://goeclectic.xyz"
         access_link = f"{base_url}/my-matches/{access_token}"
         confirmation_link = f"{base_url}/confirm-team/{new_team.id}/{player2_confirmation_token}"
         
@@ -699,7 +698,7 @@ def confirm_team_partnership(team_id: int, token: str):
         # Notify Player 1
         from utils import send_email_notification
         
-        base_url = os.environ.get("APP_BASE_URL", "http://localhost:5000")
+        base_url = "https://goeclectic.xyz"
         access_link = f"{base_url}/my-matches/{team.access_token}"
         
         if team.player1_email:
@@ -1080,7 +1079,7 @@ See you on the court! 🎾
         db.session.commit()
         
         # Notify opponent
-        base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+        base_url = "https://goeclectic.xyz"
         notification_body = f"""Hi!
 
 {team.team_name} has proposed a match booking:
@@ -1495,7 +1494,7 @@ Check the leaderboard for updated standings!
             db.session.commit()
             
             # Notify opponent
-            base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+            base_url = "https://goeclectic.xyz"
             notification_body = f"""Hi!
 
 {team.team_name} has submitted their match score:
@@ -2254,7 +2253,7 @@ def generate_round():
             
             # Send playoff email notifications
             from utils import send_email_notification
-            base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+            base_url = "https://goeclectic.xyz"
             
             for match in matches:
                 team_a = Team.query.get(match.team_a_id)
@@ -2430,7 +2429,7 @@ You'll automatically advance to the next round. Enjoy your break!
                 
                 if team_a and team_b:
                     # Access link for each team
-                    base_url = os.environ.get("REPL_DEPLOYMENT_URL") or os.environ.get("REPL_SLUG") and f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER', 'replit')}.repl.co" or os.environ.get("APP_BASE_URL", "http://localhost:5000")
+                    base_url = "https://goeclectic.xyz"
                     
                     # Team A notification
                     team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
