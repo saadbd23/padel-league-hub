@@ -2051,6 +2051,92 @@ def admin_settings():
     return render_template("admin_settings.html", settings=settings)
 
 
+@app.route("/admin/send-mass-email", methods=["GET", "POST"])
+@require_admin_auth
+def send_mass_email():
+    """Mass email communication feature for admin"""
+    if request.method == "GET":
+        teams = Team.query.all()
+        free_agents = FreeAgent.query.all()
+        
+        team_emails = []
+        for team in teams:
+            if team.player1_email:
+                team_emails.append(team.player1_email)
+            if team.player2_email:
+                team_emails.append(team.player2_email)
+        
+        free_agent_emails = [fa.email for fa in free_agents if fa.email]
+        
+        team_count = len([e for e in team_emails if e])
+        free_agent_count = len([e for e in free_agent_emails if e])
+        both_count = len(set([e for e in team_emails + free_agent_emails if e]))
+        
+        return render_template(
+            "admin_mass_email.html",
+            team_count=team_count,
+            free_agent_count=free_agent_count,
+            both_count=both_count
+        )
+    
+    try:
+        subject = request.form.get("subject", "").strip()
+        message = request.form.get("message", "").strip()
+        recipient_type = request.form.get("recipient_type", "")
+        
+        if not subject or not message:
+            flash("Subject and message are required", "error")
+            return redirect(url_for("send_mass_email"))
+        
+        if recipient_type not in ["teams", "free_agents", "both"]:
+            flash("Invalid recipient selection", "error")
+            return redirect(url_for("send_mass_email"))
+        
+        from utils import send_email_notification
+        
+        recipients = []
+        
+        if recipient_type in ["teams", "both"]:
+            teams = Team.query.all()
+            for team in teams:
+                if team.player1_email:
+                    recipients.append(team.player1_email)
+                if team.player2_email and team.player2_email != team.player1_email:
+                    recipients.append(team.player2_email)
+        
+        if recipient_type in ["free_agents", "both"]:
+            free_agents = FreeAgent.query.all()
+            for fa in free_agents:
+                if fa.email and fa.email not in recipients:
+                    recipients.append(fa.email)
+        
+        recipients = list(set([r for r in recipients if r]))
+        
+        if not recipients:
+            flash("No recipients found with email addresses", "error")
+            return redirect(url_for("send_mass_email"))
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for recipient in recipients:
+            if send_email_notification(recipient, subject, message):
+                sent_count += 1
+            else:
+                failed_count += 1
+        
+        if sent_count > 0:
+            flash(f"✅ Successfully sent {sent_count} email(s)", "success")
+        if failed_count > 0:
+            flash(f"⚠️ Failed to send {failed_count} email(s)", "warning")
+        
+        return redirect(url_for("send_mass_email"))
+        
+    except Exception as e:
+        flash(f"Error sending emails: {str(e)}", "error")
+        return redirect(url_for("send_mass_email"))
+
+
 @app.route("/admin/generate-playoff-preview", methods=["POST"])
 @require_admin_auth
 def generate_playoff_preview_route():
