@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <div class="flex items-center justify-between mb-12">
-    <h2 class="text-4xl font-bold text-white text-center flex-1">Admin Dashboard</h2>
-    <div class="flex gap-3">
+<div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-12">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-12 gap-4">
+    <h2 class="text-2xl sm:text-4xl font-bold text-white text-center sm:flex-1">Admin Dashboard</h2>
+    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
       <a href="{{ url_for('send_mass_email') }}" 
-         class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-700 transition-all duration-200 flex items-center">
+         class="bg-purple-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-purple-700 transition-all duration-200 flex items-center justify-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
         </svg>
         Mass Email
       </a>
       <a href="{{ url_for('admin_settings') }}" 
-         class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-indigo-700 transition-all duration-200 flex items-center">
+         class="bg-indigo-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-indigo-700 transition-all duration-200 flex items-center justify-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -20,7 +20,7 @@
         Settings
       </a>
       <a href="{{ url_for('admin_logout') }}" 
-         class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 transition-all duration-200 flex items-center">
+         class="bg-red-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
         </svg>
@@ -30,10 +30,10 @@
   </div>
 
   <!-- Generate Round Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-4">Generate Round Pairings</h3>
-    <div class="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-      <div class="text-sm text-blue-900">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Generate Round Pairings</h3>
+    <div class="mb-4 p-3 sm:p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+      <div class="text-xs sm:text-sm text-blue-900">
         <div class="font-semibold mb-2">📅 Monday Morning Workflow:</div>
         <div class="mb-1">1️⃣ Check for deadline violations (Sunday 23:59 for regular matches, Wednesday 23:59 for makeup matches)</div>
         <div class="mb-1">2️⃣ Review/approve any pending reschedule requests</div>
@@ -41,27 +41,27 @@
         <div class="mt-2 text-xs text-blue-700">💡 Teams have until <strong>Sunday 23:59</strong> to complete their round matches.</div>
       </div>
     </div>
-    <form method="POST" action="{{ url_for('generate_round') }}" class="flex gap-4 items-end">
+    <form method="POST" action="{{ url_for('generate_round') }}" class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
       <div class="flex-1">
         <label class="block text-sm font-semibold text-gray-700 mb-2">Round Number</label>
         <input type="number" name="round_number" required min="1" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none" placeholder="Enter round number">
       </div>
-      <button type="submit" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+      <button type="submit" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto">
         Generate Round
       </button>
     </form>
   </div>
 
   <!-- Reschedule Management Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-2xl font-bold text-gray-900">Reschedule Management</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Reschedule Management</h3>
       <a href="{{ url_for('reschedule_dashboard') }}" 
-         class="bg-gradient-to-r from-orange-600 to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+         class="bg-gradient-to-r from-orange-600 to-amber-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center">
         📅 Manage Reschedules
       </a>
     </div>
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
       <div class="bg-blue-50 rounded-lg p-4 text-center">
         <div class="text-2xl font-bold text-blue-600">{{ pending_reschedules_count or 0 }}</div>
         <div class="text-sm text-blue-800">Pending Requests</div>
@@ -78,79 +78,143 @@
   </div>
 
   <!-- Teams Management Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Registered Teams</h3>
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
-          <tr>
-            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Team Name</th>
-            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Players</th>
-            <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Record</th>
-            <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Status</th>
-            <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          {% for t in teams %}
-          <tr class="hover:bg-purple-50 transition-colors duration-200">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-lg font-bold text-gray-900">{{ t.team_name }}</div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="text-sm text-gray-700">{{ t.player1_name }} ({{ t.player1_phone }})</div>
-              <div class="text-sm text-gray-700">{{ t.player2_name }} ({{ t.player2_phone }})</div>
-            </td>
-            <td class="px-6 py-4 text-center">
-              <div class="text-sm font-semibold text-gray-900">{{ t.wins }}W - {{ t.losses }}L</div>
-              <div class="text-xs text-gray-600">Sets: {{ t.sets_for }}-{{ t.sets_against }}</div>
-              <div class="text-xs text-blue-600 mt-1">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/2</div>
-            </td>
-            <td class="px-6 py-4 text-center">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('teams')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Registered Teams</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="teams-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="teams-content" class="collapsible-content">
+      <div class="hidden sm:block overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Team Name</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Players</th>
+              <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Record</th>
+              <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Status</th>
+              <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for t in teams %}
+            <tr class="hover:bg-purple-50 transition-colors duration-200">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-lg font-bold text-gray-900">{{ t.team_name }}</div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-700">{{ t.player1_name }} ({{ t.player1_phone }})</div>
+                <div class="text-sm text-gray-700">{{ t.player2_name }} ({{ t.player2_phone }})</div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <div class="text-sm font-semibold text-gray-900">{{ t.wins }}W - {{ t.losses }}L</div>
+                <div class="text-xs text-gray-600">Sets: {{ t.sets_for }}-{{ t.sets_against }}</div>
+                <div class="text-xs text-blue-600 mt-1">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/2</div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                {% if t.confirmed %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    ✓ Confirmed
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                    ⏳ Pending
+                  </span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-center space-x-2">
+                <a href="{{ url_for('edit_team', team_id=t.id) }}" class="inline-block bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-600 transition-colors">
+                  Edit
+                </a>
+                <form method="POST" action="{{ url_for('confirm_team', team_id=t.id) }}" class="inline">
+                  <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
+                    {% if t.confirmed %}Unconfirm{% else %}Confirm{% endif %}
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('delete_team', team_id=t.id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this team? This cannot be undone.');">
+                  <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">
+                    Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="sm:hidden space-y-4">
+        {% for t in teams %}
+        <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h4 class="text-lg font-bold text-gray-900">{{ t.team_name }}</h4>
               {% if t.confirmed %}
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 mt-1">
                   ✓ Confirmed
                 </span>
               {% else %}
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 mt-1">
                   ⏳ Pending
                 </span>
               {% endif %}
-            </td>
-            <td class="px-6 py-4 text-center space-x-2">
-              <a href="{{ url_for('edit_team', team_id=t.id) }}" class="inline-block bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-600 transition-colors">
-                Edit
-              </a>
-              <form method="POST" action="{{ url_for('confirm_team', team_id=t.id) }}" class="inline">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
-                  {% if t.confirmed %}Unconfirm{% else %}Confirm{% endif %}
-                </button>
-              </form>
-              <form method="POST" action="{{ url_for('delete_team', team_id=t.id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this team? This cannot be undone.');">
-                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">
-                  Delete
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+            </div>
+          </div>
+          <div class="space-y-2 mb-3">
+            <div class="text-sm">
+              <span class="font-semibold text-gray-700">Player 1:</span>
+              <div class="text-gray-600">{{ t.player1_name }} ({{ t.player1_phone }})</div>
+            </div>
+            <div class="text-sm">
+              <span class="font-semibold text-gray-700">Player 2:</span>
+              <div class="text-gray-600">{{ t.player2_name }} ({{ t.player2_phone }})</div>
+            </div>
+            <div class="text-sm">
+              <span class="font-semibold text-gray-700">Record:</span>
+              <div class="text-gray-900">{{ t.wins }}W - {{ t.losses }}L</div>
+              <div class="text-xs text-gray-600">Sets: {{ t.sets_for }}-{{ t.sets_against }}</div>
+              <div class="text-xs text-blue-600">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/2</div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <a href="{{ url_for('edit_team', team_id=t.id) }}" class="bg-purple-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-purple-600 transition-colors text-center">
+              Edit
+            </a>
+            <form method="POST" action="{{ url_for('confirm_team', team_id=t.id) }}">
+              <button type="submit" class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors">
+                {% if t.confirmed %}Unconfirm{% else %}Confirm{% endif %}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('delete_team', team_id=t.id) }}" onsubmit="return confirm('Are you sure you want to delete this team? This cannot be undone.');">
+              <button type="submit" class="w-full bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 
   <!-- Free Agents Pairing Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-    <div class="flex items-center justify-between mb-6">
-      <h3 class="text-2xl font-bold text-gray-900">Free Agents Pairing</h3>
-      {% if free_agent_status|length > 0 %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('freeagents')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Free Agents Pairing</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="freeagents-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="freeagents-content" class="collapsible-content">
+    {% if free_agent_status|length > 0 %}
+    <div class="mb-4">
       <form method="POST" action="{{ url_for('cleanup_duplicate_freeagents') }}" class="inline" onsubmit="return confirm('Remove all free agents who are already in teams?');">
-        <button type="submit" class="bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:bg-orange-700 transition-all duration-200">
+        <button type="submit" class="bg-orange-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-orange-700 transition-all duration-200 w-full sm:w-auto">
           🧹 Cleanup Duplicates
         </button>
       </form>
-      {% endif %}
     </div>
+    {% endif %}
     
     {% if free_agents|length >= 2 %}
     <form method="POST" action="{{ url_for('pair_agents') }}" class="space-y-6">
@@ -221,11 +285,11 @@
           </div>
           
           <div class="mt-3 flex gap-2">
-            <a href="{{ url_for('edit_free_agent', free_agent_id=f.id) }}" class="flex-1 bg-purple-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-purple-600 transition-colors text-center">
+            <a href="{{ url_for('edit_free_agent', free_agent_id=f.id) }}" class="flex-1 bg-purple-500 text-white px-3 py-3 rounded text-sm font-semibold hover:bg-purple-600 transition-colors text-center">
               Edit
             </a>
             <form method="POST" action="{{ url_for('remove_freeagent', freeagent_id=f.id) }}" class="flex-1" onsubmit="return confirm('Remove {{ f.name }} from free agent list?');">
-              <button type="submit" class="w-full bg-red-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-red-600 transition-colors">
+              <button type="submit" class="w-full bg-red-500 text-white px-3 py-3 rounded text-sm font-semibold hover:bg-red-600 transition-colors">
                 Remove
               </button>
             </form>
@@ -235,11 +299,18 @@
       </div>
     </div>
     {% endif %}
+    </div>
   </div>
 
   <!-- Match Management Section -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Match Management</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('matches')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Match Management</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="matches-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="matches-content" class="collapsible-content">
     {% if matches %}
     <div class="space-y-4">
       {% for m in matches %}
@@ -366,12 +437,19 @@
     {% else %}
     <p class="text-gray-600 text-center py-8">No matches scheduled yet. Generate a round to create matches.</p>
     {% endif %}
+    </div>
   </div>
 
   <!-- Pending Reschedules Section -->
   {% if reschedules %}
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Pending Reschedule Requests</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('reschedules')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Pending Reschedule Requests</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="reschedules-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="reschedules-content" class="collapsible-content">
     <div class="space-y-4">
       {% for r in reschedules %}
       {% set requester_team = teams|selectattr('id', 'equalto', r.requester_team_id)|first %}
@@ -395,14 +473,14 @@
             </div>
             {% endif %}
           </div>
-          <div class="flex gap-2">
-            <form method="POST" action="{{ url_for('approve_reschedule', reschedule_id=r.id) }}" class="inline">
-              <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-green-600 transition-colors">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <form method="POST" action="{{ url_for('approve_reschedule', reschedule_id=r.id) }}" class="flex-1">
+              <button type="submit" class="w-full bg-green-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors">
                 Approve
               </button>
             </form>
-            <form method="POST" action="{{ url_for('deny_reschedule', reschedule_id=r.id) }}" class="inline">
-              <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-red-600 transition-colors">
+            <form method="POST" action="{{ url_for('deny_reschedule', reschedule_id=r.id) }}" class="flex-1">
+              <button type="submit" class="w-full bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">
                 Deny
               </button>
             </form>
@@ -411,13 +489,14 @@
       </div>
       {% endfor %}
     </div>
+    </div>
   </div>
   {% endif %}
 
   <!-- Reschedule History Section -->
   {% if reschedules_history %}
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Reschedule History</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Reschedule History</h3>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="bg-gray-100 text-gray-800">
@@ -450,8 +529,14 @@
 
   <!-- Pending Substitutes Section -->
   {% if substitutes %}
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Pending Substitute Requests</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('substitutes')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Pending Substitute Requests</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="substitutes-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="substitutes-content" class="collapsible-content">
     <div class="space-y-4">
       {% for s in substitutes %}
       {% set team = teams|selectattr('id', 'equalto', s.team_id)|first %}
@@ -475,14 +560,14 @@
             </div>
             {% endif %}
           </div>
-          <div class="flex gap-2">
-            <form method="POST" action="{{ url_for('approve_substitute', substitute_id=s.id) }}" class="inline">
-              <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-green-600 transition-colors">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <form method="POST" action="{{ url_for('approve_substitute', substitute_id=s.id) }}" class="flex-1">
+              <button type="submit" class="w-full bg-green-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors">
                 Approve
               </button>
             </form>
-            <form method="POST" action="{{ url_for('deny_substitute', substitute_id=s.id) }}" class="inline">
-              <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-red-600 transition-colors">
+            <form method="POST" action="{{ url_for('deny_substitute', substitute_id=s.id) }}" class="flex-1">
+              <button type="submit" class="w-full bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors">
                 Deny
               </button>
             </form>
@@ -491,13 +576,14 @@
       </div>
       {% endfor %}
     </div>
+    </div>
   </div>
   {% endif %}
 
   <!-- Substitute History Section -->
   {% if substitutes_history %}
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">Substitute History</h3>
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Substitute History</h3>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="bg-gray-100 text-gray-800">
@@ -529,22 +615,79 @@
   {% endif %}
 
   <!-- Email-Only Mode -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mt-8">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6">📧 Email Notifications</h3>
-    <p class="text-gray-600">All notifications are now sent via email only. Players will receive email confirmations for:</p>
-    <ul class="list-disc ml-6 mt-2 text-gray-700">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">📧 Email Notifications</h3>
+    <p class="text-sm sm:text-base text-gray-600">All notifications are now sent via email only. Players will receive email confirmations for:</p>
+    <ul class="list-disc ml-6 mt-2 text-sm sm:text-base text-gray-700">
       <li>Team registration and partnership confirmation</li>
       <li>Match bookings and confirmations</li>
       <li>Score submissions and disputes</li>
       <li>Reschedule and substitute requests</li>
     </ul>
-    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <p class="text-sm text-blue-800">
+    <div class="mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <p class="text-xs sm:text-sm text-blue-800">
         <strong>📱 WhatsApp Groups:</strong> You mentioned using WhatsApp numbers to create an exclusive WhatsApp group for participating players. You can manually create this group using the WhatsApp numbers collected during registration.
       </p>
     </div>
   </div>
 </div>
+
+<script>
+function toggleSection(sectionId) {
+  const content = document.getElementById(sectionId + '-content');
+  const icon = document.getElementById(sectionId + '-icon');
+  
+  if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    content.style.maxHeight = '0px';
+    content.style.opacity = '0';
+    icon.style.transform = 'rotate(-90deg)';
+    localStorage.setItem('admin-section-' + sectionId, 'collapsed');
+  } else {
+    content.style.maxHeight = content.scrollHeight + 'px';
+    content.style.opacity = '1';
+    icon.style.transform = 'rotate(0deg)';
+    localStorage.setItem('admin-section-' + sectionId, 'expanded');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sections = ['teams', 'freeagents', 'matches', 'reschedules', 'substitutes'];
+  
+  sections.forEach(function(sectionId) {
+    const content = document.getElementById(sectionId + '-content');
+    const icon = document.getElementById(sectionId + '-icon');
+    
+    if (content && icon) {
+      const savedState = localStorage.getItem('admin-section-' + sectionId);
+      
+      content.style.transition = 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out';
+      content.style.overflow = 'hidden';
+      
+      if (savedState === 'collapsed') {
+        content.style.maxHeight = '0px';
+        content.style.opacity = '0';
+        icon.style.transform = 'rotate(-90deg)';
+      } else {
+        content.style.maxHeight = content.scrollHeight + 'px';
+        content.style.opacity = '1';
+        icon.style.transform = 'rotate(0deg)';
+      }
+      
+      const observer = new MutationObserver(function() {
+        if (content.style.maxHeight !== '0px') {
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }
+      });
+      
+      observer.observe(content, {
+        childList: true,
+        subtree: true,
+        attributes: false
+      });
+    }
+  });
+});
+</script>
 {% endblock %}
 
 
