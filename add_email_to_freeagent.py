@@ -45,6 +45,28 @@ try:
             conn.commit()
             print("✅ Email column added successfully!")
         
+        # Check if registration toggle columns exist in league_settings
+        result = conn.execute(text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='league_settings' AND column_name='team_registration_open'
+        """))
+        
+        if not result.fetchone():
+            print("📝 Adding registration toggle columns to league_settings...")
+            conn.execute(text("""
+                ALTER TABLE league_settings 
+                ADD COLUMN team_registration_open BOOLEAN DEFAULT TRUE
+            """))
+            conn.execute(text("""
+                ALTER TABLE league_settings 
+                ADD COLUMN freeagent_registration_open BOOLEAN DEFAULT TRUE
+            """))
+            conn.commit()
+            print("✅ Registration toggle columns added successfully!")
+        else:
+            print("✅ Registration toggle columns already exist")
+        
         # Verify the column exists
         result = conn.execute(text("""
             SELECT column_name, data_type 
@@ -57,8 +79,20 @@ try:
         for row in result:
             print(f"  - {row[0]}: {row[1]}")
         
+        result = conn.execute(text("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name='league_settings'
+            ORDER BY ordinal_position
+        """))
+        
+        print("\n📊 Current league_settings table schema:")
+        for row in result:
+            print(f"  - {row[0]}: {row[1]}")
+        
         print("\n✅ Migration completed successfully!")
         
 except Exception as e:
     print(f"❌ Migration failed: {e}")
-    exit(1)
+    import traceback
+    traceback.print_exc()
