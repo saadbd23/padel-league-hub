@@ -449,6 +449,11 @@ def index():
 
 @app.route("/register-team", methods=["GET", "POST"])
 def register_team():
+    # Check if team registration is open
+    settings = LeagueSettings.query.first()
+    if settings and not settings.team_registration_open:
+        return render_template("registration_closed.html", registration_type="Team")
+    
     if request.method == "POST":
         team_name = request.form["team_name"]
         p1_name = request.form["player1_name"]
@@ -726,6 +731,11 @@ Good luck!
 
 @app.route("/register-freeagent", methods=["GET", "POST"])
 def register_freeagent():
+    # Check if free agent registration is open
+    settings = LeagueSettings.query.first()
+    if settings and not settings.freeagent_registration_open:
+        return render_template("registration_closed.html", registration_type="Free Agent")
+    
     if request.method == "POST":
         name = request.form["name"]
         phone = request.form["phone"]
@@ -2010,7 +2020,7 @@ def admin_settings():
     # Get or create settings
     settings = LeagueSettings.query.first()
     if not settings:
-        settings = LeagueSettings(swiss_rounds_count=5, playoff_teams_count=8)
+        settings = LeagueSettings(swiss_rounds_count=5, playoff_teams_count=8, team_registration_open=True, freeagent_registration_open=True)
         db.session.add(settings)
         db.session.commit()
     
@@ -2019,6 +2029,8 @@ def admin_settings():
             # Update settings
             swiss_rounds = request.form.get("swiss_rounds_count", type=int)
             playoff_teams = request.form.get("playoff_teams_count", type=int)
+            team_reg_open = request.form.get("team_registration_open") == "on"
+            freeagent_reg_open = request.form.get("freeagent_registration_open") == "on"
             
             # Validation
             if swiss_rounds and swiss_rounds < 1:
@@ -2039,6 +2051,10 @@ def admin_settings():
                 settings.swiss_rounds_count = swiss_rounds
             if playoff_teams:
                 settings.playoff_teams_count = playoff_teams
+            
+            # Update registration toggles (always update these)
+            settings.team_registration_open = team_reg_open
+            settings.freeagent_registration_open = freeagent_reg_open
             
             db.session.commit()
             flash("✅ League settings updated successfully!", "success")

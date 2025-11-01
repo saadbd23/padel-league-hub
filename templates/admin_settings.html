@@ -51,6 +51,35 @@
 
     <form method="POST" action="{{ url_for('admin_settings') }}">
       <div class="space-y-6">
+        <!-- Registration Toggles -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4">Registration Controls</h4>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-semibold text-gray-700">Team Registration</label>
+                <p class="text-sm text-gray-600">Allow teams to register</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="team_registration_open" class="sr-only peer" {% if settings.team_registration_open %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-semibold text-gray-700">Free Agent Registration</label>
+                <p class="text-sm text-gray-600">Allow free agents to register</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="freeagent_registration_open" class="sr-only peer" {% if settings.freeagent_registration_open %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- Swiss Rounds Count -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -128,7 +157,7 @@
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            Save Settings
+            Save All Settings
           </button>
           {% else %}
           <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">

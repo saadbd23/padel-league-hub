@@ -18,29 +18,29 @@ class Team(db.Model):
     subs_used = db.Column(db.Integer, default=0)
     reschedules_used = db.Column(db.Integer, default=0)
     access_token = db.Column(db.String(64), unique=True, index=True)  # Unique token for secure access
-    
+
     # Match statistics
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     draws = db.Column(db.Integer, default=0)
     points = db.Column(db.Integer, default=0)  # 3 for win, 1 for draw, 0 for loss
-    
+
     # Set statistics
     sets_for = db.Column(db.Integer, default=0)
     sets_against = db.Column(db.Integer, default=0)
-    
+
     # Game statistics (within sets)
     games_for = db.Column(db.Integer, default=0)
     games_against = db.Column(db.Integer, default=0)
-    
+
     @property
     def sets_diff(self):
         return self.sets_for - self.sets_against
-    
+
     @property
     def games_diff(self):
         return self.games_for - self.games_against
-    
+
     @property
     def matches_played(self):
         return self.wins + self.losses + self.draws
@@ -51,36 +51,36 @@ class Player(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), unique=True, index=True)  # Unique identifier
     email = db.Column(db.String(120))
-    
+
     # Match statistics (accumulated from all matches they've played)
     matches_played = db.Column(db.Integer, default=0)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     draws = db.Column(db.Integer, default=0)
     points = db.Column(db.Integer, default=0)  # 3 for win, 1 for draw, 0 for loss
-    
+
     # Set statistics
     sets_for = db.Column(db.Integer, default=0)
     sets_against = db.Column(db.Integer, default=0)
-    
+
     # Game statistics
     games_for = db.Column(db.Integer, default=0)
     games_against = db.Column(db.Integer, default=0)
-    
+
     # Metadata
     current_team_id = db.Column(db.Integer, nullable=True)  # Current team (if any)
     created_at = db.Column(db.String(50))
-    
+
     @property
     def win_percentage(self):
         if self.matches_played == 0:
             return 0.0
         return round((self.wins / self.matches_played) * 100, 1)
-    
+
     @property
     def sets_diff(self):
         return self.sets_for - self.sets_against
-    
+
     @property
     def games_diff(self):
         return self.games_for - self.games_against
@@ -102,18 +102,18 @@ class Match(db.Model):
     phase = db.Column(db.String(20), default="swiss")  # swiss, quarterfinal, semifinal, third_place, final
     team_a_id = db.Column(db.Integer)
     team_b_id = db.Column(db.Integer, nullable=True)  # Nullable for bye rounds
-    
+
     # Scores (format: "6-4, 6-3" or "6-4, 3-6, 10-8")
     score_a = db.Column(db.String(50))
     score_b = db.Column(db.String(50))
-    
+
     # Match result
     winner_id = db.Column(db.Integer, nullable=True)
     sets_a = db.Column(db.Integer, default=0)
     sets_b = db.Column(db.Integer, default=0)
     games_a = db.Column(db.Integer, default=0)
     games_b = db.Column(db.Integer, default=0)
-    
+
     # Match metadata
     match_date = db.Column(db.String(50))  # Store as string for now
     match_datetime = db.Column(db.DateTime, nullable=True)  # Parsed datetime for reminders
@@ -126,13 +126,13 @@ class Match(db.Model):
     booking_confirmed = db.Column(db.Boolean, default=False)  # Both teams confirmed booking
     reminder_sent = db.Column(db.Boolean, default=False)  # 24h reminder sent flag
     pairing_log = db.Column(db.Text, nullable=True)  # Swiss pairing algorithm decision log
-    
+
     # Score submission tracking (two-team confirmation)
     score_submission_a = db.Column(db.Text)  # Team A's submitted score
     score_submission_b = db.Column(db.Text)  # Team B's submitted score
     score_submitted_by_a = db.Column(db.Boolean, default=False)  # Team A submitted
     score_submitted_by_b = db.Column(db.Boolean, default=False)  # Team B submitted
-    
+
     # Player participation tracking (for individual stats)
     # Stores player IDs who actually played in this match
     team_a_player1_id = db.Column(db.Integer, nullable=True)  # Team A player 1
@@ -165,12 +165,13 @@ class Substitute(db.Model):
 
 
 class LeagueSettings(db.Model):
-    """Store league configuration and playoff state"""
+    __tablename__ = 'league_settings'
+
     id = db.Column(db.Integer, primary_key=True)
     swiss_rounds_count = db.Column(db.Integer, default=5)
     playoff_teams_count = db.Column(db.Integer, default=8)
-    current_phase = db.Column(db.String(20), default="swiss")  # swiss, playoff_preview, playoffs, complete
+    current_phase = db.Column(db.String(50), default="swiss")
     playoffs_approved = db.Column(db.Boolean, default=False)
-    qualified_team_ids = db.Column(db.Text, nullable=True)  # JSON string of team IDs [1,2,3,4,5,6,7,8]
-
-
+    qualified_team_ids = db.Column(db.Text, nullable=True)
+    team_registration_open = db.Column(db.Boolean, default=True)
+    freeagent_registration_open = db.Column(db.Boolean, default=True)
