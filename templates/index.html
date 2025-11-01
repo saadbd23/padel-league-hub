@@ -5,6 +5,67 @@
     <h2 class="text-5xl font-bold mb-6 animate-fade-in">Welcome to BD Padel League</h2>
     <p class="text-xl mb-6 opacity-95 max-w-3xl mx-auto">Join the most exciting padel league in town. Compete, connect, and conquer the court!</p>
     
+    <!-- Countdown Timers -->
+    <div class="max-w-4xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Registration Deadline Countdown -->
+      <div class="bg-white/15 backdrop-blur-md border-2 border-white/40 rounded-xl p-6">
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+          </svg>
+          <h3 class="text-lg font-bold text-white">Registration Closes</h3>
+        </div>
+        <div id="registration-countdown" class="text-3xl font-bold text-yellow-300 mb-2"></div>
+        <div class="text-sm text-white/90">Monday, November 10, 2025</div>
+      </div>
+      
+      <!-- Round 1 Start Countdown -->
+      <div class="bg-white/15 backdrop-blur-md border-2 border-white/40 rounded-xl p-6">
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+          </svg>
+          <h3 class="text-lg font-bold text-white">Round 1 Starts</h3>
+        </div>
+        <div id="round1-countdown" class="text-3xl font-bold text-green-300 mb-2"></div>
+        <div class="text-sm text-white/90">Monday, November 17, 2025</div>
+      </div>
+    </div>
+
+    <script>
+      // Countdown timer logic
+      function updateCountdown(targetDate, elementId, color) {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        
+        if (distance < 0) {
+          document.getElementById(elementId).innerHTML = "CLOSED";
+          return;
+        }
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        document.getElementById(elementId).innerHTML = 
+          days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+      }
+      
+      // Set target dates (November 10, 2025 23:59:59 and November 17, 2025 09:00:00)
+      const registrationDeadline = new Date("November 10, 2025 23:59:59").getTime();
+      const round1Start = new Date("November 17, 2025 09:00:00").getTime();
+      
+      // Update countdowns immediately and every second
+      updateCountdown(registrationDeadline, 'registration-countdown');
+      updateCountdown(round1Start, 'round1-countdown');
+      
+      setInterval(function() {
+        updateCountdown(registrationDeadline, 'registration-countdown');
+        updateCountdown(round1Start, 'round1-countdown');
+      }, 1000);
+    </script>
+    
     <!-- Time Commitment Notice -->
     <div class="max-w-4xl mx-auto mb-4">
       <div class="bg-white/15 backdrop-blur-md border-2 border-white/40 rounded-xl p-6">
