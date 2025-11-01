@@ -3456,6 +3456,85 @@ def remove_freeagent(freeagent_id):
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/edit-free-agent/<int:free_agent_id>", methods=["GET", "POST"])
+@require_admin_auth
+def edit_free_agent(free_agent_id):
+    """Edit free agent registration details"""
+    free_agent = FreeAgent.query.get(free_agent_id)
+    if not free_agent:
+        flash("Free agent not found", "error")
+        return redirect(url_for("admin_panel"))
+    
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        skill_level = request.form.get("skill_level", "").strip()
+        playstyle = request.form.get("playstyle", "").strip()
+        availability = request.form.get("availability", "").strip()
+        
+        errors = []
+        
+        if not name:
+            errors.append("Name is required")
+        
+        if not email:
+            errors.append("Email is required")
+        
+        if not phone:
+            errors.append("Phone number is required")
+        
+        if not skill_level:
+            errors.append("Skill level is required")
+        
+        if not playstyle:
+            errors.append("Playstyle is required")
+        
+        if not availability:
+            errors.append("Availability is required")
+        
+        normalized_phone = normalize_phone_number(phone) if phone else None
+        
+        if phone and not normalized_phone:
+            errors.append("Phone number is invalid")
+        
+        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            errors.append("Email format is invalid")
+        
+        if normalized_phone and normalized_phone != free_agent.phone:
+            existing_fa_phone = FreeAgent.query.filter_by(phone=normalized_phone).first()
+            if existing_fa_phone and existing_fa_phone.id != free_agent_id:
+                errors.append("This phone number is already registered")
+        
+        if email and email != free_agent.email:
+            existing_fa_email = FreeAgent.query.filter_by(email=email).first()
+            if existing_fa_email and existing_fa_email.id != free_agent_id:
+                errors.append("This email is already registered")
+        
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template("admin_edit_free_agent.html", free_agent=free_agent)
+        
+        free_agent.name = name
+        free_agent.email = email
+        free_agent.phone = normalized_phone
+        free_agent.skill_level = skill_level
+        free_agent.playstyle = playstyle
+        free_agent.availability = availability
+        
+        try:
+            db.session.commit()
+            flash(f"Free agent {name} updated successfully!", "success")
+            return redirect(url_for("admin_panel"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating free agent: {str(e)}", "error")
+            return render_template("admin_edit_free_agent.html", free_agent=free_agent)
+    
+    return render_template("admin_edit_free_agent.html", free_agent=free_agent)
+
+
 @app.route("/admin/cleanup-duplicate-freeagents", methods=["POST"])
 @require_admin_auth
 def cleanup_duplicate_freeagents():
