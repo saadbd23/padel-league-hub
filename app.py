@@ -3030,6 +3030,97 @@ def confirm_team(team_id):
         flash("Team not found", "error")
     return redirect(url_for("admin_panel"))
 
+@app.route("/admin/edit-team/<int:team_id>", methods=["GET", "POST"])
+@require_admin_auth
+def edit_team(team_id):
+    team = Team.query.get(team_id)
+    if not team:
+        flash("Team not found", "error")
+        return redirect(url_for("admin_panel"))
+    
+    if request.method == "POST":
+        team_name = request.form.get("team_name", "").strip()
+        player1_name = request.form.get("player1_name", "").strip()
+        player1_email = request.form.get("player1_email", "").strip()
+        player1_phone = request.form.get("player1_phone", "").strip()
+        player2_name = request.form.get("player2_name", "").strip()
+        player2_email = request.form.get("player2_email", "").strip()
+        player2_phone = request.form.get("player2_phone", "").strip()
+        
+        errors = []
+        
+        if not team_name:
+            errors.append("Team name is required")
+        
+        if not player1_name:
+            errors.append("Player 1 name is required")
+        
+        if not player2_name:
+            errors.append("Player 2 name is required")
+        
+        if not player1_phone:
+            errors.append("Player 1 phone is required")
+        
+        if not player2_phone:
+            errors.append("Player 2 phone is required")
+        
+        normalized_phone1 = normalize_phone_number(player1_phone) if player1_phone else None
+        normalized_phone2 = normalize_phone_number(player2_phone) if player2_phone else None
+        
+        if player1_phone and not normalized_phone1:
+            errors.append("Player 1 phone number is invalid")
+        
+        if player2_phone and not normalized_phone2:
+            errors.append("Player 2 phone number is invalid")
+        
+        if player1_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', player1_email):
+            errors.append("Player 1 email format is invalid")
+        
+        if player2_email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', player2_email):
+            errors.append("Player 2 email format is invalid")
+        
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template("admin_edit_team.html", team=team)
+        
+        old_player1_phone = team.player1_phone
+        old_player2_phone = team.player2_phone
+        
+        team.team_name = team_name
+        team.team_name_canonical = normalize_team_name(team_name)
+        team.player1_name = player1_name
+        team.player1_email = player1_email if player1_email else None
+        team.player1_phone = normalized_phone1
+        team.player2_name = player2_name
+        team.player2_email = player2_email if player2_email else None
+        team.player2_phone = normalized_phone2
+        
+        if old_player1_phone != normalized_phone1:
+            player1 = Player.query.filter_by(phone=old_player1_phone).first()
+            if player1:
+                player1.phone = normalized_phone1
+                player1.name = player1_name
+                player1.email = player1_email if player1_email else None
+        
+        if old_player2_phone != normalized_phone2:
+            player2 = Player.query.filter_by(phone=old_player2_phone).first()
+            if player2:
+                player2.phone = normalized_phone2
+                player2.name = player2_name
+                player2.email = player2_email if player2_email else None
+        
+        try:
+            db.session.commit()
+            flash(f"Team {team_name} updated successfully!", "success")
+            return redirect(url_for("admin_panel"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating team: {str(e)}", "error")
+            return render_template("admin_edit_team.html", team=team)
+    
+    return render_template("admin_edit_team.html", team=team)
+
 @app.route("/admin/delete-team/<int:team_id>", methods=["POST"])
 @require_admin_auth
 def delete_team(team_id):
