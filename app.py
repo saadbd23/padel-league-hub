@@ -2308,6 +2308,31 @@ def reject_playoffs():
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/reset-match-booking/<int:match_id>", methods=["POST"])
+@require_admin_auth
+def reset_match_booking(match_id):
+    """Reset a match's booking details so teams need to reschedule"""
+    match = Match.query.get_or_404(match_id)
+    
+    # Clear booking details
+    match.booking_details = None
+    match.booking_confirmed = False
+    match.match_datetime = None
+    match.match_date = None
+    match.court = None
+    
+    db.session.commit()
+    
+    # Get team names for flash message
+    team_a = Team.query.get(match.team_a_id)
+    team_b = Team.query.get(match.team_b_id)
+    team_a_name = team_a.team_name if team_a else "Team A"
+    team_b_name = team_b.team_name if team_b else "Team B"
+    
+    flash(f"✅ Match booking reset for {team_a_name} vs {team_b_name}. Teams will need to reschedule.", "success")
+    return redirect(url_for("admin_panel"))
+
+
 @app.route("/admin/reset-round-status/<int:round_number>", methods=["POST"])
 @require_admin_auth
 def reset_round_status(round_number):
