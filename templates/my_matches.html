@@ -1053,12 +1053,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Set date restrictions for reschedule forms (Monday-Wednesday of next week ONLY)
-  // Calculate next Monday (start of following week)
-  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  // Use November 18, 2025 as reference for next week calculation
+  const referenceDate = new Date('2025-11-18T00:00:00'); // This is a Tuesday
+  const currentDay = referenceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   let daysToAdd;
 
   if (currentDay === 1) {
-    // If today is Monday, next Monday is 7 days away
+    // If reference day is Monday, next Monday is 7 days away
     daysToAdd = 7;
   } else {
     // Calculate days until next Monday
@@ -1066,10 +1067,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (daysToAdd === 0) daysToAdd = 7;
   }
 
-  const nextMonday = new Date(today);
-  nextMonday.setDate(today.getDate() + daysToAdd);
+  const nextMonday = new Date(referenceDate);
+  nextMonday.setDate(referenceDate.getDate() + daysToAdd);
 
-  // Calculate next Wednesday (CHANGED from Sunday to Wednesday)
+  // Calculate next Wednesday
   const nextWednesday = new Date(nextMonday);
   nextWednesday.setDate(nextMonday.getDate() + 2);
 
@@ -1098,15 +1099,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Set min/max dates for booking inputs based on round dates
   document.querySelectorAll('input[id^="booking-date-"]').forEach(input => {
-    const roundNumber = parseInt(input.dataset.roundNumber); // Ensure roundNumber is an integer
+    const roundNumber = parseInt(input.dataset.roundNumber);
 
-    // Calculate round start date (assuming Round 1 starts Nov 17, 2025)
-    const round1Start = new Date('2025-11-17');
-    const roundStartDate = new Date(round1Start);
+    // Calculate round start date (Round 1 starts Nov 17, 2025)
+    const round1Start = new Date('2025-11-17T00:00:00');
+    const roundStartDate = new Date(round1Start.getTime());
     roundStartDate.setDate(roundStartDate.getDate() + (roundNumber - 1) * 7);
 
     // Round ends on Sunday (6 days later)
-    const roundEndDate = new Date(roundStartDate);
+    const roundEndDate = new Date(roundStartDate.getTime());
     roundEndDate.setDate(roundEndDate.getDate() + 6);
 
     const minDate = roundStartDate.toISOString().split('T')[0];
@@ -1132,14 +1133,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Validate booking date is within round dates
       if (roundDatesText && roundDatesText.includes('(') && roundDatesText.includes(')')) {
-        const dateRangeMatch = roundDatesText.match(/\(([^)]+)\)/); // Extract content within parentheses
+        const dateRangeMatch = roundDatesText.match(/\(([^)]+)\)/);
         if (dateRangeMatch && dateRangeMatch[1].includes('-')) {
           const dates = dateRangeMatch[1].split(' - ');
           if (dates.length === 2) {
-            const currentYear = new Date().getFullYear();
-            // Assuming dates are like "Nov 17" and "Nov 23"
-            const startDate = new Date(`${dates[0]}, ${currentYear}`);
-            const endDate = new Date(`${dates[1]}, ${currentYear}`);
+            // Always use 2025 for round dates
+            const startDate = new Date(`${dates[0]}, 2025`);
+            const endDate = new Date(`${dates[1]}, 2025`);
             const bookingDate = new Date(selectedDate);
 
             // Set to start of day for comparison
