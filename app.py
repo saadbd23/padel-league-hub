@@ -198,7 +198,7 @@ def get_round_date_range(round_number):
     # Calculate the start date (Monday) for the round
     # Assuming Round 1 starts from a specific Monday (you can adjust this)
     # For now, let's assume Round 1 starts from the first Monday of 2025
-    round_1_start = datetime(2025, 1, 6)  # January 6, 2025 (first Monday)
+    round_1_start = datetime(2025, 11, 17)  # November 17, 2025 (first Monday)
     round_start = round_1_start + timedelta(weeks=round_number - 1)
     round_end = round_start + timedelta(days=6)
     
