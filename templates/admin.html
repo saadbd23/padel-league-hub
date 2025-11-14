@@ -65,6 +65,19 @@
         Generate Round
       </button>
     </form>
+    
+    <!-- Manual Email Resend -->
+    <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+      <h4 class="font-semibold text-yellow-900 mb-3">📧 Resend Round Emails</h4>
+      <p class="text-sm text-yellow-800 mb-3">If emails failed to send during round generation, you can manually resend them here.</p>
+      <form method="POST" action="{{ url_for('resend_round_emails', round_number=next_round-1 if next_round > 1 else 1) }}" class="flex gap-3 items-center">
+        <label class="text-sm font-medium text-yellow-900">Resend emails for Round:</label>
+        <input type="number" name="round_number" value="{{ next_round - 1 if next_round > 1 else 1 }}" min="1" class="px-3 py-2 border border-yellow-300 rounded-lg w-20" readonly>
+        <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-700 transition-all">
+          Resend Emails
+        </button>
+      </form>
+    </div>
   </div>
 
   <!-- Reschedule Management Section -->

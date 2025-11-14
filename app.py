@@ -2935,6 +2935,144 @@ def check_deadlines():
     
     return redirect(url_for("reschedule_dashboard"))
 
+@app.route("/admin/resend-round-emails/<int:round_number>", methods=["POST"])
+@require_admin_auth
+def resend_round_emails(round_number):
+    """Manually resend email notifications for a specific round"""
+    from utils import send_email_notification
+    
+    # Get all matches for this round
+    matches = Match.query.filter_by(round=round_number).all()
+    
+    if not matches:
+        flash(f"No matches found for Round {round_number}", "error")
+        return redirect(url_for("admin_panel"))
+    
+    round_dates = get_round_date_range(round_number)
+    base_url = "https://goeclectic.xyz"
+    
+    emails_sent = 0
+    emails_failed = 0
+    
+    for match in matches:
+        try:
+            if match.status == "bye":
+                # Handle bye notification
+                bye_team = Team.query.get(match.team_a_id)
+                if bye_team:
+                    bye_body = f"""Hi {bye_team.team_name},
+
+Round {round_number} has been generated!
+
+🏖️ You have a BYE this round - no match to play.
+
+Round Dates: {round_dates}
+
+You'll automatically advance to the next round. Enjoy your break!
+
+- BD Padel League
+"""
+                    if bye_team.player1_email:
+                        if send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+                    if bye_team.player2_email:
+                        if send_email_notification(bye_team.player2_email, f"Round {round_number} - BYE Week", bye_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+            else:
+                # Handle regular match notifications
+                team_a = Team.query.get(match.team_a_id)
+                team_b = Team.query.get(match.team_b_id)
+                
+                if team_a and team_b:
+                    # Team A notification
+                    team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
+                    team_a_body = f"""Hi {team_a.team_name},
+
+Round {round_number} has been generated!
+
+🎾 Your Match:
+- Opponent: {team_b.team_name}
+- Round Dates: {round_dates}
+- Deadline: Sunday 23:59
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before Sunday 23:59
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_a_link}
+
+Opponent Contact:
+- {team_b.player1_name}: {team_b.player1_email or team_b.player1_phone}
+- {team_b.player2_name}: {team_b.player2_email or team_b.player2_phone}
+
+Good luck! 🎾
+
+- BD Padel League
+"""
+                    if team_a.player1_email:
+                        if send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+                    if team_a.player2_email:
+                        if send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+                    
+                    # Team B notification
+                    team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
+                    team_b_body = f"""Hi {team_b.team_name},
+
+Round {round_number} has been generated!
+
+🎾 Your Match:
+- Opponent: {team_a.team_name}
+- Round Dates: {round_dates}
+- Deadline: Sunday 23:59
+
+📋 Next Steps:
+1. Coordinate with your opponent to book a court
+2. Play your match before Sunday 23:59
+3. Submit scores immediately after the match
+
+🔗 Your Match Page: {team_b_link}
+
+Opponent Contact:
+- {team_a.player1_name}: {team_a.player1_email or team_a.player1_phone}
+- {team_a.player2_name}: {team_a.player2_email or team_a.player2_phone}
+
+Good luck! 🎾
+
+- BD Padel League
+"""
+                    if team_b.player1_email:
+                        if send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+                    if team_b.player2_email:
+                        if send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body):
+                            emails_sent += 1
+                        else:
+                            emails_failed += 1
+        
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send emails for match {match.id}: {e}")
+            emails_failed += 1
+    
+    if emails_sent > 0:
+        flash(f"✅ Successfully sent {emails_sent} email(s) for Round {round_number}", "success")
+    if emails_failed > 0:
+        flash(f"⚠️ Failed to send {emails_failed} email(s). Check SMTP configuration.", "warning")
+    
+    return redirect(url_for("admin_panel"))
+
 @app.route("/admin/update-match/<int:match_id>", methods=["POST"])
 @require_admin_auth
 def update_match(match_id):
