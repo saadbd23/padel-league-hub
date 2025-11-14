@@ -1036,6 +1036,21 @@ def submit_booking(token):
         if match_datetime < datetime.now():
             return {"success": False, "message": "Booking time cannot be in the past"}, 400
         
+        # CRITICAL: Validate booking date is within round date range
+        if match.round:
+            round_start_date = get_round_start_date(match.round)
+            if round_start_date:
+                from datetime import timedelta
+                round_end_date = round_start_date + timedelta(days=6)  # Sunday
+                booking_date_obj = datetime.strptime(booking_date, "%Y-%m-%d").date()
+                
+                if booking_date_obj < round_start_date or booking_date_obj > round_end_date:
+                    round_dates = get_round_date_range(match.round)
+                    return {
+                        "success": False, 
+                        "message": f"Booking date must be within round dates ({round_dates}). For dates outside this range, please use the Reschedule Request feature."
+                    }, 400
+        
         # Get opponent
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         opponent = Team.query.get(opponent_id)
