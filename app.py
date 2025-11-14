@@ -1962,6 +1962,13 @@ def admin_panel():
     pending_reschedules_count = len(reschedules)
     max_reschedules = get_max_reschedules_per_round()
     
+    # Calculate current and next round numbers
+    current_round = 0
+    if matches:
+        # Get the highest round number from existing matches
+        current_round = max([m.round for m in matches if m.round])
+    next_round = current_round + 1
+    
     # Check for free agent duplicates (already in teams)
     free_agent_status = []
     for fa in free_agents:
@@ -2010,6 +2017,8 @@ def admin_panel():
         total_swiss=total_swiss,
         show_playoff_preview=show_playoff_preview,
         settings=settings,
+        current_round=current_round,
+        next_round=next_round,
     )
 
 
