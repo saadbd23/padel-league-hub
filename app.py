@@ -2447,6 +2447,9 @@ def generate_round():
                 flash("All playoff rounds have already been generated!", "warning")
                 return redirect(url_for("admin_panel"))
             
+            # Commit matches before sending emails
+            db.session.commit()
+            
             # Send playoff email notifications
             from utils import send_email_notification
             base_url = "https://goeclectic.xyz"
@@ -2593,9 +2596,13 @@ Good luck! May the best team win! 🏆
         for match in matches:
             match.round_dates = get_round_date_range(round_number)
         
+        # Commit matches before sending emails
+        db.session.commit()
+        
         # Send email notifications to all teams about new round pairings
         from utils import send_email_notification
         round_dates = get_round_date_range(round_number)
+        base_url = "https://goeclectic.xyz"
         
         for match in matches:
             if match.status == "bye":
@@ -2614,10 +2621,13 @@ You'll automatically advance to the next round. Enjoy your break!
 
 - BD Padel League
 """
-                    if bye_team.player1_email:
-                        send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body)
-                    if bye_team.player2_email:
-                        send_email_notification(bye_team.player2_email, f"Round {round_number} - BYE Week", bye_body)
+                    try:
+                        if bye_team.player1_email:
+                            send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body)
+                        if bye_team.player2_email:
+                            send_email_notification(bye_team.player2_email, f"Round {round_number} - BYE Week", bye_body)
+                    except Exception as email_error:
+                        print(f"[EMAIL ERROR] Failed to send BYE notification to {bye_team.team_name}: {email_error}")
             else:
                 # Notify both teams
                 team_a = Team.query.get(match.team_a_id)
@@ -2629,7 +2639,9 @@ You'll automatically advance to the next round. Enjoy your break!
                     
                     # Team A notification
                     team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
-                    team_a_body = f"""Hi {team_a.team_name},
+                    
+                    try:
+                        team_a_body = f"""Hi {team_a.team_name},
 
 Round {round_number} has been generated!
 
@@ -2654,11 +2666,14 @@ Good luck! 🎾
 - BD Padel League
 """
                     if team_a.player1_email:
-                        send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
-                    if team_a.player2_email:
-                        send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
+                            send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
+                        if team_a.player2_email:
+                            send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
+                    except Exception as email_error:
+                        print(f"[EMAIL ERROR] Failed to send to Team A ({team_a.team_name}): {email_error}")
                     
                     # Team B notification
+                    try:
                     team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
                     team_b_body = f"""Hi {team_b.team_name},
 
@@ -2685,9 +2700,11 @@ Good luck! 🎾
 - BD Padel League
 """
                     if team_b.player1_email:
-                        send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
-                    if team_b.player2_email:
-                        send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
+                            send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
+                        if team_b.player2_email:
+                            send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
+                    except Exception as email_error:
+                        print(f"[EMAIL ERROR] Failed to send to Team B ({team_b.team_name}): {email_error}")
             
     except Exception as e:
         flash(f"Error generating round: {str(e)}", "error")
