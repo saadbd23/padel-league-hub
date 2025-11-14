@@ -2665,7 +2665,7 @@ Good luck! 🎾
 
 - BD Padel League
 """
-                    if team_a.player1_email:
+                        if team_a.player1_email:
                             send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
                         if team_a.player2_email:
                             send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
@@ -2674,8 +2674,8 @@ Good luck! 🎾
                     
                     # Team B notification
                     try:
-                    team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
-                    team_b_body = f"""Hi {team_b.team_name},
+                        team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
+                        team_b_body = f"""Hi {team_b.team_name},
 
 Round {round_number} has been generated!
 
@@ -2699,7 +2699,7 @@ Good luck! 🎾
 
 - BD Padel League
 """
-                    if team_b.player1_email:
+                        if team_b.player1_email:
                             send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
                         if team_b.player2_email:
                             send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)

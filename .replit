@@ -33,16 +33,12 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "gunicorn app:app --workers 1 --threads 2 --timeout 120 --bind 0.0.0.0:5000"
+args = "gunicorn --bind=0.0.0.0:5000 --reuse-port app:app"
 waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 41793
-externalPort = 3000
 
 [agent]
 expertMode = true
