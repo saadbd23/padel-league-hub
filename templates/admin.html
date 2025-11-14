@@ -47,6 +47,21 @@
       </div>
     </div>
     
+    <!-- Reset Round Status (for future rounds marked as completed by mistake) -->
+    {% if current_round > 0 %}
+    <div class="mt-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+      <h4 class="font-semibold text-orange-900 mb-3">🔄 Reset Round Status</h4>
+      <p class="text-sm text-orange-800 mb-3">If matches were marked as completed by mistake (e.g., for a future round), you can reset them back to scheduled status.</p>
+      <form method="POST" action="{{ url_for('reset_round_status', round_number=current_round) }}" class="flex gap-3 items-center" onsubmit="return confirm('Are you sure you want to reset all matches in this round? This will reverse all stats and scores.')">
+        <label class="text-sm font-medium text-orange-900">Reset Round:</label>
+        <input type="number" name="round_number" value="{{ current_round }}" min="1" class="px-3 py-2 border border-orange-300 rounded-lg w-20">
+        <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-all">
+          Reset to Scheduled
+        </button>
+      </form>
+    </div>
+    {% endif %}
+    
     <div class="mb-4 p-3 sm:p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
       <div class="text-xs sm:text-sm text-blue-900">
         <div class="font-semibold mb-2">📅 Monday Morning Workflow:</div>

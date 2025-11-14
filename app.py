@@ -2308,6 +2308,74 @@ def reject_playoffs():
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/reset-round-status/<int:round_number>", methods=["POST"])
+@require_admin_auth
+def reset_round_status(round_number):
+    """Reset all matches in a round back to scheduled status (useful for future rounds)"""
+    matches = Match.query.filter_by(round=round_number).all()
+    
+    if not matches:
+        flash(f"No matches found for Round {round_number}", "error")
+        return redirect(url_for("admin_panel"))
+    
+    reset_count = 0
+    for match in matches:
+        if match.status == "completed":
+            # Reverse stats if already calculated
+            if match.stats_calculated:
+                team_a = Team.query.get(match.team_a_id)
+                team_b = Team.query.get(match.team_b_id)
+                
+                if team_a and team_b:
+                    # Reverse team stats
+                    team_a.sets_for -= match.sets_a
+                    team_a.sets_against -= match.sets_b
+                    team_a.games_for -= match.games_a
+                    team_a.games_against -= match.games_b
+                    
+                    team_b.sets_for -= match.sets_b
+                    team_b.sets_against -= match.sets_a
+                    team_b.games_for -= match.games_b
+                    team_b.games_against -= match.games_a
+                    
+                    # Reverse wins/losses/draws
+                    if match.winner_id == team_a.id:
+                        team_a.wins -= 1
+                        team_a.points -= 3
+                        team_b.losses -= 1
+                    elif match.winner_id == team_b.id:
+                        team_b.wins -= 1
+                        team_b.points -= 3
+                        team_a.losses -= 1
+                    elif match.winner_id is None:
+                        team_a.draws -= 1
+                        team_a.points -= 1
+                        team_b.draws -= 1
+                        team_b.points -= 1
+            
+            # Reset match to scheduled
+            match.status = "scheduled"
+            match.score_a = None
+            match.score_b = None
+            match.sets_a = 0
+            match.sets_b = 0
+            match.games_a = 0
+            match.games_b = 0
+            match.winner_id = None
+            match.verified = False
+            match.stats_calculated = False
+            match.score_submission_a = None
+            match.score_submission_b = None
+            match.score_submitted_by_a = False
+            match.score_submitted_by_b = False
+            
+            reset_count += 1
+    
+    db.session.commit()
+    flash(f"✅ Reset {reset_count} match(es) in Round {round_number} back to scheduled status. All stats reversed.", "success")
+    return redirect(url_for("admin_panel"))
+
+
 @app.route("/admin/pair-agents", methods=["POST"])
 @require_admin_auth
 def pair_agents():
