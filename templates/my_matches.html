@@ -1062,22 +1062,21 @@ document.addEventListener('DOMContentLoaded', function() {
   nowForCalendar.setHours(0, 0, 0, 0);
   
   const currentDayOfWeek = nowForCalendar.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  let daysUntilNextMonday;
-
-  // Sunday is the last day of current round, so "next week" means the week AFTER current round
+  
+  // Calculate the Monday of NEXT week (following the current round)
+  // Current round is Mon-Sun, so we always want Mon-Wed of the NEXT round
+  let daysUntilFollowingMonday;
+  
   if (currentDayOfWeek === 0) {
-    // If today is Sunday (last day of round), next Monday of FOLLOWING week is 8 days away
-    daysUntilNextMonday = 8;
-  } else if (currentDayOfWeek === 1) {
-    // If today is Monday, next Monday is 7 days away
-    daysUntilNextMonday = 7;
+    // Sunday: next Monday is 1 day away
+    daysUntilFollowingMonday = 1;
   } else {
-    // Tuesday through Saturday: calculate days until next Monday
-    daysUntilNextMonday = 8 - currentDayOfWeek;
+    // Mon-Sat: calculate days until next Monday (start of following week)
+    daysUntilFollowingMonday = 8 - currentDayOfWeek; // Mon:7, Tue:6, Wed:5, Thu:4, Fri:3, Sat:2
   }
 
   const nextMonday = new Date(nowForCalendar);
-  nextMonday.setDate(nowForCalendar.getDate() + daysUntilNextMonday);
+  nextMonday.setDate(nowForCalendar.getDate() + daysUntilFollowingMonday);
   nextMonday.setHours(0, 0, 0, 0);
 
   // Calculate next Wednesday (2 days after Monday)
