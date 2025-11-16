@@ -1053,11 +1053,48 @@ def submit_booking(token):
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         opponent = Team.query.get(opponent_id)
 
-        # Check if opponent already submitted the same booking
+        # Check if there's an existing booking or if this is a change to confirmed booking
         if match.booking_details:
             # Parse existing booking
             try:
                 existing_datetime_str = match.booking_details.split("Court assigned on arrival")[0].strip()
+                
+                # If booking was already confirmed and someone is proposing a new time
+                if match.booking_confirmed:
+                    # Reset confirmation and store new proposal
+                    match.booking_confirmed = False
+                    formatted_datetime = match_datetime.strftime("%A, %B %d at %I:%M %p")
+                    match.booking_details = f"{formatted_datetime}\nCourt assigned on arrival\nWaiting for {opponent.team_name} to confirm..."
+                    match.match_datetime = match_datetime
+                    db.session.commit()
+
+                    # Notify opponent about the change
+                    base_url = "https://goeclectic.xyz"
+                    notification_body = f"""Hi!
+
+{team.team_name} has proposed a CHANGE to your confirmed match booking:
+
+NEW Proposed Time: {formatted_datetime}
+Court: Assigned on arrival
+
+Please log in to confirm or propose a different time:
+{base_url}/my-matches/{opponent.access_token}
+
+- BD Padel League
+"""
+                    if opponent.player1_email:
+                        send_email_notification(opponent.player1_email, "Match Booking Change Proposed", notification_body)
+                    if opponent.player2_email:
+                        send_email_notification(opponent.player2_email, "Match Booking Change Proposed", notification_body)
+
+                    return {
+                        "success": True,
+                        "message": f"Booking change submitted! Waiting for {opponent.team_name} to confirm the new time.",
+                        "confirmed": False,
+                        "booking_details": match.booking_details
+                    }
+                
+                # Check if opponent is confirming existing proposal
                 if datetime_str in existing_datetime_str:
                     # Both teams agree! Confirm booking
                     match.match_datetime = match_datetime
