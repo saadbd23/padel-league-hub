@@ -770,18 +770,18 @@ function submitReschedule(event, matchId, token) {
   today.setHours(0, 0, 0, 0); // Normalize to start of day
 
   // Calculate next Monday (start of following week)
-  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
   let daysToAdd;
 
-  if (currentDay === 0) {
+  if (currentDayOfWeek === 0) {
     // If today is Sunday, next Monday is 1 day away
     daysToAdd = 1;
-  } else if (currentDay === 1) {
+  } else if (currentDayOfWeek === 1) {
     // If today is Monday, next Monday is 7 days away
     daysToAdd = 7;
   } else {
     // Tuesday through Saturday: calculate days until next Monday
-    daysToAdd = 8 - currentDay;
+    daysToAdd = 8 - currentDayOfWeek;
   }
 
   const nextMonday = new Date(today);
@@ -1060,33 +1060,33 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set date restrictions for reschedule forms (Monday-Wednesday of FOLLOWING week ONLY)
   const nowForCalendar = new Date();
   nowForCalendar.setHours(0, 0, 0, 0);
-  
+
   const currentDayOfWeek = nowForCalendar.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  
+
   // Calculate the Monday of the FOLLOWING week (next round)
-  // Current round is Mon-Sun. Following week starts on Monday AFTER the current round ends.
+  // If today is Sunday (last day of current round), following Monday is tomorrow (1 day away)
+  // If today is Monday (first day of current round), following Monday is 7 days away (start of next round)
+  // If today is Tue-Sat, following Monday is the Monday that starts the next round
   let daysUntilFollowingMonday;
-  
+
   if (currentDayOfWeek === 0) {
-    // If today is Sunday (end of current round), following Monday is 1 day away
+    // Sunday: Next round starts tomorrow (Monday)
     daysUntilFollowingMonday = 1;
   } else if (currentDayOfWeek === 1) {
-    // If today is Monday (start of current round), following Monday is 7 days away
+    // Monday: Following Monday is 7 days away
     daysUntilFollowingMonday = 7;
   } else {
-    // For Tue-Sat: calculate days to get to next Monday (following week)
-    // Days until this Sunday: (7 - currentDayOfWeek)
-    // Then +1 to get to Monday
-    daysUntilFollowingMonday = (7 - currentDayOfWeek) + 1;
+    // Tue-Sat: Calculate days to next Monday
+    daysUntilFollowingMonday = 8 - currentDayOfWeek;
   }
 
-  const nextMonday = new Date(nowForCalendar.getTime());
-  nextMonday.setDate(nextMonday.getDate() + daysUntilFollowingMonday);
+  const nextMonday = new Date(nowForCalendar);
+  nextMonday.setDate(nowForCalendar.getDate() + daysUntilFollowingMonday);
   nextMonday.setHours(0, 0, 0, 0);
 
   // Calculate next Wednesday (2 days after Monday)
   const nextWednesday = new Date(nextMonday.getTime());
-  nextWednesday.setDate(nextWednesday.getDate() + 2);
+  nextWednesday.setDate(nextMonday.getDate() + 2);
   nextWednesday.setHours(23, 59, 59, 999);
 
   const nextMondayStr = nextMonday.toISOString().split('T')[0];
@@ -1113,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         this.setCustomValidity('');
       }
     });
-    
+
     // Also add validation on form submission
     const form = input.closest('form');
     if (form) {
