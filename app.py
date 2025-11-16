@@ -1739,9 +1739,10 @@ def submit_substitute(token):
         sub_name = data.get("sub_name", "").strip()
         sub_phone = data.get("sub_phone", "").strip()
         sub_email = data.get("sub_email", "").strip()
+        replaces_player = data.get("replaces_player", "").strip()
 
-        if not all([match_id, sub_name, sub_phone, sub_email]):
-            return {"success": False, "message": "Match ID, substitute name, phone, and email are required"}, 400
+        if not all([match_id, sub_name, sub_phone, sub_email, replaces_player]):
+            return {"success": False, "message": "All fields including which player is being replaced are required"}, 400
 
         # Find the match
         match = Match.query.get(match_id)
@@ -1761,12 +1762,17 @@ def submit_substitute(token):
 
         # Create substitute request
         from datetime import datetime
+        
+        # Get the replaced player's name
+        replaced_player_name = team.player1_name if replaces_player == "1" else team.player2_name
+        
         s = Substitute(
             team_id=team.id,
             match_id=match_id,
             name=sub_name,
             phone=sub_phone,
             email=sub_email,
+            replaces_player_number=int(replaces_player),
             status="pending",
             created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
@@ -1789,6 +1795,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Substitute: {sub_name} ({sub_email})
+- Replacing: {replaced_player_name}
 
 Admin will review and approve/deny your request soon. You will receive a confirmation email once processed.
 
@@ -1806,6 +1813,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Substitute: {sub_name} ({sub_email})
+- Replacing: {replaced_player_name}
 
 Admin will review and approve/deny the request soon. You will receive a confirmation email once processed.
 
@@ -1822,6 +1830,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Team Players: {team.player1_name} & {team.player2_name}
+- You will replace: {replaced_player_name}
 
 Admin will review and approve/deny the request soon. You will receive a confirmation email once processed.
 
@@ -3461,6 +3470,13 @@ def approve_substitute(substitute_id):
     from utils import send_email_notification
 
     if match and team:
+        # Get replaced player's name
+        replaced_player_name = team.player1_name if substitute.replaces_player_number == 1 else team.player2_name
+        
+        # Get opponent team
+        opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
+        opponent_team = Team.query.get(opponent_id)
+        
         subject = f"Substitute Request APPROVED - Round {match.round}"
 
         # Email to Player 1
@@ -3473,6 +3489,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Substitute: {substitute.name} ({substitute.email})
+- Replacing: {replaced_player_name}
 - Match ID: {match.id}
 
 Your substitute is now officially approved for this match. Please coordinate with {substitute.name} for the match schedule.
@@ -3493,6 +3510,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Substitute: {substitute.name} ({substitute.email})
+- Replacing: {replaced_player_name}
 - Match ID: {match.id}
 
 Your substitute is now officially approved for this match. Please coordinate with {substitute.name} for the match schedule.
@@ -3513,6 +3531,7 @@ Match Details:
 - Round: {match.round}
 - Team: {team.team_name}
 - Team Players: {team.player1_name} & {team.player2_name}
+- You will replace: {replaced_player_name}
 - Match ID: {match.id}
 
 You are now officially approved to play as a substitute for this match. Please coordinate with the team for the match schedule and details.
@@ -3520,6 +3539,29 @@ You are now officially approved to play as a substitute for this match. Please c
 Thank you for participating!
 Padel League Hub"""
             send_email_notification(substitute.email, subject, sub_body)
+        
+        # Email to OPPONENT TEAM
+        if opponent_team:
+            opponent_subject = f"Opponent Using Substitute - Round {match.round}"
+            opponent_body = f"""Hello {opponent_team.team_name},
+
+📢 FYI: Your opponent will be using a substitute player for your upcoming match.
+
+Match Details:
+- Round: {match.round}
+- Opponent Team: {team.team_name}
+- Substitute Player: {substitute.name}
+- Replacing: {replaced_player_name}
+
+The substitute has been approved by the admin. Please proceed with the match as scheduled.
+
+Good luck!
+Padel League Hub"""
+            
+            if opponent_team.player1_email:
+                send_email_notification(opponent_team.player1_email, opponent_subject, opponent_body)
+            if opponent_team.player2_email:
+                send_email_notification(opponent_team.player2_email, opponent_subject, opponent_body)
 
     flash(f"Substitute request approved for Match {substitute.match_id}. Team now has {team.subs_used}/2 substitutes used. Confirmation emails sent to all parties.", "success")
     return redirect(url_for("admin_panel"))

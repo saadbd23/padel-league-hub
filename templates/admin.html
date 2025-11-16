@@ -600,6 +600,9 @@
             <div class="font-bold text-gray-900">Match {{ s.match_id }}</div>
             <div class="text-sm text-gray-600">Team: {{ team.team_name if team else 'Unknown' }}</div>
             <div class="text-sm text-gray-600">Substitute: {{ s.name }} ({{ s.phone }})</div>
+            {% if s.replaces_player_number %}
+            <div class="text-sm text-orange-600 font-semibold">Replaces: {{ team.player1_name if s.replaces_player_number == 1 else team.player2_name }}</div>
+            {% endif %}
             {% if team %}
             <div class="text-xs {% if team.subs_used >= 1 %}text-orange-600 font-semibold{% else %}text-blue-600{% endif %} mt-1">
               Team substitutes: {{ team.subs_used }}/2 used
