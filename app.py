@@ -409,7 +409,7 @@ def check_reschedule_conflicts(proposed_matches):
                 existing_match = Match.query.get(reschedule.match_id)
                 if existing_match:
                     # Check if this proposed match conflicts with a pending reschedule
-                    if (team_a_id in [existing_match.team_a_id, existing_match.team_b_id] or 
+                    if (team_a_id in [existing_match.team_a_id, existing_match.team_b_id] or
                         team_b_id in [existing_match.team_a_id, existing_match.team_b_id]):
                         conflicts.append({
                             'proposed_match': match,
@@ -851,7 +851,7 @@ def leaderboard():
     Leaderboard with proper padel league ranking:
     1. Points (3 for win, 1 for draw, 0 for loss)
     2. Sets difference
-    3. Games difference  
+    3. Games difference
     4. Wins
     5. Team name (alphabetical)
     """
@@ -1045,7 +1045,7 @@ def submit_booking(token):
                 if booking_date_obj < round_start_date or booking_date_obj > round_end_date:
                     round_dates = get_round_date_range(match.round)
                     return {
-                        "success": False, 
+                        "success": False,
                         "message": f"Booking date must be within round dates ({round_dates}). For dates outside this range, please use the Reschedule Request feature."
                     }, 400
 
@@ -1262,7 +1262,7 @@ def confirm_score(token):
             submitted_score = match.score_submission_b
             submitted_by_team = opponent
         else:
-            # Team B is confirming Team A's score  
+            # Team B is confirming Team A's score
             submitted_score = match.score_submission_a
             submitted_by_team = opponent
 
@@ -1574,7 +1574,7 @@ def submit_reschedule(token):
         # Check reschedule limit (max 2 per team)
         if team.reschedules_used >= 2:
             return {
-                "success": False, 
+                "success": False,
                 "message": "Your team has already used all 2 reschedules. Contact admin for special approval."
             }, 400
 
@@ -1825,7 +1825,7 @@ Match Details:
 
 Admin will review and approve/deny the request soon. You will receive a confirmation email once processed.
 
-Thank you!
+Thank you for participating!
 Padel League Hub"""
         send_email_notification(sub_email, subject, sub_body)
 
@@ -2007,9 +2007,9 @@ def admin_panel():
 
     # Determine if we should show playoff preview button
     show_playoff_preview = (
-        swiss_complete and 
-        settings and 
-        settings.current_phase == "swiss" and 
+        swiss_complete and
+        settings and
+        settings.current_phase == "swiss" and
         not settings.playoffs_approved
     )
 
@@ -3094,6 +3094,9 @@ You'll automatically advance to the next round. Enjoy your break!
                 team_b = Team.query.get(match.team_b_id)
 
                 if team_a and team_b:
+                    # Access link for each team
+                    base_url = "https://goeclectic.xyz"
+
                     # Team A notification
                     team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
                     team_a_body = f"""Hi {team_a.team_name},
@@ -3324,6 +3327,10 @@ def edit_team(team_id):
         flash("Team not found", "error")
         return redirect(url_for("admin_panel"))
 
+    # Store original phone numbers to check for changes
+    old_player1_phone = team.player1_phone
+    old_player2_phone = team.player2_phone
+
     if request.method == "POST":
         team_name = request.form.get("team_name", "").strip()
         player1_name = request.form.get("player1_name", "").strip()
@@ -3379,6 +3386,7 @@ def edit_team(team_id):
         team.player2_email = player2_email if player2_email else None
         team.player2_phone = normalized_phone2
 
+        # Update associated Player records if phone number changed
         if old_player1_phone != normalized_phone1:
             player1 = Player.query.filter_by(phone=old_player1_phone).first()
             if player1:
@@ -3545,7 +3553,7 @@ Match Details:
 - Substitute: {substitute.name} ({substitute.email})
 - Match ID: {match.id}
 
-Please contact the admin if you have questions or need to submit a different substitute request.
+Please contact the admin if you have questions or to submit a different substitute request.
 
 Team Substitute Usage: {team.subs_used}/2
 

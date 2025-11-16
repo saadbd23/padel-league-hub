@@ -1057,16 +1057,17 @@ document.addEventListener('DOMContentLoaded', function() {
     input.setAttribute('min', todayStr);
   });
 
-  // Set date restrictions for reschedule forms (Monday-Wednesday of next week ONLY)
+  // Set date restrictions for reschedule forms (Monday-Wednesday of FOLLOWING week ONLY)
   const nowForCalendar = new Date();
   nowForCalendar.setHours(0, 0, 0, 0);
   
   const currentDayOfWeek = nowForCalendar.getDay(); // 0 = Sunday, 1 = Monday, etc.
   let daysUntilNextMonday;
 
+  // Sunday is the last day of current round, so "next week" means the week AFTER current round
   if (currentDayOfWeek === 0) {
-    // If today is Sunday, next Monday is 1 day away
-    daysUntilNextMonday = 1;
+    // If today is Sunday (last day of round), next Monday of FOLLOWING week is 8 days away
+    daysUntilNextMonday = 8;
   } else if (currentDayOfWeek === 1) {
     // If today is Monday, next Monday is 7 days away
     daysUntilNextMonday = 7;
