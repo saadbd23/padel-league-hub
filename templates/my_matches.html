@@ -1080,13 +1080,13 @@ document.addEventListener('DOMContentLoaded', function() {
     daysUntilFollowingMonday = (7 - currentDayOfWeek) + 1;
   }
 
-  const nextMonday = new Date(nowForCalendar);
-  nextMonday.setDate(nowForCalendar.getDate() + daysUntilFollowingMonday);
+  const nextMonday = new Date(nowForCalendar.getTime());
+  nextMonday.setDate(nextMonday.getDate() + daysUntilFollowingMonday);
   nextMonday.setHours(0, 0, 0, 0);
 
   // Calculate next Wednesday (2 days after Monday)
-  const nextWednesday = new Date(nextMonday);
-  nextWednesday.setDate(nextMonday.getDate() + 2);
+  const nextWednesday = new Date(nextMonday.getTime());
+  nextWednesday.setDate(nextWednesday.getDate() + 2);
   nextWednesday.setHours(23, 59, 59, 999);
 
   const nextMondayStr = nextMonday.toISOString().split('T')[0];
@@ -1102,14 +1102,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add custom validation to only allow Mon/Tue/Wed
     input.addEventListener('input', function() {
-      const selectedDate = new Date(this.value);
+      const selectedDate = new Date(this.value + 'T00:00:00');
       const selectedDay = selectedDate.getDay();
-      if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
-        this.setCustomValidity('Only Monday, Tuesday, or Wednesday are allowed');
+      if (selectedDay === 0) {
+        this.setCustomValidity('Sunday is not allowed. Please select Monday, Tuesday, or Wednesday only.');
+        alert('⚠️ Sunday is NOT allowed for reschedule requests. Please select Monday, Tuesday, or Wednesday of the following week only.');
+      } else if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
+        this.setCustomValidity('Only Monday, Tuesday, or Wednesday are allowed for reschedule requests.');
       } else {
         this.setCustomValidity('');
       }
     });
+    
+    // Also add validation on form submission
+    const form = input.closest('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        const selectedDate = new Date(input.value + 'T00:00:00');
+        const selectedDay = selectedDate.getDay();
+        if (selectedDay === 0 || selectedDay === 6 || selectedDay === 4 || selectedDay === 5) {
+          e.preventDefault();
+          alert('⚠️ Invalid day selected. Reschedule requests are ONLY allowed for Monday, Tuesday, or Wednesday of the following week.');
+          return false;
+        }
+      });
+    }
   });
 
   // Set min/max dates for booking inputs based on round dates
