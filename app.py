@@ -4047,6 +4047,31 @@ def admin_panel():
         not settings.playoffs_approved
     )
 
+    # Ladder-specific data
+    men_teams_count = LadderTeam.query.filter_by(ladder_type='men').count()
+    women_teams_count = LadderTeam.query.filter_by(ladder_type='women').count()
+    
+    active_challenges_count = LadderChallenge.query.filter(
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).count()
+    
+    pending_matches_count = LadderMatch.query.filter(
+        LadderMatch.status.in_(['pending_scores', 'pending_opponent_score'])
+    ).count()
+    
+    no_show_reports_count = LadderMatch.query.filter_by(status='no_show_reported').count()
+    disputed_matches_count = LadderMatch.query.filter_by(disputed=True).count()
+    
+    men_on_holiday_count = LadderTeam.query.filter_by(
+        ladder_type='men',
+        holiday_mode_active=True
+    ).count()
+    
+    women_on_holiday_count = LadderTeam.query.filter_by(
+        ladder_type='women',
+        holiday_mode_active=True
+    ).count()
+
     return render_template(
         "admin.html",
         teams=teams,
@@ -4066,6 +4091,14 @@ def admin_panel():
         settings=settings,
         current_round=current_round,
         next_round=next_round,
+        men_teams_count=men_teams_count,
+        women_teams_count=women_teams_count,
+        active_challenges_count=active_challenges_count,
+        pending_matches_count=pending_matches_count,
+        no_show_reports_count=no_show_reports_count,
+        disputed_matches_count=disputed_matches_count,
+        men_on_holiday_count=men_on_holiday_count,
+        women_on_holiday_count=women_on_holiday_count,
     )
 
 

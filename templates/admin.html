@@ -29,6 +29,23 @@
     </div>
   </div>
 
+  <!-- Tab Navigation -->
+  <div class="mb-6 sm:mb-8">
+    <div class="border-b border-gray-700">
+      <nav class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4" aria-label="Tabs">
+        <button onclick="switchTab('league')" id="league-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
+          🏆 League
+        </button>
+        <button onclick="switchTab('ladder')" id="ladder-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
+          🪜 Ladder
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- LEAGUE TAB CONTENT -->
+  <div id="league-tab-content" class="tab-content">
+    
   <!-- Generate Round Section -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
     <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Generate Round Pairings</h3>
@@ -473,7 +490,6 @@
             </form>
           </div>
           {% endif %}
-          </form>
         </div>
         {% endif %}
 
@@ -686,9 +702,303 @@
       </p>
     </div>
   </div>
+
+  </div>
+  <!-- END LEAGUE TAB CONTENT -->
+
+  <!-- LADDER TAB CONTENT -->
+  <div id="ladder-tab-content" class="tab-content hidden">
+    
+    <!-- Ladder Sub-tabs -->
+    <div class="mb-6">
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 border-b border-gray-300">
+        <button onclick="switchLadderSubTab('men')" id="men-subtab-btn" class="ladder-subtab-button px-4 py-2 text-sm font-semibold transition-all duration-200">
+          👨 Men's Division
+        </button>
+        <button onclick="switchLadderSubTab('women')" id="women-subtab-btn" class="ladder-subtab-button px-4 py-2 text-sm font-semibold transition-all duration-200">
+          👩 Women's Division
+        </button>
+      </div>
+    </div>
+
+    <!-- Men's Division Content -->
+    <div id="men-ladder-content" class="ladder-subtab-content">
+      <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Men's Division Overview</h3>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-300">
+            <div class="text-sm font-semibold text-blue-800 mb-1">👥 Total Teams</div>
+            <div class="text-3xl font-bold text-blue-900">{{ men_teams_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border-2 border-orange-300">
+            <div class="text-sm font-semibold text-orange-800 mb-1">⚡ Active Challenges</div>
+            <div class="text-3xl font-bold text-orange-900">{{ active_challenges_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border-2 border-yellow-300">
+            <div class="text-sm font-semibold text-yellow-800 mb-1">📊 Pending Matches</div>
+            <div class="text-3xl font-bold text-yellow-900">{{ pending_matches_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-300">
+            <div class="text-sm font-semibold text-purple-800 mb-1">🏖️ On Holiday</div>
+            <div class="text-3xl font-bold text-purple-900">{{ men_on_holiday_count }}</div>
+          </div>
+        </div>
+
+        <!-- Action Alerts -->
+        {% if no_show_reports_count > 0 %}
+        <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-semibold text-red-800">
+                {{ no_show_reports_count }} No-Show Report{{ 's' if no_show_reports_count != 1 }} Pending Review
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if disputed_matches_count > 0 %}
+        <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-semibold text-orange-800">
+                {{ disputed_matches_count }} Disputed Match{{ 'es' if disputed_matches_count != 1 }} Need Resolution
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">🏆</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Rankings</h4>
+            <p class="text-sm text-gray-600 mb-4">View and manage current ladder rankings</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">⚔️</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Challenges</h4>
+            <p class="text-sm text-gray-600 mb-4">Manage active and pending challenges</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">📋</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Match Results</h4>
+            <p class="text-sm text-gray-600 mb-4">Review and verify match scores</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Women's Division Content -->
+    <div id="women-ladder-content" class="ladder-subtab-content hidden">
+      <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Women's Division Overview</h3>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border-2 border-pink-300">
+            <div class="text-sm font-semibold text-pink-800 mb-1">👥 Total Teams</div>
+            <div class="text-3xl font-bold text-pink-900">{{ women_teams_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border-2 border-orange-300">
+            <div class="text-sm font-semibold text-orange-800 mb-1">⚡ Active Challenges</div>
+            <div class="text-3xl font-bold text-orange-900">{{ active_challenges_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border-2 border-yellow-300">
+            <div class="text-sm font-semibold text-yellow-800 mb-1">📊 Pending Matches</div>
+            <div class="text-3xl font-bold text-yellow-900">{{ pending_matches_count }}</div>
+          </div>
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-300">
+            <div class="text-sm font-semibold text-purple-800 mb-1">🏖️ On Holiday</div>
+            <div class="text-3xl font-bold text-purple-900">{{ women_on_holiday_count }}</div>
+          </div>
+        </div>
+
+        <!-- Action Alerts -->
+        {% if no_show_reports_count > 0 %}
+        <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-semibold text-red-800">
+                {{ no_show_reports_count }} No-Show Report{{ 's' if no_show_reports_count != 1 }} Pending Review
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if disputed_matches_count > 0 %}
+        <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-semibold text-orange-800">
+                {{ disputed_matches_count }} Disputed Match{{ 'es' if disputed_matches_count != 1 }} Need Resolution
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">🏆</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Rankings</h4>
+            <p class="text-sm text-gray-600 mb-4">View and manage current ladder rankings</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">⚔️</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Challenges</h4>
+            <p class="text-sm text-gray-600 mb-4">Manage active and pending challenges</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">📋</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Match Results</h4>
+            <p class="text-sm text-gray-600 mb-4">Review and verify match scores</p>
+            <a href="#" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Coming Soon
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- END LADDER TAB CONTENT -->
+
 </div>
 
+<style>
+.tab-button {
+  color: #9ca3af;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  color: white;
+  border-bottom-color: transparent;
+}
+
+.tab-button:not(.active):hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ladder-subtab-button {
+  color: #6b7280;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+
+.ladder-subtab-button.active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+  font-weight: 600;
+}
+
+.ladder-subtab-button:not(.active):hover {
+  color: #4b5563;
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.collapsible-content {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+}
+</style>
+
 <script>
+function switchTab(tabName) {
+  const leagueContent = document.getElementById('league-tab-content');
+  const ladderContent = document.getElementById('ladder-tab-content');
+  const leagueBtn = document.getElementById('league-tab-btn');
+  const ladderBtn = document.getElementById('ladder-tab-btn');
+
+  if (tabName === 'league') {
+    leagueContent.classList.remove('hidden');
+    ladderContent.classList.add('hidden');
+    leagueBtn.classList.add('active');
+    ladderBtn.classList.remove('active');
+  } else {
+    leagueContent.classList.add('hidden');
+    ladderContent.classList.remove('hidden');
+    leagueBtn.classList.remove('active');
+    ladderBtn.classList.add('active');
+  }
+
+  localStorage.setItem('admin-active-tab', tabName);
+  
+  const url = new URL(window.location);
+  url.searchParams.set('tab', tabName);
+  window.history.replaceState({}, '', url);
+}
+
+function switchLadderSubTab(subTabName) {
+  const menContent = document.getElementById('men-ladder-content');
+  const womenContent = document.getElementById('women-ladder-content');
+  const menBtn = document.getElementById('men-subtab-btn');
+  const womenBtn = document.getElementById('women-subtab-btn');
+
+  if (subTabName === 'men') {
+    menContent.classList.remove('hidden');
+    womenContent.classList.add('hidden');
+    menBtn.classList.add('active');
+    womenBtn.classList.remove('active');
+  } else {
+    menContent.classList.add('hidden');
+    womenContent.classList.remove('hidden');
+    menBtn.classList.remove('active');
+    womenBtn.classList.add('active');
+  }
+
+  localStorage.setItem('admin-ladder-subtab', subTabName);
+}
+
 function toggleSection(sectionId) {
   const content = document.getElementById(sectionId + '-content');
   const icon = document.getElementById(sectionId + '-icon');
@@ -707,6 +1017,16 @@ function toggleSection(sectionId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlTab = urlParams.get('tab');
+  const savedTab = localStorage.getItem('admin-active-tab');
+  const activeTab = urlTab || savedTab || 'league';
+  
+  switchTab(activeTab);
+
+  const savedLadderSubTab = localStorage.getItem('admin-ladder-subtab') || 'men';
+  switchLadderSubTab(savedLadderSubTab);
+
   const sections = ['teams', 'freeagents', 'matches', 'reschedules', 'substitutes'];
 
   sections.forEach(function(sectionId) {
