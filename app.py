@@ -1492,6 +1492,46 @@ BD Padel Ladder Team
             send_email_notification(team.player2_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
 
 
+def calculate_holiday_status(team, settings):
+    """
+    Calculate holiday mode status for a team.
+    
+    Args:
+        team: LadderTeam object
+        settings: LadderSettings object
+    
+    Returns:
+        Dictionary with holiday status info or None if not on holiday
+    """
+    from datetime import datetime, timedelta
+    
+    if not team.holiday_mode_active or not team.holiday_mode_start:
+        return None
+    
+    now = datetime.now()
+    grace_period_days = settings.holiday_mode_grace_weeks * 7
+    grace_period_end = team.holiday_mode_start + timedelta(days=grace_period_days)
+    
+    days_in_holiday = (now - team.holiday_mode_start).days
+    grace_period_days_remaining = (grace_period_end - now).days
+    
+    weeks_beyond_grace = 0
+    penalty_ranks = 0
+    if grace_period_days_remaining < 0:
+        days_beyond_grace = abs(grace_period_days_remaining)
+        weeks_beyond_grace = (days_beyond_grace // 7) + (1 if days_beyond_grace % 7 > 0 else 0)
+        penalty_ranks = weeks_beyond_grace * settings.holiday_mode_weekly_penalty_ranks
+    
+    return {
+        'start_date': team.holiday_mode_start,
+        'days_in_holiday': days_in_holiday,
+        'grace_period_days_remaining': max(0, grace_period_days_remaining),
+        'is_in_grace_period': grace_period_days_remaining >= 0,
+        'weeks_beyond_grace': weeks_beyond_grace,
+        'penalty_ranks': penalty_ranks
+    }
+
+
 def update_ladder_team_stats_from_match(match):
     """Update ladder team statistics after a verified match"""
     from datetime import datetime
@@ -1907,9 +1947,99 @@ def ladder_my_team(token):
         action = request.form.get("action")
         
         if action == "toggle_holiday":
-            # Placeholder: Holiday mode toggle logic will be implemented in next task
-            flash("Holiday mode toggle functionality will be available soon.", "info")
-            return redirect(url_for('ladder_my_team', token=token))
+            from utils import send_email_notification
+            from datetime import datetime, timedelta
+            
+            now = datetime.now()
+            
+            if team.holiday_mode_active:
+                team.holiday_mode_active = False
+                team.holiday_mode_end = now
+                
+                db.session.commit()
+                
+                deactivation_message = f"""
+Holiday Mode Deactivated
+
+Welcome back to the ladder, {team.team_name}!
+
+Your holiday mode has been deactivated and you can now participate in challenges again.
+
+Team Dashboard: {request.url_root}ladder/my-team/{team.access_token}
+
+Regards,
+BD Padel Ladder Team
+"""
+                
+                if team.contact_preference_email:
+                    if team.player1_email:
+                        send_email_notification(team.player1_email, f"Holiday Mode Deactivated - {team.team_name}", deactivation_message)
+                    if team.player2_email and team.player2_email != team.player1_email:
+                        send_email_notification(team.player2_email, f"Holiday Mode Deactivated - {team.team_name}", deactivation_message)
+                
+                flash("Holiday mode deactivated! Welcome back to the ladder.", "success")
+                return redirect(url_for('ladder_my_team', token=token))
+            else:
+                active_challenges_sent = LadderChallenge.query.filter(
+                    LadderChallenge.challenger_team_id == team.id,
+                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+                ).count()
+                
+                active_challenges_received = LadderChallenge.query.filter(
+                    LadderChallenge.challenged_team_id == team.id,
+                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+                ).count()
+                
+                pending_matches = LadderMatch.query.filter(
+                    db.or_(
+                        LadderMatch.team_a_id == team.id,
+                        LadderMatch.team_b_id == team.id
+                    ),
+                    LadderMatch.verified == False,
+                    LadderMatch.status.in_(['pending', 'pending_opponent_score'])
+                ).count()
+                
+                if active_challenges_sent > 0 or active_challenges_received > 0 or pending_matches > 0:
+                    flash("Cannot activate holiday mode while you have active challenges or pending matches. Please complete or cancel them first.", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+                
+                team.holiday_mode_active = True
+                team.holiday_mode_start = now
+                
+                db.session.commit()
+                
+                grace_period_days = settings.holiday_mode_grace_weeks * 7
+                
+                activation_message = f"""
+Holiday Mode Activated
+
+{team.team_name}, your holiday mode has been successfully activated!
+
+What this means:
+- You have {grace_period_days} days ({settings.holiday_mode_grace_weeks} weeks) of grace period with no rank penalties
+- You cannot be challenged by other teams during this time
+- You cannot challenge other teams during this time
+- After the grace period, you will be penalized {settings.holiday_mode_weekly_penalty_ranks} rank(s) per week
+- You can deactivate holiday mode anytime through your team dashboard
+
+Grace Period: {grace_period_days} days (until {(now + timedelta(days=grace_period_days)).strftime('%B %d, %Y')})
+
+Team Dashboard: {request.url_root}ladder/my-team/{team.access_token}
+
+Enjoy your break!
+
+Regards,
+BD Padel Ladder Team
+"""
+                
+                if team.contact_preference_email:
+                    if team.player1_email:
+                        send_email_notification(team.player1_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
+                    if team.player2_email and team.player2_email != team.player1_email:
+                        send_email_notification(team.player2_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
+                
+                flash(f"Holiday mode activated! You have {grace_period_days} days of grace period before any penalties apply.", "success")
+                return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "submit_score":
             from utils import send_email_notification
@@ -2318,29 +2448,8 @@ BD Padel Ladder Team
         else:
             pending_matches.append(match_detail)
     
-    # Calculate holiday mode grace period info
-    holiday_info = None
-    if team.holiday_mode_active and team.holiday_mode_start:
-        now = datetime.now()
-        grace_period_end = team.holiday_mode_start + timedelta(weeks=settings.holiday_mode_grace_weeks)
-        days_in_holiday = (now - team.holiday_mode_start).days
-        grace_period_days_remaining = (grace_period_end - now).days
-        
-        # Calculate penalty if beyond grace period
-        weeks_beyond_grace = 0
-        penalty_ranks = 0
-        if grace_period_days_remaining < 0:
-            weeks_beyond_grace = abs(grace_period_days_remaining) // 7 + 1
-            penalty_ranks = weeks_beyond_grace * settings.holiday_mode_weekly_penalty_ranks
-        
-        holiday_info = {
-            'start_date': team.holiday_mode_start,
-            'days_in_holiday': days_in_holiday,
-            'grace_period_days_remaining': max(0, grace_period_days_remaining),
-            'is_in_grace_period': grace_period_days_remaining >= 0,
-            'weeks_beyond_grace': weeks_beyond_grace,
-            'penalty_ranks': penalty_ranks
-        }
+    # Calculate holiday mode grace period info using helper function
+    holiday_info = calculate_holiday_status(team, settings)
     
     # Check if team is locked (in active challenge)
     is_locked = any(c['challenge'].status in ['pending_acceptance', 'accepted'] 
