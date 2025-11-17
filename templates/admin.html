@@ -260,11 +260,33 @@
   <!-- Free Agents Pairing Section -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
     <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('freeagents')">
-      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Free Agents Pairing</h3>
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Free Agents Pairing <span class="text-sm text-orange-600 font-normal">(DEPRECATED)</span></h3>
       <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="freeagents-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
     </div>
+    
+    <!-- Deprecation Notice -->
+    <div class="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h4 class="text-sm font-semibold text-orange-800 mb-1">⚠️ League Free Agent System Deprecated</h4>
+          <p class="text-sm text-orange-700">
+            <strong>Free agents are now managed in the Ladder system.</strong> This section is kept for historical records only. 
+            New free agent registrations automatically go to the Ladder system where they can participate in ongoing matches and monthly tournaments.
+          </p>
+          <p class="text-xs text-orange-600 mt-2">
+            👉 <a href="{{ url_for('admin_ladder_rankings') }}" class="underline font-semibold hover:text-orange-800">Manage Ladder Free Agents here</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    
     <div id="freeagents-content" class="collapsible-content">
     {% if free_agent_status|length > 0 %}
     <div class="mb-4">

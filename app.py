@@ -446,8 +446,8 @@ def health():
 @app.route("/")
 def index():
     teams = Team.query.count()
-    free_agents = FreeAgent.query.filter_by(paired=False).count()
-    return render_template("index.html", teams=teams, free_agents=free_agents)
+    ladder_free_agents = LadderFreeAgent.query.count()
+    return render_template("index.html", teams=teams, ladder_free_agents=ladder_free_agents)
 
 @app.route("/register-team", methods=["GET", "POST"])
 def register_team():
@@ -733,121 +733,12 @@ Good luck!
 
 @app.route("/register-freeagent", methods=["GET", "POST"])
 def register_freeagent():
-    # Check if free agent registration is open
-    settings = LeagueSettings.query.first()
-    if settings and not settings.freeagent_registration_open:
-        return render_template("registration_closed.html", registration_type="Free Agent")
-
-    if request.method == "POST":
-        name = request.form["name"]
-        phone = request.form["phone"]
-        email = request.form.get("email", "").strip()
-        skill = request.form["skill_level"]
-        style = request.form["playstyle"]
-        avail = request.form["availability"]
-
-        # Require email
-        if not email:
-            flash("Email is required for free agent registration.", "error")
-            return render_template("register_freeagent.html", form_data=request.form)
-
-        # Normalize phone number
-        phone_normalized = normalize_phone_number(phone)
-
-        # Check if email is already registered in a team
-        existing_team_email = Team.query.filter(
-            db.or_(
-                Team.player1_email == email,
-                Team.player2_email == email
-            )
-        ).first()
-
-        if existing_team_email:
-            flash(f"This email ({email}) is already registered in team '{existing_team_email.team_name}'. Please use a different email.", "error")
-            return render_template("register_freeagent.html", form_data=request.form)
-
-        # Check if phone number is already registered in a team
-        existing_team_phone = Team.query.filter(
-            db.or_(
-                Team.player1_phone == phone_normalized,
-                Team.player2_phone == phone_normalized
-            )
-        ).first()
-
-        if existing_team_phone:
-            flash(f"This WhatsApp number is already registered in team '{existing_team_phone.team_name}'. Please use a different number.", "error")
-            return render_template("register_freeagent.html", form_data=request.form)
-
-        # Check if email or phone is already registered as a free agent
-        existing_fa_email = FreeAgent.query.filter_by(email=email).first()
-        if existing_fa_email:
-            flash(f"This email is already registered as a free agent. Please use a different email.", "error")
-            return render_template("register_freeagent.html", form_data=request.form)
-
-        existing_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
-        if existing_fa_phone:
-            flash(f"This WhatsApp number is already registered as a free agent. Please use a different number.", "error")
-            return render_template("register_freeagent.html", form_data=request.form)
-
-        fa = FreeAgent(name=name, phone=phone_normalized, email=email,
-                       skill_level=skill, playstyle=style, availability=avail)
-        db.session.add(fa)
-        db.session.commit()
-
-        # Send admin notification about new free agent registration
-        admin_email = os.environ.get("ADMIN_EMAIL")
-        if admin_email:
-            from utils import send_email_notification
-            admin_body = f"""🆕 NEW FREE AGENT REGISTRATION
-
-Name: {name}
-Email: {email}
-Phone: {phone}
-Skill Level: {skill}
-Playstyle: {style}
-Availability: {avail}
-
-Please review and pair this free agent in the admin panel.
-"""
-            send_email_notification(admin_email, f"New Free Agent: {name}", admin_body)
-
-        # Send welcome email to free agent
-        if email:
-            from utils import send_email_notification
-            email_body = f"""Hi {name},
-
-✅ Welcome to BD Padel League! Your free agent registration has been confirmed.
-
-📋 Your Profile:
-- Name: {name}
-- Skill Level: {skill}
-- Playstyle: {style}
-- Availability: {avail}
-
-🤝 What's Next?
-Our admin team will review all free agent registrations and pair you with another player of similar skill level. Once paired, you'll receive:
-- A confirmation email with your team details
-- Your partner's contact information
-- Access to your team page to view matches
-
-⏳ This process typically takes 1-3 days, depending on the number of free agents.
-
-💬 Join Our WhatsApp Community for Free Agents:
-https://chat.whatsapp.com/KCdAt3a5YbSCHF6wKauIQq
-
-Connect with other free agents, find potential partners, and stay updated!
-
-If you have any questions or want to update your profile, please contact the admin.
-
-Thank you for joining the league! 🎾
-
-- BD Padel League
-"""
-            send_email_notification(email, f"Free Agent Registration Confirmed - BD Padel League", email_body)
-
-        flash("Free Agent registered successfully!")
-        return redirect(url_for("index"))
-    return render_template("register_freeagent.html")
+    """
+    DEPRECATED: League free agent registration has been moved to the Ladder system.
+    This route now redirects to the ladder free agent registration.
+    """
+    flash("ℹ️ Free agent registration has moved to our Ladder system for better matching and ongoing play opportunities!", "info")
+    return redirect(url_for("ladder_register_freeagent"))
 
 @app.route("/ladder/register-team", methods=["GET", "POST"])
 def ladder_register_team():
