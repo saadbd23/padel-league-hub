@@ -13,15 +13,22 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-**November 17, 2025** - Ladder Tournament System Added
-- Created 6 new database models for ladder tournament functionality
+**November 17, 2025** - Ladder Tournament System Added & League Free Agents Deprecated
+- Created 7 new database models for ladder tournament functionality (including Americano)
+- Deprecated league free agent system - all free agents now managed through Ladder
 - Separate Men's and Women's ladder divisions
 - Challenge system: teams can challenge up to 3 ranks above
 - Holiday mode with 2-week grace period
 - Activity monitoring: minimum 2 matches per month
-- Americano tournament system for free agent pairing
+- Complete Americano tournament system:
+  - Monthly tournaments for pairing ladder free agents
+  - Smart round-robin pairing algorithm with partner rotation
+  - Individual scoring and leaderboards
+  - Top 50% pairing eligibility
+  - Admin tournament creation, match generation, score entry, and team pairing
 - Team names must be unique across both league and ladder (no duplicates allowed)
 - Contact preferences: Email and/or WhatsApp for all registrations
+- Fixed admin page loading issue: broken URL link in deprecated free agents section
 - See `ladder_implementation_plan.md` for complete feature specifications
 
 # System Architecture
