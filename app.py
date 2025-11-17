@@ -445,9 +445,15 @@ def health():
 
 @app.route("/")
 def index():
-    teams = Team.query.count()
+    league_teams = Team.query.count()
+    ladder_men_teams = LadderTeam.query.filter_by(gender='men').count()
+    ladder_women_teams = LadderTeam.query.filter_by(gender='women').count()
     ladder_free_agents = LadderFreeAgent.query.count()
-    return render_template("index.html", teams=teams, ladder_free_agents=ladder_free_agents)
+    return render_template("index.html", 
+                         league_teams=league_teams,
+                         ladder_men_teams=ladder_men_teams,
+                         ladder_women_teams=ladder_women_teams,
+                         ladder_free_agents=ladder_free_agents)
 
 @app.route("/register-team", methods=["GET", "POST"])
 def register_team():
