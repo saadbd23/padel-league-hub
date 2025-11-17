@@ -1367,13 +1367,21 @@ def ladder_men():
     
     team_map = {t.id: t for t in teams}
     
+    logged_in_team = None
+    if 'ladder_team_id' in session:
+        logged_in_team = LadderTeam.query.get(session['ladder_team_id'])
+    
+    settings = LadderSettings.query.first()
+    
     return render_template("ladder/ladder_rankings.html",
                          teams=teams,
                          ladder_type=ladder_type,
                          locked_team_ids=locked_team_ids,
                          recent_matches=recent_matches,
                          top_performers=top_performers,
-                         team_map=team_map)
+                         team_map=team_map,
+                         logged_in_team=logged_in_team,
+                         settings=settings)
 
 @app.route("/ladder/women/")
 def ladder_women():
@@ -1408,13 +1416,21 @@ def ladder_women():
     
     team_map = {t.id: t for t in teams}
     
+    logged_in_team = None
+    if 'ladder_team_id' in session:
+        logged_in_team = LadderTeam.query.get(session['ladder_team_id'])
+    
+    settings = LadderSettings.query.first()
+    
     return render_template("ladder/ladder_rankings.html",
                          teams=teams,
                          ladder_type=ladder_type,
                          locked_team_ids=locked_team_ids,
                          recent_matches=recent_matches,
                          top_performers=top_performers,
-                         team_map=team_map)
+                         team_map=team_map,
+                         logged_in_team=logged_in_team,
+                         settings=settings)
 
 @app.route("/ladder/my-team/<token>", methods=["GET", "POST"])
 def ladder_my_team(token):
@@ -1596,6 +1612,188 @@ def ladder_my_team(token):
                          team_status=team_status,
                          status_color=status_color,
                          status_message=status_message)
+
+@app.route("/ladder/login", methods=["GET", "POST"])
+def ladder_login():
+    """Team login for ladder system - allows teams to challenge others"""
+    if request.method == "POST":
+        access_token = request.form.get("access_token", "").strip()
+        ladder_type = request.form.get("ladder_type", "men")
+        
+        if not access_token:
+            flash("Please enter your access token", "error")
+            return redirect(url_for('ladder_login'))
+        
+        team = LadderTeam.query.filter_by(access_token=access_token).first()
+        
+        if not team:
+            flash("Invalid access token. Please check your registration email for the correct token.", "error")
+            return redirect(url_for('ladder_login'))
+        
+        session['ladder_team_id'] = team.id
+        session['ladder_team_token'] = access_token
+        flash(f"Welcome back, {team.team_name}!", "success")
+        
+        if team.ladder_type == 'men':
+            return redirect(url_for('ladder_men'))
+        else:
+            return redirect(url_for('ladder_women'))
+    
+    return render_template("ladder/login.html")
+
+@app.route("/ladder/logout")
+def ladder_logout():
+    """Logout from ladder team session"""
+    team_id = session.get('ladder_team_id')
+    if team_id:
+        team = LadderTeam.query.get(team_id)
+        if team:
+            flash(f"Goodbye, {team.team_name}!", "info")
+    
+    session.pop('ladder_team_id', None)
+    session.pop('ladder_team_token', None)
+    return redirect(url_for('index'))
+
+@app.route("/ladder/challenge/create", methods=["POST"])
+def ladder_challenge_create():
+    """Create a new ladder challenge from one team to another"""
+    from datetime import datetime, timedelta
+    from utils import send_email_notification
+    
+    if 'ladder_team_id' not in session:
+        flash("Please log in to challenge other teams", "error")
+        return redirect(url_for('ladder_login'))
+    
+    challenger_id = session.get('ladder_team_id')
+    challenged_id = request.form.get('challenged_team_id', type=int)
+    
+    if not challenged_id:
+        flash("Invalid challenge request", "error")
+        return redirect(url_for('index'))
+    
+    challenger = LadderTeam.query.get(challenger_id)
+    challenged = LadderTeam.query.get(challenged_id)
+    
+    if not challenger or not challenged:
+        flash("One or both teams not found", "error")
+        return redirect(url_for('index'))
+    
+    settings = LadderSettings.query.first()
+    if not settings:
+        settings = LadderSettings(
+            challenge_acceptance_hours=48,
+            challenge_completion_days=7,
+            max_challenge_rank_difference=3
+        )
+        db.session.add(settings)
+        db.session.commit()
+    
+    if challenger.ladder_type != challenged.ladder_type:
+        flash("You can only challenge teams in your own ladder", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    if challenger.holiday_mode_active:
+        flash("You cannot challenge while in holiday mode", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    if challenged.holiday_mode_active:
+        flash("You cannot challenge a team that is in holiday mode", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    active_challenge_challenger = LadderChallenge.query.filter(
+        db.or_(
+            LadderChallenge.challenger_team_id == challenger_id,
+            LadderChallenge.challenged_team_id == challenger_id
+        ),
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).first()
+    
+    if active_challenge_challenger:
+        flash("You already have an active challenge. Complete it before creating a new one.", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    active_challenge_challenged = LadderChallenge.query.filter(
+        db.or_(
+            LadderChallenge.challenger_team_id == challenged_id,
+            LadderChallenge.challenged_team_id == challenged_id
+        ),
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).first()
+    
+    if active_challenge_challenged:
+        flash(f"{challenged.team_name} is already in an active challenge", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    rank_diff = challenger.current_rank - challenged.current_rank
+    if rank_diff <= 0:
+        flash("You can only challenge teams ranked above you", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    if rank_diff > settings.max_challenge_rank_difference:
+        flash(f"You can only challenge teams within {settings.max_challenge_rank_difference} ranks above you", "error")
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    
+    acceptance_deadline = datetime.utcnow() + timedelta(hours=settings.challenge_acceptance_hours)
+    
+    new_challenge = LadderChallenge(
+        challenger_team_id=challenger_id,
+        challenged_team_id=challenged_id,
+        ladder_type=challenger.ladder_type,
+        status='pending_acceptance',
+        acceptance_deadline=acceptance_deadline,
+        created_at=datetime.utcnow()
+    )
+    
+    db.session.add(new_challenge)
+    db.session.commit()
+    
+    challenger_email_body = f"""Hello {challenger.team_name},
+
+Your challenge to {challenged.team_name} has been sent successfully!
+
+They have {settings.challenge_acceptance_hours} hours ({settings.challenge_acceptance_hours // 24} days) to accept your challenge.
+
+If they don't accept within the deadline, they will receive a -{settings.acceptance_penalty_ranks} rank penalty.
+
+You'll receive an email notification once they accept. Good luck!
+
+---
+Padel Ladder League
+"""
+    
+    challenged_email_body = f"""Hello {challenged.team_name},
+
+You have been challenged by {challenger.team_name} (Rank #{challenger.current_rank})!
+
+⚠️ IMPORTANT: You have {settings.challenge_acceptance_hours} hours ({settings.challenge_acceptance_hours // 24} days) to accept this challenge.
+
+If you don't accept by {acceptance_deadline.strftime('%B %d, %Y at %I:%M %p UTC')}, you will receive a -{settings.acceptance_penalty_ranks} rank penalty.
+
+Accept the challenge here:
+{request.url_root}ladder/my-team/{challenged.access_token}
+
+Good luck!
+
+---
+Padel Ladder League
+"""
+    
+    if challenger.contact_preference_email and challenger.player1_email:
+        send_email_notification(
+            challenger.player1_email,
+            f"Challenge Sent to {challenged.team_name}",
+            challenger_email_body
+        )
+    
+    if challenged.contact_preference_email and challenged.player1_email:
+        send_email_notification(
+            challenged.player1_email,
+            f"⚠️ Challenge from {challenger.team_name} - Action Required!",
+            challenged_email_body
+        )
+    
+    flash(f"Challenge sent to {challenged.team_name}! They have {settings.challenge_acceptance_hours // 24} days to accept.", "success")
+    return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
 
 @app.route("/leaderboard")
 def leaderboard():
