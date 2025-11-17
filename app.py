@@ -6847,62 +6847,18 @@ def update_match(match_id):
             elif winner == 'draw':
                 team_a.draws += 1
                 team_a.points += 1
-
-
-@app.route("/admin/ladder/delete-team/<int:team_id>", methods=["POST"])
-@require_admin_auth
-def admin_ladder_delete_team(team_id: int):
-    """Delete a ladder team and all associated data"""
-    team = LadderTeam.query.get_or_404(team_id)
-    team_name = team.team_name
-    ladder_type = team.ladder_type
-    deleted_rank = team.current_rank
-    
-    # Delete all associated challenges
-    LadderChallenge.query.filter(
-        db.or_(
-            LadderChallenge.challenger_team_id == team_id,
-            LadderChallenge.challenged_team_id == team_id
-        )
-    ).delete()
-    
-    # Delete all associated matches
-    LadderMatch.query.filter(
-        db.or_(
-            LadderMatch.team_a_id == team_id,
-            LadderMatch.team_b_id == team_id
-        )
-    ).delete()
-    
-    # Delete the team
-    db.session.delete(team)
-    
-    # Adjust ranks of teams below the deleted team (move them up)
-    teams_to_adjust = LadderTeam.query.filter(
-        LadderTeam.ladder_type == ladder_type,
-        LadderTeam.current_rank > deleted_rank
-    ).all()
-    
-    for t in teams_to_adjust:
-        t.current_rank -= 1
-    
-    db.session.commit()
-    
-    flash(f"Team '{team_name}' has been deleted successfully. Teams below have been moved up.", "success")
-    return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-
                 team_b.draws += 1
                 team_b.points += 1
                 match.winner_id = None
-
+        
         db.session.commit()
-        flash("Match updated successfully!", "success")
-
+        flash(f"Match scores updated successfully for {match.team_a.team_name} vs {match.team_b.team_name}", "success")
+        return redirect(url_for("admin_panel"))
+    
     except Exception as e:
         db.session.rollback()
         flash(f"Error updating match: {str(e)}", "error")
-
-    return redirect(url_for("admin_panel"))
+        return redirect(url_for("admin_panel"))
 
 @app.route("/admin/confirm-team/<int:team_id>", methods=["POST"])
 @require_admin_auth
