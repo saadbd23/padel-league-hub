@@ -253,6 +253,23 @@
             </span>
           </div>
           <div class="text-sm">
+            <span class="font-semibold text-gray-700">Payment:</span>
+            <form method="POST" action="{{ url_for('admin_ladder_toggle_payment') }}" class="inline ml-2">
+              <input type="hidden" name="team_id" value="{{ t.id }}">
+              <label class="flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="payment_received"
+                  {% if t.payment_received %}checked{% endif %}
+                  onchange="this.form.submit()"
+                  class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                <span class="ml-2 text-xs {% if t.payment_received %}text-green-700 font-semibold{% else %}text-red-600 font-semibold{% endif %}">
+                  {% if t.payment_received %}✓ Paid{% else %}Unpaid{% endif %}
+                </span>
+              </label>
+            </form>
+          </div>
+          <div class="text-sm">
             <span class="font-semibold text-gray-700">Last Match:</span>
             <span class="text-gray-600 ml-1">
               {% if t.last_match_date %}
