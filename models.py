@@ -319,6 +319,12 @@ class LadderMatch(db.Model):
     match_date = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
+    
+    reported_no_show_team_id = db.Column(db.Integer, nullable=True)
+    reported_by_team_id = db.Column(db.Integer, nullable=True)
+    no_show_report_date = db.Column(db.DateTime, nullable=True)
+    no_show_verified = db.Column(db.Boolean, default=False)
+    no_show_notes = db.Column(db.Text, nullable=True)
 
 
 class AmericanoTournament(db.Model):

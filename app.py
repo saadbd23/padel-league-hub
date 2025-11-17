@@ -2369,8 +2369,172 @@ BD Padel Ladder Team
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "report_no_show":
-            # Placeholder: No-show reporting logic will be implemented in next task
-            flash("No-show reporting functionality will be available soon.", "info")
+            from utils import send_email_notification
+            
+            match_id = request.form.get("match_id")
+            if not match_id:
+                flash("Match ID is required", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            match = LadderMatch.query.get(match_id)
+            if not match:
+                flash("Match not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if match.team_a_id != team.id and match.team_b_id != team.id:
+                flash("You are not authorized to report no-show for this match", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if match.verified or match.status in ['completed', 'completed_no_show']:
+                flash("Cannot report no-show for a completed match", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if match.team_a_submitted and match.team_b_submitted:
+                flash("Cannot report no-show when both teams have submitted scores", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if match.reported_no_show_team_id:
+                flash("A no-show report has already been filed for this match", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge = LadderChallenge.query.get(match.challenge_id)
+            now = datetime.now()
+            
+            if challenge and challenge.completion_deadline:
+                if now <= challenge.completion_deadline:
+                    deadline_str = challenge.completion_deadline.strftime('%B %d, %Y at %I:%M %p')
+                    flash(f"Cannot report no-show before match completion deadline ({deadline_str})", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+            
+            opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
+            opponent_team = LadderTeam.query.get(opponent_id)
+            
+            if not opponent_team:
+                flash("Opponent team not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            match.reported_no_show_team_id = opponent_id
+            match.reported_by_team_id = team.id
+            match.no_show_report_date = now
+            match.status = 'no_show_reported'
+            
+            db.session.commit()
+            
+            reporter_message = f"""
+No-Show Report Submitted
+
+{team.team_name}, your no-show report has been successfully submitted.
+
+Match Details:
+- Your Team: {team.team_name}
+- Opponent Team: {opponent_team.team_name}
+- Reported No-Show Team: {opponent_team.team_name}
+- Report Date: {now.strftime('%B %d, %Y at %I:%M %p')}
+
+An administrator will review your report shortly and take appropriate action. You will be notified once the review is complete.
+
+If the no-show is verified:
+- You will be awarded the match win
+- Your opponent will receive a {settings.no_show_penalty_ranks} rank penalty
+
+Team Dashboard: {request.url_root}ladder/my-team/{team.access_token}
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            reported_team_message = f"""
+No-Show Report - Immediate Action Required
+
+{opponent_team.team_name}, you have been reported as a no-show for your match.
+
+Match Details:
+- Your Team: {opponent_team.team_name}
+- Opponent Team: {team.team_name}
+- Report Date: {now.strftime('%B %d, %Y at %I:%M %p')}
+
+If this report is incorrect, please contact the administrator IMMEDIATELY by replying to this email with evidence that you:
+1. Attempted to schedule the match
+2. Were present at the agreed time and location
+3. Have communication records with your opponent
+
+If the no-show is verified by admin:
+- Match will be awarded to {team.team_name}
+- Your team will be penalized {settings.no_show_penalty_ranks} rank(s)
+- Match will be marked as completed with no-show status
+
+Team Dashboard: {request.url_root}ladder/my-team/{opponent_team.access_token}
+
+IMPORTANT: Respond within 24 hours to dispute this report.
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            admin_email = os.environ.get("ADMIN_EMAIL")
+            admin_message = f"""
+No-Show Report Requires Review
+
+A no-show report has been submitted and requires admin review.
+
+Report Details:
+- Match ID: {match.id}
+- Reporter Team: {team.team_name} (Rank #{team.current_rank})
+  - Players: {team.player1_name} & {team.player2_name}
+  - Contact: {team.player1_phone}
+- Reported Team: {opponent_team.team_name} (Rank #{opponent_team.current_rank})
+  - Players: {opponent_team.player1_name} & {opponent_team.player2_name}
+  - Contact: {opponent_team.player1_phone}
+- Report Date: {now.strftime('%B %d, %Y at %I:%M %p')}
+- Match Completion Deadline: {challenge.completion_deadline.strftime('%B %d, %Y at %I:%M %p') if challenge and challenge.completion_deadline else 'N/A'}
+
+Action Required:
+1. Review communication between both teams
+2. Verify if reported team was genuinely absent
+3. Check if there were legitimate reasons for absence
+4. Approve or reject the no-show report in admin panel
+
+If Approved:
+- {team.team_name} will be awarded the match win
+- {opponent_team.team_name} will receive -{settings.no_show_penalty_ranks} rank penalty
+- Match status will be updated to 'completed_no_show'
+
+If Rejected:
+- Both teams will be notified
+- Match remains pending for score submission
+
+Admin Panel: {request.url_root}admin
+
+Regards,
+BD Padel Ladder System
+"""
+            
+            if team.contact_preference_email:
+                if team.player1_email:
+                    send_email_notification(team.player1_email, 
+                                          f"No-Show Report Submitted - {team.team_name}", 
+                                          reporter_message)
+                if team.player2_email and team.player2_email != team.player1_email:
+                    send_email_notification(team.player2_email, 
+                                          f"No-Show Report Submitted - {team.team_name}", 
+                                          reporter_message)
+            
+            if opponent_team.contact_preference_email:
+                if opponent_team.player1_email:
+                    send_email_notification(opponent_team.player1_email, 
+                                          f"URGENT: No-Show Report Filed Against {opponent_team.team_name}", 
+                                          reported_team_message)
+                if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
+                    send_email_notification(opponent_team.player2_email, 
+                                          f"URGENT: No-Show Report Filed Against {opponent_team.team_name}", 
+                                          reported_team_message)
+            
+            if admin_email:
+                send_email_notification(admin_email, 
+                                      f"No-Show Report Review Required - Match #{match.id}", 
+                                      admin_message)
+            
+            flash(f"No-show report submitted for {opponent_team.team_name}. An administrator will review your report shortly.", "success")
             return redirect(url_for('ladder_my_team', token=token))
     
     # Query active challenges (sent and received)
@@ -2432,6 +2596,10 @@ BD Padel Ladder Team
         
         is_team_a = match.team_a_id == team.id
         
+        is_past_deadline = False
+        if challenge and challenge.completion_deadline:
+            is_past_deadline = now > challenge.completion_deadline
+        
         match_detail = {
             'match': match,
             'opponent': opponent,
@@ -2441,6 +2609,7 @@ BD Padel Ladder Team
             'opponent_score': match.score_b if is_team_a else match.score_a,
             'team_submitted': match.score_submitted_by_a if is_team_a else match.score_submitted_by_b,
             'opponent_submitted': match.score_submitted_by_b if is_team_a else match.score_submitted_by_a,
+            'is_past_deadline': is_past_deadline,
         }
         
         if match.verified:
