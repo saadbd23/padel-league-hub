@@ -131,16 +131,146 @@
     </div>
 
     <!-- General Match Play Rules -->
-    <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-      <h3 class="text-lg font-semibold text-blue-900 mb-3">⚠️ General Match Play Rules</h3>
-      <ul class="list-disc pl-6 space-y-2 text-blue-800">
-        <li><strong>Court Booking:</strong> Teams coordinate booking through team dashboard</li>
-        <li><strong>Score Submission:</strong> Both teams must submit scores for verification</li>
-        <li><strong>Disputes:</strong> Admin reviews disputed scores and makes final decisions</li>
-        <li><strong>No-Shows:</strong> Report through dashboard if opponent doesn't show up</li>
-        <li><strong>Contact:</strong> Exchange contact info through secure team pages only</li>
-        <li><strong>Sportsmanship:</strong> Respect opponents, follow padel etiquette</li>
-      </ul>
+    <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-300 shadow-lg">
+      <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-2">
+        <span>⚠️</span>
+        <span>General Match Play Rules</span>
+        <span class="text-sm font-normal text-blue-700">(Applies to Both League & Ladder)</span>
+      </h3>
+      
+      <div class="space-y-6">
+        <!-- Match Format -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">🎾</span>
+            <span>Match Format</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Best of 3 Sets:</strong> First team to win 2 sets wins the match</li>
+            <li><strong>Set Format:</strong> First to 6 games wins the set (must win by 2 games if 5-5)</li>
+            <li><strong>Tiebreak at 6-6:</strong> Play tiebreak to 7 points (must win by 2)</li>
+            <li><strong>Super Tiebreak (if needed):</strong> If sets are 1-1, play super tiebreak to 10 points (must win by 2)</li>
+            <li><strong>Scoring:</strong> Traditional tennis scoring (15-30-40-Game)</li>
+          </ul>
+        </div>
+
+        <!-- Court Booking & Scheduling -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">📅</span>
+            <span>Court Booking & Scheduling</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Coordinate Through Dashboard:</strong> Use your team dashboard to propose and confirm match times</li>
+            <li><strong>Contact Opponents:</strong> Exchange contact info through secure team pages only</li>
+            <li><strong>Book in Advance:</strong> Recommended to book courts at least 2-3 days ahead</li>
+            <li><strong>Court Assignment:</strong> Most venues assign courts on arrival (bring booking confirmation)</li>
+            <li><strong>Reschedules:</strong> Must be approved by admin (limited to 2 per team in league)</li>
+          </ul>
+        </div>
+
+        <!-- Score Submission -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">📊</span>
+            <span>Score Submission & Verification</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Both Teams Must Submit:</strong> Each team submits their score through their dashboard</li>
+            <li><strong>Score Format:</strong> Enter as "6-4, 6-3" or "6-4, 3-6, 10-8" (your team's score first)</li>
+            <li><strong>Automatic Verification:</strong> If both submissions match, match is instantly verified</li>
+            <li><strong>Disputes:</strong> If scores don't match, admin will review and make final decision</li>
+            <li><strong>Submit Immediately:</strong> Enter scores right after the match while fresh in memory</li>
+          </ul>
+        </div>
+
+        <!-- Match Day Procedures -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">🏟️</span>
+            <span>Match Day Procedures</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Arrive 10 Minutes Early:</strong> Allow time for warm-up and court assignment</li>
+            <li><strong>Bring Booking Confirmation:</strong> Show venue staff your confirmed booking details</li>
+            <li><strong>Warm-Up:</strong> 5 minutes warm-up before starting the match</li>
+            <li><strong>Equipment:</strong> Bring your own padel rackets and balls (or coordinate with opponent)</li>
+            <li><strong>Keep Score:</strong> Both teams should track score throughout the match</li>
+          </ul>
+        </div>
+
+        <!-- No-Shows & Walkovers -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">⏰</span>
+            <span>No-Shows & Walkovers</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Grace Period:</strong> Wait 15 minutes past scheduled time before leaving</li>
+            <li><strong>Report No-Show:</strong> Submit report through your team dashboard immediately</li>
+            <li><strong>Evidence Required:</strong> Take photo of court booking, time-stamped message to opponent</li>
+            <li><strong>Admin Review:</strong> Admin will verify and award walkover win if justified</li>
+            <li><strong>Penalties:</strong> No-show teams may face rank penalties or disqualification</li>
+          </ul>
+        </div>
+
+        <!-- Sportsmanship & Conduct -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">🤝</span>
+            <span>Sportsmanship & Conduct</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Respect Opponents:</strong> Shake hands before and after the match</li>
+            <li><strong>Fair Play:</strong> Call your own shots honestly, give benefit of doubt on close calls</li>
+            <li><strong>Padel Etiquette:</strong> No coaching during points, respect opponent's concentration</li>
+            <li><strong>Line Calls:</strong> If in doubt, replay the point</li>
+            <li><strong>Disputes:</strong> Resolve calmly and respectfully, escalate to admin if needed</li>
+            <li><strong>Venue Rules:</strong> Follow all venue-specific rules and regulations</li>
+          </ul>
+        </div>
+
+        <!-- Contact & Communication -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">💬</span>
+            <span>Contact & Communication</span>
+          </h4>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Team Dashboard:</strong> All opponent contact info available through your secure team page</li>
+            <li><strong>WhatsApp Groups:</strong> Join division-specific groups for updates and coordination</li>
+            <li><strong>Response Time:</strong> Respond to opponent messages within 24 hours</li>
+            <li><strong>Professional Tone:</strong> Keep all communications respectful and professional</li>
+            <li><strong>Admin Support:</strong> Contact admin if opponent is unresponsive or difficult to coordinate</li>
+          </ul>
+        </div>
+
+        <!-- Score Examples -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="text-2xl">📝</span>
+            <span>Score Entry Examples</span>
+          </h4>
+          <div class="space-y-3 text-gray-700">
+            <div class="bg-green-50 p-3 rounded border-l-4 border-green-500">
+              <p class="font-semibold text-green-800">✓ Correct Format:</p>
+              <ul class="list-disc pl-6 mt-2 space-y-1">
+                <li>"6-4, 6-3" (You won 2-0 in sets)</li>
+                <li>"6-4, 3-6, 10-8" (You won 2-1 with super tiebreak)</li>
+                <li>"7-6, 6-4" (You won 2-0, first set tiebreak)</li>
+              </ul>
+            </div>
+            <div class="bg-red-50 p-3 rounded border-l-4 border-red-500">
+              <p class="font-semibold text-red-800">✗ Incorrect Format:</p>
+              <ul class="list-disc pl-6 mt-2 space-y-1">
+                <li>"6-4" (Missing second set)</li>
+                <li>"We won 2 sets to 1" (Use game scores, not set count)</li>
+                <li>"6/4, 6/3" (Use dashes, not slashes)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
