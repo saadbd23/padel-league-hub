@@ -1,10 +1,28 @@
 # Overview
 
-BD Padel League is a comprehensive web-based platform for managing competitive padel tournaments using the Swiss format. Built with Flask and SQLAlchemy, it handles team/player registration, automated round pairings, match scheduling, score submission, leaderboards, reschedule requests, and substitute player management. The system provides secure team-specific access via unique tokens and supports both complete teams and free agent matching.
+BD Padel League is a comprehensive web-based platform for managing competitive padel tournaments. Built with Flask and SQLAlchemy, it manages two parallel tournament systems:
+
+1. **League System** - Swiss format league with playoffs, reschedule/substitute management
+2. **Ladder Tournament** - Challenge-based ranking system with separate Men's and Women's divisions (November 2025)
+
+The system handles team/player registration, automated pairings, match scheduling, score submission, leaderboards, and provides secure team-specific access via unique tokens.
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+# Recent Changes
+
+**November 17, 2025** - Ladder Tournament System Added
+- Created 6 new database models for ladder tournament functionality
+- Separate Men's and Women's ladder divisions
+- Challenge system: teams can challenge up to 3 ranks above
+- Holiday mode with 2-week grace period
+- Activity monitoring: minimum 2 matches per month
+- Americano tournament system for free agent pairing
+- Team names must be unique across both league and ladder (no duplicates allowed)
+- Contact preferences: Email and/or WhatsApp for all registrations
+- See `ladder_implementation_plan.md` for complete feature specifications
 
 # System Architecture
 
@@ -17,13 +35,25 @@ Preferred communication style: Simple, everyday language.
 - **WSGI Server**: Gunicorn for production deployment
 
 ## Database Schema
-Key models tracked in `models.py`:
+All models tracked in `models.py` within a single PostgreSQL database:
+
+### League Models:
 - **Team**: Team registration, player details, match statistics (wins/losses/draws), points, sets/games differentials, reschedule/substitute usage tracking, secure access tokens
 - **Player**: Individual player statistics across all matches participated in (handles substitutions separately from team stats)
 - **Match**: Round-based match records, scheduling, booking times, score storage, status tracking (scheduled/completed/bye/walkover/disputed)
 - **FreeAgent**: Solo player registration with skill level for pairing
 - **Reschedule**: Reschedule request tracking with deadlines and approval workflow
 - **Substitute**: Substitute player management with admin approval
+- **LeagueSettings**: Configuration for Swiss rounds, playoff teams, registration status
+
+### Ladder Models (Added November 2025):
+- **LadderTeam**: Ladder teams with rankings, gender, contact preferences, stats, holiday mode tracking
+- **LadderFreeAgent**: Individual players awaiting pairing via Americano tournaments
+- **LadderChallenge**: Challenge requests with acceptance/completion deadlines, status tracking
+- **LadderMatch**: Match results with dual score verification, rank swapping
+- **AmericanoTournament**: Monthly tournaments for free agent pairing
+- **AmericanoMatch**: Individual Americano match results and player points
+- **LadderSettings**: Ladder configuration (challenge rules, penalties, activity requirements)
 
 ## Authentication & Security
 - **Admin Access**: Password-protected admin panel with session-based authentication
