@@ -4972,7 +4972,7 @@ def admin_americano_tournaments():
     except Exception as e:
         app.logger.error(f"Error loading Americano tournaments: {str(e)}")
         flash(f"Error loading tournaments: {str(e)}", "error")
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('admin'))
 
 
 @app.route("/admin/ladder/americano/create", methods=["GET", "POST"])
