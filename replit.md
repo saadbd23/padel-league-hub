@@ -13,6 +13,33 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**November 17, 2025** - Major UI/UX Redesign: Ladder-First Experience
+- **Homepage Redesign**: Dual-card hero layout emphasizing Ladder as primary tournament system
+  - Ladder Challenge card: Large, prominent with "Open for Registration" green badge and yellow border
+  - Swiss League card: Secondary placement with "Season in Progress" badge
+  - Clear visual hierarchy: Ladder (purple gradient) vs League (neutral gray)
+  - Live stats dashboard: Ladder Men's/Women's teams, Free Agents, League teams
+  - Two registration paths clearly displayed: Team registration + Free agent option
+- **Navigation Overhaul**: Dropdown menu system for both desktop and mobile
+  - Register dropdown: Team-Ladder, Team-League, Free Agent (with descriptions)
+  - Ladder dropdown: Men's Rankings, Women's Rankings
+  - League dropdown: Leaderboard, Stats, Rounds
+  - Mobile: Organized sections with category headers
+- **Leaderboard Page**: Tabbed interface with [Ladder Men] [Ladder Women] [League] tabs
+  - Embedded ladder rankings via iframes
+  - League tab shows traditional leaderboard
+  - Smooth tab switching without page reloads
+- **Statistics Page**: Dual-tab layout with [Ladder Stats] [League Stats]
+  - Ladder Stats: Dashboard cards showing total teams, active challenges, monthly matches, top performers
+  - Top performers table with win rates and ladder rankings
+  - League Stats: Existing league statistics (streaks, points leaders, differentials)
+- **Rules Page**: Accordion-style expandable sections
+  - Ladder Rules (expanded by default): Complete ladder system documentation
+  - League Rules (collapsed): Swiss format league rules
+  - Americano Tournaments (collapsed): Monthly pairing event details
+  - Smooth expand/collapse animations
+- All pages fully mobile-responsive with proper touch targets and card layouts
+
 **November 17, 2025** - Ladder Tournament System Added & League Free Agents Deprecated
 - Created 7 new database models for ladder tournament functionality (including Americano)
 - Deprecated league free agent system - all free agents now managed through Ladder
