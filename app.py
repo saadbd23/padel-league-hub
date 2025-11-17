@@ -4049,8 +4049,8 @@ def admin_panel():
     )
 
     # Ladder-specific data
-    men_teams_count = LadderTeam.query.filter_by(ladder_type='men').count()
-    women_teams_count = LadderTeam.query.filter_by(ladder_type='women').count()
+    men_teams_count = LadderTeam.query.filter_by(gender='men').count()
+    women_teams_count = LadderTeam.query.filter_by(gender='women').count()
     
     active_challenges_count = LadderChallenge.query.filter(
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
