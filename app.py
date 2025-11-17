@@ -922,7 +922,7 @@ def ladder_register_team():
         
         # Generate access link
         base_url = "https://goeclectic.xyz"
-        access_link = f"{base_url}/ladder/my-matches/{access_token}"
+        access_link = f"{base_url}/ladder/my-team/{access_token}"
         
         # Send confirmation email to Player 1
         if p1_email:
@@ -1217,7 +1217,7 @@ def ladder_register_freeagent():
         
         # Generate access link
         base_url = "https://goeclectic.xyz"
-        access_link = f"{base_url}/ladder/freeagent/{access_token}"
+        access_link = f"{base_url}/ladder/my-team/{access_token}"
         
         # Send confirmation email
         if email:
