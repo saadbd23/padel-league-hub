@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+    <h2 class="text-3xl sm:text-4xl font-bold text-white">
+      {{ "Men's Ladder" if ladder_type == 'men' else "Women's Ladder" }}
+    </h2>
+    <div class="flex gap-3">
+      <a href="{{ url_for('ladder_register_team') }}" class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg font-semibold transition">
+        Register Team
+      </a>
+      <a href="{{ url_for('ladder_register_freeagent') }}" class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg font-semibold transition">
+        Free Agent
+      </a>
+    </div>
+  </div>
+
+  {% if top_performers %}
+  <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl shadow-2xl p-6 mb-8">
+    <div class="text-center text-white">
+      <h3 class="text-xl font-bold mb-4">🏆 Top Performers</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for performer in top_performers %}
+        <div class="bg-white/10 rounded-lg p-4">
+          <div class="font-bold text-lg">{{ performer.team_name }}</div>
+          <div class="text-sm text-white/80">{{ performer.player1_name }} & {{ performer.player2_name }}</div>
+          <div class="text-2xl font-bold mt-2">
+            {% if performer.matches_played > 0 %}
+              {{ "%.0f"|format((performer.wins / performer.matches_played) * 100) }}%
+            {% else %}
+              0%
+            {% endif %}
+          </div>
+          <div class="text-xs text-white/70">Win Rate ({{ performer.wins }}-{{ performer.draws }}-{{ performer.losses }})</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Desktop Table View (hidden on mobile) -->
+  <div class="hidden lg:block bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden mb-8">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+          <tr>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Team</th>
+            <th class="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider">Players</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">W-D-L</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Sets</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Set Diff</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Games</th>
+            <th class="px-3 py-4 text-center text-xs font-semibold uppercase tracking-wider">Game Diff</th>
+            <th class="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider">Contact</th>
+            <th class="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for t in teams %}
+          <tr class="hover:bg-purple-50 transition-colors duration-200 {% if loop.index <= 3 %}bg-yellow-50/30{% endif %}">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-center">
+                {% if loop.index == 1 %}
+                  <span class="text-2xl">🥇</span>
+                {% elif loop.index == 2 %}
+                  <span class="text-2xl">🥈</span>
+                {% elif loop.index == 3 %}
+                  <span class="text-2xl">🥉</span>
+                {% else %}
+                  <span class="text-base font-bold text-gray-600">{{ t.current_rank }}</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="text-base font-bold text-indigo-700">{{ t.team_name }}</div>
+            </td>
+            <td class="px-4 py-4">
+              <div class="text-xs text-gray-700">{{ t.player1_name }}</div>
+              <div class="text-xs text-gray-700">{{ t.player2_name }}</div>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <div class="text-sm font-semibold text-gray-900">
+                <span class="text-green-600">{{ t.wins }}</span>-<span class="text-gray-500">{{ t.draws }}</span>-<span class="text-red-600">{{ t.losses }}</span>
+              </div>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <div class="text-xs text-gray-700">
+                <span class="font-semibold">{{ t.sets_for }}</span>-<span>{{ t.sets_against }}</span>
+              </div>
+            </td>
+            <td class="px-3 py-4 text-center">
+              {% set sets_diff = t.sets_for - t.sets_against %}
+              <span class="text-sm font-bold {% if sets_diff > 0 %}text-green-600{% elif sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if sets_diff > 0 %}+{% endif %}{{ sets_diff }}
+              </span>
+            </td>
+            <td class="px-3 py-4 text-center">
+              <div class="text-xs text-gray-700">
+                <span class="font-semibold">{{ t.games_for }}</span>-<span>{{ t.games_against }}</span>
+              </div>
+            </td>
+            <td class="px-3 py-4 text-center">
+              {% set games_diff = t.games_for - t.games_against %}
+              <span class="text-sm font-bold {% if games_diff > 0 %}text-green-600{% elif games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if games_diff > 0 %}+{% endif %}{{ games_diff }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                {% if t.contact_preference_email %}
+                  <span class="text-indigo-600" title="Email">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    </svg>
+                  </span>
+                {% endif %}
+                {% if t.contact_preference_whatsapp %}
+                  <span class="text-green-600" title="WhatsApp">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                {% if t.id in locked_team_ids %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800" title="In active challenge">
+                    🔒
+                  </span>
+                {% endif %}
+                {% if t.holiday_mode_active %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" title="Holiday mode">
+                    🏖️
+                  </span>
+                {% endif %}
+                {% if not t.id in locked_team_ids and not t.holiday_mode_active %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    ✓
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mobile Card View (hidden on desktop) -->
+  <div class="lg:hidden space-y-4 mb-8">
+    {% for t in teams %}
+    <div class="bg-white/95 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden {% if loop.index <= 3 %}ring-2 ring-yellow-400{% endif %}">
+      <!-- Card Header -->
+      <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="text-2xl">
+              {% if loop.index == 1 %}🥇
+              {% elif loop.index == 2 %}🥈
+              {% elif loop.index == 3 %}🥉
+              {% else %}<span class="text-white font-bold text-lg">#{{ t.current_rank }}</span>
+              {% endif %}
+            </div>
+            <div>
+              <div class="text-white font-bold text-lg">{{ t.team_name }}</div>
+              <div class="text-white/80 text-xs">{{ t.matches_played }} matches played</div>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-1">
+            {% if t.id in locked_team_ids %}
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                🔒 Locked
+              </span>
+            {% endif %}
+            {% if t.holiday_mode_active %}
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                🏖️ Holiday
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="p-4 space-y-3">
+        <!-- Players -->
+        <div class="flex items-start space-x-2">
+          <svg class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          <div class="text-sm text-gray-700">
+            <div>{{ t.player1_name }}</div>
+            <div>{{ t.player2_name }}</div>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
+          <div class="text-center">
+            <div class="text-xs text-gray-500">Record</div>
+            <div class="text-sm font-semibold">
+              <span class="text-green-600">{{ t.wins }}</span>-<span class="text-gray-500">{{ t.draws }}</span>-<span class="text-red-600">{{ t.losses }}</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500">Sets</div>
+            <div class="text-sm font-semibold">
+              {% set sets_diff = t.sets_for - t.sets_against %}
+              <span class="{% if sets_diff > 0 %}text-green-600{% elif sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if sets_diff > 0 %}+{% endif %}{{ sets_diff }}
+              </span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500">Games</div>
+            <div class="text-sm font-semibold">
+              {% set games_diff = t.games_for - t.games_against %}
+              <span class="{% if games_diff > 0 %}text-green-600{% elif games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if games_diff > 0 %}+{% endif %}{{ games_diff }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Preferences -->
+        <div class="flex items-center justify-center gap-3 pt-2 border-t border-gray-200">
+          <div class="text-xs text-gray-500">Contact via:</div>
+          {% if t.contact_preference_email %}
+            <span class="text-indigo-600" title="Email">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+              </svg>
+            </span>
+          {% endif %}
+          {% if t.contact_preference_whatsapp %}
+            <span class="text-green-600" title="WhatsApp">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+              </svg>
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Recent Matches Section -->
+  {% if recent_matches %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Recent Matches</h3>
+    <div class="space-y-3">
+      {% for match in recent_matches %}
+      {% set team_a = team_map.get(match.team_a_id) %}
+      {% set team_b = team_map.get(match.team_b_id) %}
+      {% if team_a and team_b %}
+      <div class="border border-gray-200 rounded-lg p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-900">{{ team_a.team_name }}</span>
+              {% if match.winner_id == team_a.id %}
+                <span class="text-green-600 font-bold">W</span>
+              {% endif %}
+            </div>
+            <div class="text-xs text-gray-500">{{ team_a.player1_name }} & {{ team_a.player2_name }}</div>
+          </div>
+          <div class="text-center px-4">
+            <div class="text-sm font-bold text-gray-900">{{ match.score_a }}</div>
+            <div class="text-xs text-gray-500">vs</div>
+            <div class="text-sm font-bold text-gray-900">{{ match.score_b }}</div>
+          </div>
+          <div class="flex-1 text-right">
+            <div class="flex items-center justify-end gap-2">
+              {% if match.winner_id == team_b.id %}
+                <span class="text-green-600 font-bold">W</span>
+              {% endif %}
+              <span class="font-semibold text-gray-900">{{ team_b.team_name }}</span>
+            </div>
+            <div class="text-xs text-gray-500">{{ team_b.player1_name }} & {{ team_b.player2_name }}</div>
+          </div>
+        </div>
+        {% if match.completed_at %}
+        <div class="mt-2 text-xs text-gray-400 text-center">
+          {{ match.completed_at.strftime('%b %d, %Y') }}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Info Section -->
+  <div class="mt-8 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">How the Ladder Works</h3>
+    <div class="text-gray-700 space-y-2">
+      <p>🎯 Challenge teams up to 3 positions above you on the ladder</p>
+      <p>🏆 Win to swap positions with your opponent</p>
+      <p>📧 Contact teams via email or WhatsApp based on their preferences</p>
+      <p>🔒 Teams in active challenges are locked and cannot accept new challenges</p>
+      <p>🏖️ Teams on holiday mode cannot be challenged</p>
+    </div>
+    <div class="mt-4">
+      <a href="{{ url_for('ladder_register_team') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-800 transition">
+        Join the Ladder →
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

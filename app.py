@@ -1334,6 +1334,88 @@ Access Link: {access_link}
     
     return render_template("ladder/register_freeagent.html")
 
+@app.route("/ladder/men/")
+def ladder_men():
+    """Public Men's Ladder Rankings Page"""
+    ladder_type = 'men'
+    
+    teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderTeam.current_rank.asc()
+    ).all()
+    
+    active_challenges = LadderChallenge.query.filter(
+        LadderChallenge.ladder_type == ladder_type,
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).all()
+    
+    locked_team_ids = set()
+    for challenge in active_challenges:
+        locked_team_ids.add(challenge.challenger_team_id)
+        locked_team_ids.add(challenge.challenged_team_id)
+    
+    recent_matches = LadderMatch.query.filter(
+        LadderMatch.ladder_type == ladder_type,
+        LadderMatch.verified == True
+    ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
+    
+    top_performers = []
+    if teams:
+        teams_with_matches = [t for t in teams if t.matches_played > 0]
+        if teams_with_matches:
+            sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
+            top_performers = sorted_by_wins[:3]
+    
+    team_map = {t.id: t for t in teams}
+    
+    return render_template("ladder/ladder_rankings.html",
+                         teams=teams,
+                         ladder_type=ladder_type,
+                         locked_team_ids=locked_team_ids,
+                         recent_matches=recent_matches,
+                         top_performers=top_performers,
+                         team_map=team_map)
+
+@app.route("/ladder/women/")
+def ladder_women():
+    """Public Women's Ladder Rankings Page"""
+    ladder_type = 'women'
+    
+    teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderTeam.current_rank.asc()
+    ).all()
+    
+    active_challenges = LadderChallenge.query.filter(
+        LadderChallenge.ladder_type == ladder_type,
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).all()
+    
+    locked_team_ids = set()
+    for challenge in active_challenges:
+        locked_team_ids.add(challenge.challenger_team_id)
+        locked_team_ids.add(challenge.challenged_team_id)
+    
+    recent_matches = LadderMatch.query.filter(
+        LadderMatch.ladder_type == ladder_type,
+        LadderMatch.verified == True
+    ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
+    
+    top_performers = []
+    if teams:
+        teams_with_matches = [t for t in teams if t.matches_played > 0]
+        if teams_with_matches:
+            sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
+            top_performers = sorted_by_wins[:3]
+    
+    team_map = {t.id: t for t in teams}
+    
+    return render_template("ladder/ladder_rankings.html",
+                         teams=teams,
+                         ladder_type=ladder_type,
+                         locked_team_ids=locked_team_ids,
+                         recent_matches=recent_matches,
+                         top_performers=top_performers,
+                         team_map=team_map)
+
 @app.route("/leaderboard")
 def leaderboard():
     """
