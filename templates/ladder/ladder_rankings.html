@@ -193,16 +193,22 @@
               {% set rank_diff = logged_in_team.current_rank - t.current_rank %}
               {% set can_challenge = (
                 logged_in_team.id != t.id and
-                rank_diff > 0 and 
+                rank_diff > 0 and
                 rank_diff <= (settings.max_challenge_rank_difference if settings else 3) and
                 logged_in_team.id not in locked_team_ids and
                 not logged_in_team.holiday_mode_active and
                 t.id not in locked_team_ids and
                 not t.holiday_mode_active
               ) %}
-              
+
               {% if can_challenge %}
-                <form method="POST" action="{{ url_for('ladder_challenge_create') }}" class="inline">
+                <!-- Show contact details for challengeable teams -->
+                <div class="mt-2 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1">
+                  <div class="font-semibold text-gray-700 mb-1">Contact Details:</div>
+                  <div>📧 {{ t.player1_name }}: {{ t.player1_email or t.player1_phone }}</div>
+                  <div>📧 {{ t.player2_name }}: {{ t.player2_email or t.player2_phone }}</div>
+                </div>
+                <form method="POST" action="{{ url_for('ladder_challenge_create') }}" class="mt-3">
                   <input type="hidden" name="challenged_team_id" value="{{ t.id }}">
                   <button type="submit" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow">
                     Challenge
@@ -329,6 +335,49 @@
             </span>
           {% endif %}
         </div>
+
+        {% if logged_in_team %}
+          {% set rank_diff = logged_in_team.current_rank - t.current_rank %}
+          {% set can_challenge = (
+            logged_in_team.id != t.id and
+            rank_diff > 0 and
+            rank_diff <= (settings.max_challenge_rank_difference if settings else 3) and
+            logged_in_team.id not in locked_team_ids and
+            not logged_in_team.holiday_mode_active and
+            t.id not in locked_team_ids and
+            not t.holiday_mode_active
+          ) %}
+          {% if can_challenge %}
+            <!-- Show contact details for challengeable teams -->
+            <div class="mt-2 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1">
+              <div class="font-semibold text-gray-700 mb-1">Contact Details:</div>
+              <div>📧 {{ t.player1_name }}: {{ t.player1_email or t.player1_phone }}</div>
+              <div>📧 {{ t.player2_name }}: {{ t.player2_email or t.player2_phone }}</div>
+            </div>
+            <form method="POST" action="{{ url_for('ladder_challenge_create') }}" class="mt-3">
+              <input type="hidden" name="challenged_team_id" value="{{ t.id }}">
+              <button type="submit"
+                      class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                <span>⚔️</span>
+                <span>Challenge This Team</span>
+              </button>
+            </form>
+          {% elif logged_in_team.id == t.id %}
+            <div class="mt-3 text-center text-xs text-gray-400 italic">Your Team</div>
+          {% elif rank_diff <= 0 %}
+            <div class="mt-3 text-center text-xs text-gray-400 italic">Lower Rank</div>
+          {% elif rank_diff > (settings.max_challenge_rank_difference if settings else 3) %}
+            <div class="mt-3 text-center text-xs text-gray-400 italic">Too Far</div>
+          {% elif logged_in_team.id in locked_team_ids %}
+            <div class="mt-3 text-center text-xs text-orange-600 italic">You're Locked</div>
+          {% elif logged_in_team.holiday_mode_active %}
+            <div class="mt-3 text-center text-xs text-blue-600 italic">You're On Holiday</div>
+          {% elif t.id in locked_team_ids %}
+            <div class="mt-3 text-center text-xs text-orange-600 italic">They're Locked</div>
+          {% elif t.holiday_mode_active %}
+            <div class="mt-3 text-center text-xs text-blue-600 italic">On Holiday</div>
+          {% endif %}
+        {% endif %}
       </div>
     </div>
     {% endfor %}
