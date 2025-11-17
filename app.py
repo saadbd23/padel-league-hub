@@ -4937,32 +4937,42 @@ def admin_americano_tournaments():
     """List all Americano tournaments"""
     from datetime import datetime
     
-    tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
-    
-    tournament_data = []
-    for tournament in tournaments:
-        participating_ids = []
-        if tournament.participating_free_agents:
-            import json
-            try:
-                participating_ids = json.loads(tournament.participating_free_agents)
-            except:
-                pass
+    try:
+        tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
         
-        participants_count = len(participating_ids)
+        tournament_data = []
+        for tournament in tournaments:
+            participating_ids = []
+            if tournament.participating_free_agents:
+                import json
+                try:
+                    participating_ids = json.loads(tournament.participating_free_agents)
+                except:
+                    pass
+            
+            participants_count = len(participating_ids)
+            
+            matches = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
+            matches_count = len(matches)
+            completed_matches = len([m for m in matches if m.status == 'completed'])
+            
+            tournament_data.append({
+                'tournament': tournament,
+                'participants_count': participants_count,
+                'matches_count': matches_count,
+                'completed_matches': completed_matches
+            })
         
-        matches = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
-        matches_count = len(matches)
-        completed_matches = len([m for m in matches if m.status == 'completed'])
+        response = make_response(render_template("admin_americano_tournaments.html", tournament_data=tournament_data))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
         
-        tournament_data.append({
-            'tournament': tournament,
-            'participants_count': participants_count,
-            'matches_count': matches_count,
-            'completed_matches': completed_matches
-        })
-    
-    return render_template("admin_americano_tournaments.html", tournament_data=tournament_data)
+    except Exception as e:
+        app.logger.error(f"Error loading Americano tournaments: {str(e)}")
+        flash(f"Error loading tournaments: {str(e)}", "error")
+        return redirect(url_for('admin_panel'))
 
 
 @app.route("/admin/ladder/americano/create", methods=["GET", "POST"])
