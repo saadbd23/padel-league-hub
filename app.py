@@ -849,6 +849,491 @@ Thank you for joining the league! 🎾
         return redirect(url_for("index"))
     return render_template("register_freeagent.html")
 
+@app.route("/ladder/register-team", methods=["GET", "POST"])
+def ladder_register_team():
+    """Ladder team registration with gender and contact preferences"""
+    if request.method == "POST":
+        team_name = request.form["team_name"]
+        p1_name = request.form["player1_name"]
+        p1_phone = request.form["player1_phone"]
+        p1_email = request.form.get("player1_email", "").strip()
+        p2_name = request.form["player2_name"]
+        p2_phone = request.form["player2_phone"]
+        p2_email = request.form.get("player2_email", "").strip()
+        gender = request.form.get("gender", "").strip()
+        
+        # Get contact preferences
+        contact_email = request.form.get("contact_email") == "on"
+        contact_whatsapp = request.form.get("contact_whatsapp") == "on"
+        
+        # Validate required fields
+        if not p1_email or not p2_email:
+            flash("Email is required for both players.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if not gender or gender not in ["men", "women"]:
+            flash("Please select a gender (Men or Women).", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Validate at least one contact preference
+        if not contact_email and not contact_whatsapp:
+            flash("Please select at least one contact preference (Email or WhatsApp).", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Check if Player 1 and Player 2 have the same email or phone number
+        if p1_email.lower() == p2_email.lower():
+            flash("Player 1 and Player 2 cannot have the same email address.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if normalize_phone_number(p1_phone) == normalize_phone_number(p2_phone):
+            flash("Player 1 and Player 2 cannot have the same WhatsApp number.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Normalize phone numbers
+        p1_phone_normalized = normalize_phone_number(p1_phone)
+        p2_phone_normalized = normalize_phone_number(p2_phone)
+        
+        # Check team name uniqueness against BOTH Team and LadderTeam tables
+        canonical = normalize_team_name(team_name)
+        existing_league_team = Team.query.filter_by(team_name_canonical=canonical).first()
+        existing_ladder_team = LadderTeam.query.filter_by(team_name_canonical=canonical).first()
+        
+        if existing_league_team or existing_ladder_team:
+            flash("A team with a similar name already exists. Please choose a unique name.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Check Player 1 email in both Team and LadderTeam
+        existing_team_p1_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == p1_email,
+                Team.player2_email == p1_email
+            )
+        ).first()
+        existing_ladder_p1_email = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_email == p1_email,
+                LadderTeam.player2_email == p1_email
+            )
+        ).first()
+        
+        if existing_team_p1_email:
+            flash(f"Player 1's email ({p1_email}) is already registered in league team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if existing_ladder_p1_email:
+            flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Check Player 1 phone in both Team and LadderTeam
+        existing_team_p1_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == p1_phone_normalized,
+                Team.player2_phone == p1_phone_normalized
+            )
+        ).first()
+        existing_ladder_p1_phone = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_phone == p1_phone_normalized,
+                LadderTeam.player2_phone == p1_phone_normalized
+            )
+        ).first()
+        
+        if existing_team_p1_phone:
+            flash(f"Player 1's WhatsApp number is already registered in league team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if existing_ladder_p1_phone:
+            flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Check Player 2 email in both Team and LadderTeam
+        existing_team_p2_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == p2_email,
+                Team.player2_email == p2_email
+            )
+        ).first()
+        existing_ladder_p2_email = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_email == p2_email,
+                LadderTeam.player2_email == p2_email
+            )
+        ).first()
+        
+        if existing_team_p2_email:
+            flash(f"Player 2's email ({p2_email}) is already registered in league team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if existing_ladder_p2_email:
+            flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Check Player 2 phone in both Team and LadderTeam
+        existing_team_p2_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == p2_phone_normalized,
+                Team.player2_phone == p2_phone_normalized
+            )
+        ).first()
+        existing_ladder_p2_phone = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_phone == p2_phone_normalized,
+                LadderTeam.player2_phone == p2_phone_normalized
+            )
+        ).first()
+        
+        if existing_team_p2_phone:
+            flash(f"Player 2's WhatsApp number is already registered in league team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        if existing_ladder_p2_phone:
+            flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one team.", "error")
+            return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # Generate unique access token
+        access_token = secrets.token_urlsafe(32)
+        
+        # Find max rank in the appropriate gender ladder and add team at bottom
+        from datetime import datetime
+        max_rank_team = LadderTeam.query.filter_by(
+            gender=gender,
+            ladder_type="ladder"
+        ).order_by(LadderTeam.current_rank.desc()).first()
+        
+        current_rank = max_rank_team.current_rank + 1 if max_rank_team else 1
+        
+        # Create new ladder team
+        new_team = LadderTeam(
+            team_name=team_name,
+            team_name_canonical=canonical,
+            player1_name=p1_name,
+            player1_phone=p1_phone_normalized,
+            player1_email=p1_email,
+            player2_name=p2_name,
+            player2_phone=p2_phone_normalized,
+            player2_email=p2_email,
+            gender=gender,
+            ladder_type="ladder",
+            current_rank=current_rank,
+            contact_preference_email=contact_email,
+            contact_preference_whatsapp=contact_whatsapp,
+            access_token=access_token,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        db.session.add(new_team)
+        db.session.commit()
+        
+        # Generate access link
+        base_url = "https://goeclectic.xyz"
+        access_link = f"{base_url}/ladder/my-matches/{access_token}"
+        
+        # Send confirmation email to Player 1
+        if p1_email:
+            from utils import send_email_notification
+            email_body = f"""Hi {p1_name},
+
+✅ Your team "{team_name}" has been successfully registered for the Ladder Tournament!
+
+📋 Registration Details:
+- Team Name: {team_name}
+- Gender Category: {gender.capitalize()}
+- Player 1: {p1_name} (You)
+- Player 2: {p2_name}
+- Starting Rank: #{current_rank}
+
+🔗 Your Team Access Link:
+{access_link}
+
+Bookmark this link to:
+- Challenge teams above you
+- View your ladder ranking
+- Submit match scores
+- Track your progress
+
+🎾 How the Ladder Works:
+- Challenge teams up to 3 positions above you
+- Win to swap positions and climb the ladder
+- Play at your convenience
+- Monthly Americano tournaments for additional fun!
+
+Good luck climbing the ladder! 🚀
+
+- BD Padel League
+"""
+            send_email_notification(p1_email, f"Ladder Team Registered - {team_name}", email_body)
+        
+        # Send confirmation email to Player 2
+        if p2_email:
+            from utils import send_email_notification
+            email_body = f"""Hi {p2_name},
+
+✅ You've been registered as part of team "{team_name}" for the Ladder Tournament!
+
+📋 Team Details:
+- Team Name: {team_name}
+- Gender Category: {gender.capitalize()}
+- Partner: {p1_name}
+- Starting Rank: #{current_rank}
+
+🔗 Your Team Access Link:
+{access_link}
+
+Bookmark this link to:
+- Challenge teams above you
+- View your ladder ranking
+- Submit match scores
+- Track your progress
+
+🎾 How the Ladder Works:
+- Challenge teams up to 3 positions above you
+- Win to swap positions and climb the ladder
+- Play at your convenience
+- Monthly Americano tournaments for additional fun!
+
+Good luck climbing the ladder! 🚀
+
+- BD Padel League
+"""
+            send_email_notification(p2_email, f"Ladder Team Registered - {team_name}", email_body)
+        
+        # Send admin notification
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            from utils import send_email_notification
+            admin_body = f"""🆕 NEW LADDER TEAM REGISTRATION
+
+Team Name: {team_name}
+Gender: {gender.capitalize()}
+Ladder Type: Ladder
+Starting Rank: #{current_rank}
+
+Player 1:
+- Name: {p1_name}
+- Email: {p1_email}
+- Phone: {p1_phone}
+
+Player 2:
+- Name: {p2_name}
+- Email: {p2_email}
+- Phone: {p2_phone}
+
+Contact Preferences:
+- Email: {"Yes" if contact_email else "No"}
+- WhatsApp: {"Yes" if contact_whatsapp else "No"}
+
+Access Link: {access_link}
+"""
+            send_email_notification(admin_email, f"New Ladder Team: {team_name}", admin_body)
+        
+        return render_template("ladder/registration_success_team.html", 
+                             team_name=team_name, 
+                             access_link=access_link,
+                             rank=current_rank,
+                             gender=gender)
+    
+    return render_template("ladder/register_team.html")
+
+@app.route("/ladder/register-freeagent", methods=["GET", "POST"])
+def ladder_register_freeagent():
+    """Ladder free agent registration for monthly Americano tournaments"""
+    if request.method == "POST":
+        name = request.form["name"]
+        phone = request.form["phone"]
+        email = request.form.get("email", "").strip()
+        gender = request.form.get("gender", "").strip()
+        skill_level = request.form.get("skill_level", "").strip()
+        playstyle = request.form.get("playstyle", "").strip()
+        availability = request.form.get("availability", "").strip()
+        
+        # Get contact preferences
+        contact_email = request.form.get("contact_email") == "on"
+        contact_whatsapp = request.form.get("contact_whatsapp") == "on"
+        
+        # Validate required fields
+        if not email:
+            flash("Email is required for free agent registration.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        if not gender or gender not in ["men", "women"]:
+            flash("Please select a gender (Men or Women).", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Validate at least one contact preference
+        if not contact_email and not contact_whatsapp:
+            flash("Please select at least one contact preference (Email or WhatsApp).", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Normalize phone number
+        phone_normalized = normalize_phone_number(phone)
+        
+        # Check if email is already registered in Team
+        existing_team_email = Team.query.filter(
+            db.or_(
+                Team.player1_email == email,
+                Team.player2_email == email
+            )
+        ).first()
+        
+        if existing_team_email:
+            flash(f"This email ({email}) is already registered in league team '{existing_team_email.team_name}'. Please use a different email.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if email is already registered in LadderTeam
+        existing_ladder_email = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_email == email,
+                LadderTeam.player2_email == email
+            )
+        ).first()
+        
+        if existing_ladder_email:
+            flash(f"This email ({email}) is already registered in ladder team '{existing_ladder_email.team_name}'. Please use a different email.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if phone is already registered in Team
+        existing_team_phone = Team.query.filter(
+            db.or_(
+                Team.player1_phone == phone_normalized,
+                Team.player2_phone == phone_normalized
+            )
+        ).first()
+        
+        if existing_team_phone:
+            flash(f"This WhatsApp number is already registered in league team '{existing_team_phone.team_name}'. Please use a different number.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if phone is already registered in LadderTeam
+        existing_ladder_phone = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_phone == phone_normalized,
+                LadderTeam.player2_phone == phone_normalized
+            )
+        ).first()
+        
+        if existing_ladder_phone:
+            flash(f"This WhatsApp number is already registered in ladder team '{existing_ladder_phone.team_name}'. Please use a different number.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if email is already registered as league free agent
+        existing_fa_email = FreeAgent.query.filter_by(email=email).first()
+        if existing_fa_email:
+            flash(f"This email is already registered as a league free agent. Please use a different email.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if phone is already registered as league free agent
+        existing_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
+        if existing_fa_phone:
+            flash(f"This WhatsApp number is already registered as a league free agent. Please use a different number.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if email is already registered as ladder free agent
+        existing_ladder_fa_email = LadderFreeAgent.query.filter_by(email=email).first()
+        if existing_ladder_fa_email:
+            flash(f"This email is already registered as a ladder free agent. Please use a different email.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Check if phone is already registered as ladder free agent
+        existing_ladder_fa_phone = LadderFreeAgent.query.filter_by(phone=phone_normalized).first()
+        if existing_ladder_fa_phone:
+            flash(f"This WhatsApp number is already registered as a ladder free agent. Please use a different number.", "error")
+            return render_template("ladder/register_freeagent.html", form_data=request.form)
+        
+        # Generate unique access token
+        access_token = secrets.token_urlsafe(32)
+        
+        # Create new ladder free agent
+        from datetime import datetime
+        new_fa = LadderFreeAgent(
+            name=name,
+            phone=phone_normalized,
+            email=email,
+            gender=gender,
+            contact_preference_email=contact_email,
+            contact_preference_whatsapp=contact_whatsapp,
+            access_token=access_token,
+            skill_level=skill_level,
+            playstyle=playstyle,
+            availability=availability,
+            created_at=datetime.now()
+        )
+        db.session.add(new_fa)
+        db.session.commit()
+        
+        # Generate access link
+        base_url = "https://goeclectic.xyz"
+        access_link = f"{base_url}/ladder/freeagent/{access_token}"
+        
+        # Send confirmation email
+        if email:
+            from utils import send_email_notification
+            email_body = f"""Hi {name},
+
+✅ Welcome to the Ladder Tournament! Your free agent registration has been confirmed.
+
+📋 Your Profile:
+- Name: {name}
+- Gender: {gender.capitalize()}
+- Skill Level: {skill_level}
+- Playstyle: {playstyle}
+- Availability: {availability}
+
+🎾 Monthly Americano Tournaments:
+As a ladder free agent, you'll be invited to participate in our monthly Americano tournaments! These are fun, social tournaments where you'll:
+- Play with different partners each round
+- Meet other players in your gender category
+- Compete for prizes and bragging rights
+- Enjoy a friendly, competitive atmosphere
+
+🔗 Your Access Link:
+{access_link}
+
+📅 What's Next?
+You'll receive an email notification before each monthly tournament with:
+- Tournament date and time
+- Registration confirmation
+- Tournament format details
+- Venue information
+
+Contact Preferences: {"Email" if contact_email else ""}{"" if not (contact_email and contact_whatsapp) else " and "}{"WhatsApp" if contact_whatsapp else ""}
+
+If you have any questions or want to update your profile, please contact the admin.
+
+Thank you for joining! 🚀
+
+- BD Padel League
+"""
+            send_email_notification(email, f"Ladder Free Agent Registration Confirmed", email_body)
+        
+        # Send admin notification
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            from utils import send_email_notification
+            admin_body = f"""🆕 NEW LADDER FREE AGENT REGISTRATION
+
+Name: {name}
+Email: {email}
+Phone: {phone}
+Gender: {gender.capitalize()}
+Skill Level: {skill_level}
+Playstyle: {playstyle}
+Availability: {availability}
+
+Contact Preferences:
+- Email: {"Yes" if contact_email else "No"}
+- WhatsApp: {"Yes" if contact_whatsapp else "No"}
+
+Access Link: {access_link}
+"""
+            send_email_notification(admin_email, f"New Ladder Free Agent: {name}", admin_body)
+        
+        return render_template("ladder/registration_success_freeagent.html", 
+                             name=name, 
+                             access_link=access_link,
+                             gender=gender)
+    
+    return render_template("ladder/register_freeagent.html")
+
 @app.route("/leaderboard")
 def leaderboard():
     """

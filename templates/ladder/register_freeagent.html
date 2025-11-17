@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12">
+    <h2 class="text-4xl font-bold text-gray-900 mb-2 text-center">Ladder Free Agent Registration</h2>
+    <p class="text-gray-600 text-center mb-4">Register for monthly Americano tournaments!</p>
+
+    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-4 mb-4 rounded-r-lg">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-semibold text-purple-900 mb-2">🎾 Monthly Americano Tournaments</h3>
+          <p class="text-xs text-purple-800 leading-relaxed">
+            Join our monthly Americano tournaments where you'll play with different partners each round! These fun, social tournaments are perfect for meeting new players, improving your game, and competing for prizes. You'll be notified before each tournament with all the details.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-semibold text-blue-800 mb-2">📧 Communication Preferences</h3>
+          <ul class="text-xs text-blue-700 space-y-1">
+            <li>• <strong>Email address is required</strong> for tournament notifications</li>
+            <li>• Choose how you want to be contacted: Email, WhatsApp, or both</li>
+            <li>• WhatsApp number is needed if you select WhatsApp as a contact preference</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" class="space-y-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
+        <input
+          type="text"
+          name="name"
+          required
+          value="{{ form_data.get('name', '') if form_data else '' }}"
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+          placeholder="Your full name">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+        <input
+          type="email"
+          name="email"
+          required
+          value="{{ form_data.get('email', '') if form_data else '' }}"
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+          placeholder="your.email@example.com">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number *</label>
+        <input
+          type="tel"
+          name="phone"
+          required
+          value="{{ form_data.get('phone', '') if form_data else '' }}"
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+          placeholder="e.g., +8801712345678">
+        <p class="text-xs text-gray-500 mt-1">Required if WhatsApp notifications selected</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender Category *</label>
+        <select
+          name="gender"
+          required
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
+          <option value="">Select gender category</option>
+          <option value="men" {{ 'selected' if form_data and form_data.get('gender') == 'men' else '' }}>Men</option>
+          <option value="women" {{ 'selected' if form_data and form_data.get('gender') == 'women' else '' }}>Women</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-3">Contact Preferences * (Select at least one)</label>
+        <div class="space-y-2">
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              name="contact_email"
+              {{ 'checked' if form_data and form_data.get('contact_email') else 'checked' }}
+              class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Email notifications</span>
+          </label>
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              name="contact_whatsapp"
+              {{ 'checked' if form_data and form_data.get('contact_whatsapp') else '' }}
+              class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">WhatsApp notifications</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Skill Level *</label>
+        <select
+          name="skill_level"
+          required
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
+          <option value="">Select your skill level</option>
+          <option value="Beginner" {{ 'selected' if form_data and form_data.get('skill_level') == 'Beginner' else '' }}>Beginner</option>
+          <option value="Intermediate" {{ 'selected' if form_data and form_data.get('skill_level') == 'Intermediate' else '' }}>Intermediate</option>
+          <option value="Advanced" {{ 'selected' if form_data and form_data.get('skill_level') == 'Advanced' else '' }}>Advanced</option>
+          <option value="Expert" {{ 'selected' if form_data and form_data.get('skill_level') == 'Expert' else '' }}>Expert</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Playstyle *</label>
+        <select
+          name="playstyle"
+          required
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
+          <option value="">Select your playstyle</option>
+          <option value="Aggressive" {{ 'selected' if form_data and form_data.get('playstyle') == 'Aggressive' else '' }}>Aggressive</option>
+          <option value="Defensive" {{ 'selected' if form_data and form_data.get('playstyle') == 'Defensive' else '' }}>Defensive</option>
+          <option value="Balanced" {{ 'selected' if form_data and form_data.get('playstyle') == 'Balanced' else '' }}>Balanced</option>
+          <option value="Tactical" {{ 'selected' if form_data and form_data.get('playstyle') == 'Tactical' else '' }}>Tactical</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Availability *</label>
+        <textarea
+          name="availability"
+          required
+          rows="3"
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none resize-none"
+          placeholder="e.g., Weekday evenings, weekends">{{ form_data.get('availability', '') if form_data else '' }}</textarea>
+      </div>
+
+      <button
+        type="submit"
+        class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        Register as Ladder Free Agent
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
