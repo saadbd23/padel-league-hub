@@ -1,0 +1,164 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center">Tournament Rules</h1>
+    
+    <!-- Ladder Rules (Expanded by Default) -->
+    <div class="mb-4 border border-gray-200 rounded-lg">
+      <button onclick="toggleAccordion('ladder')" class="w-full px-6 py-4 text-left bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-all rounded-lg flex justify-between items-center">
+        <span class="text-xl font-bold text-purple-700">🪜 Ladder Tournament Rules</span>
+        <svg id="ladder-icon" class="w-6 h-6 text-purple-600 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="ladder-content" class="px-6 py-4 bg-white">
+        <div class="space-y-4 text-gray-700">
+          <h3 class="text-lg font-semibold text-purple-700">Challenge System</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Teams can challenge opponents up to 3 ranks above them</li>
+            <li>Challenged teams have 48 hours to accept or reject the challenge</li>
+            <li>If not responded within 48 hours, challenger wins by default and ranks are swapped</li>
+            <li>Once accepted, teams have 7 days to complete the match</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-purple-700 mt-6">Match Format</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Best of 3 sets format</li>
+            <li>First to 6 games wins a set</li>
+            <li>If tied 6-6, play a tiebreak to 7 points (win by 2)</li>
+            <li>If sets are tied 1-1, play a super tiebreak to 10 points (win by 2)</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-purple-700 mt-6">Ranking System</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Winner takes the loser's rank, loser drops one position</li>
+            <li>All teams between them shift accordingly</li>
+            <li>Teams locked in challenges cannot be challenged by others</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-purple-700 mt-6">Holiday Mode</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Teams can activate holiday mode to avoid challenges</li>
+            <li>2-week grace period with no rank penalties</li>
+            <li>After grace period: 1 rank penalty per week</li>
+            <li>Cannot challenge or be challenged while on holiday</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-purple-700 mt-6">Activity Requirements</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Minimum 2 matches per month required</li>
+            <li>Inactivity penalty: 3 ranks down if requirement not met</li>
+            <li>Teams on holiday mode are exempt from activity requirements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- League Rules (Collapsed) -->
+    <div class="mb-4 border border-gray-200 rounded-lg">
+      <button onclick="toggleAccordion('league')" class="w-full px-6 py-4 text-left bg-gray-50 hover:bg-gray-100 transition-all rounded-lg flex justify-between items-center">
+        <span class="text-xl font-bold text-gray-700">🏆 Swiss League Rules</span>
+        <svg id="league-icon" class="w-6 h-6 text-gray-600 transform rotate-[-90deg] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="league-content" class="hidden px-6 py-4 bg-white">
+        <div class="space-y-4 text-gray-700">
+          <h3 class="text-lg font-semibold text-gray-700">Format</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Swiss system: 5 rounds, followed by playoffs</li>
+            <li>Teams paired based on current standings each round</li>
+            <li>Top 8 teams advance to single-elimination playoffs</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-700 mt-6">Scoring</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Win: 3 points</li>
+            <li>Draw: 1 point</li>
+            <li>Loss: 0 points</li>
+            <li>Tiebreakers: Sets difference → Games difference → Head-to-head</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-700 mt-6">Match Deadlines</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Matches must be completed by Sunday 23:59 of the round week</li>
+            <li>Reschedules allowed (max 2 per team) with admin approval</li>
+            <li>Makeup matches deadline: Wednesday 23:59 of following week</li>
+            <li>Late completion results in automatic walkover to opponent</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Americano Tournament Rules (Collapsed) -->
+    <div class="mb-4 border border-gray-200 rounded-lg">
+      <button onclick="toggleAccordion('americano')" class="w-full px-6 py-4 text-left bg-gray-50 hover:bg-gray-100 transition-all rounded-lg flex justify-between items-center">
+        <span class="text-xl font-bold text-gray-700">🎾 Americano Tournament Rules</span>
+        <svg id="americano-icon" class="w-6 h-6 text-gray-600 transform rotate-[-90deg] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="americano-content" class="hidden px-6 py-4 bg-white">
+        <div class="space-y-4 text-gray-700">
+          <h3 class="text-lg font-semibold text-gray-700">Format</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Monthly tournament for free agents</li>
+            <li>Partners rotate each round - play with everyone</li>
+            <li>Multiple rounds with different partner combinations</li>
+            <li>Fun, social format to meet other players</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-700 mt-6">Scoring</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Win: 3 points</li>
+            <li>Draw: 1 point</li>
+            <li>Loss: 0 points</li>
+            <li>Individual standings tracked across all rounds</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-700 mt-6">Ladder Qualification</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Top 50% of finishers eligible to form ladder teams</li>
+            <li>Admin assists with partner pairing after tournament</li>
+            <li>New teams join ladder at bottom rank</li>
+            <li>Excellent opportunity to find compatible partners!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- General Match Play Rules -->
+    <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+      <h3 class="text-lg font-semibold text-blue-900 mb-3">⚠️ General Match Play Rules</h3>
+      <ul class="list-disc pl-6 space-y-2 text-blue-800">
+        <li><strong>Court Booking:</strong> Teams coordinate booking through team dashboard</li>
+        <li><strong>Score Submission:</strong> Both teams must submit scores for verification</li>
+        <li><strong>Disputes:</strong> Admin reviews disputed scores and makes final decisions</li>
+        <li><strong>No-Shows:</strong> Report through dashboard if opponent doesn't show up</li>
+        <li><strong>Contact:</strong> Exchange contact info through secure team pages only</li>
+        <li><strong>Sportsmanship:</strong> Respect opponents, follow padel etiquette</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleAccordion(section) {
+  const content = document.getElementById(section + '-content');
+  const icon = document.getElementById(section + '-icon');
+  
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden');
+    icon.classList.remove('rotate-[-90deg]');
+    icon.classList.add('rotate-0');
+  } else {
+    content.classList.add('hidden');
+    icon.classList.remove('rotate-0');
+    icon.classList.add('rotate-[-90deg]');
+  }
+}
+</script>
+{% endblock %}
