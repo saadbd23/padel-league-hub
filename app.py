@@ -4931,6 +4931,603 @@ def admin_ladder_settings():
     return render_template("admin_ladder_settings.html", settings=settings)
 
 
+@app.route("/admin/ladder/americano/tournaments")
+@require_admin_auth
+def admin_americano_tournaments():
+    """List all Americano tournaments"""
+    from datetime import datetime
+    
+    tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
+    
+    tournament_data = []
+    for tournament in tournaments:
+        participating_ids = []
+        if tournament.participating_free_agents:
+            import json
+            try:
+                participating_ids = json.loads(tournament.participating_free_agents)
+            except:
+                pass
+        
+        participants_count = len(participating_ids)
+        
+        matches = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
+        matches_count = len(matches)
+        completed_matches = len([m for m in matches if m.status == 'completed'])
+        
+        tournament_data.append({
+            'tournament': tournament,
+            'participants_count': participants_count,
+            'matches_count': matches_count,
+            'completed_matches': completed_matches
+        })
+    
+    return render_template("admin_americano_tournaments.html", tournament_data=tournament_data)
+
+
+@app.route("/admin/ladder/americano/create", methods=["GET", "POST"])
+@require_admin_auth
+def admin_americano_create():
+    """Create a new Americano tournament"""
+    from datetime import datetime
+    import json
+    
+    if request.method == "POST":
+        try:
+            gender = request.form.get("gender")
+            tournament_date_str = request.form.get("tournament_date")
+            location = request.form.get("location", "")
+            participant_ids = request.form.getlist("participants")
+            
+            if not gender or not tournament_date_str:
+                flash("Gender and tournament date are required", "error")
+                return redirect(url_for("admin_americano_create"))
+            
+            if len(participant_ids) < 4:
+                flash("At least 4 participants are required for Americano tournament", "error")
+                return redirect(url_for("admin_americano_create"))
+            
+            tournament_date = datetime.strptime(tournament_date_str, "%Y-%m-%d")
+            
+            tournament = AmericanoTournament(
+                tournament_date=tournament_date,
+                gender=gender,
+                location=location,
+                status="setup",
+                participating_free_agents=json.dumps([int(p) for p in participant_ids]),
+                created_at=datetime.now()
+            )
+            
+            db.session.add(tournament)
+            db.session.commit()
+            
+            from utils import send_email_notification
+            for participant_id in participant_ids:
+                free_agent = LadderFreeAgent.query.get(int(participant_id))
+                if free_agent and free_agent.email:
+                    subject = f"🎾 Americano Tournament Invitation - {gender.title()}'s Division"
+                    body = f"""Hi {free_agent.name},
+
+You've been invited to participate in an Americano Tournament!
+
+Tournament Details:
+📅 Date: {tournament_date.strftime('%B %d, %Y')}
+📍 Location: {location or 'TBD'}
+🏆 Division: {gender.title()}'s
+
+What is Americano Format?
+- Multiple rounds of doubles matches
+- Partners rotate each round
+- Everyone plays with everyone
+- Fun, social, and competitive!
+
+Match schedule will be sent soon. Get ready to play!
+
+- BD Padel League
+"""
+                    send_email_notification(free_agent.email, subject, body)
+            
+            flash(f"✅ Tournament created successfully! {len(participant_ids)} invitations sent.", "success")
+            return redirect(url_for("admin_americano_detail", tournament_id=tournament.id))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error creating tournament: {str(e)}", "error")
+            return redirect(url_for("admin_americano_create"))
+    
+    men_agents = LadderFreeAgent.query.filter_by(gender="men").all()
+    women_agents = LadderFreeAgent.query.filter_by(gender="women").all()
+    
+    return render_template("admin_americano_create.html", 
+                         men_agents=men_agents, 
+                         women_agents=women_agents)
+
+
+@app.route("/admin/ladder/americano/<int:tournament_id>")
+@require_admin_auth
+def admin_americano_detail(tournament_id):
+    """View tournament details"""
+    import json
+    
+    tournament = AmericanoTournament.query.get_or_404(tournament_id)
+    
+    participant_ids = []
+    if tournament.participating_free_agents:
+        try:
+            participant_ids = json.loads(tournament.participating_free_agents)
+        except:
+            pass
+    
+    participants = []
+    for pid in participant_ids:
+        agent = LadderFreeAgent.query.get(pid)
+        if agent:
+            participants.append(agent)
+    
+    matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).order_by(
+        AmericanoMatch.round_number, 
+        AmericanoMatch.id
+    ).all()
+    
+    matches_by_round = {}
+    for match in matches:
+        if match.round_number not in matches_by_round:
+            matches_by_round[match.round_number] = []
+        
+        p1 = LadderFreeAgent.query.get(match.player1_id)
+        p2 = LadderFreeAgent.query.get(match.player2_id)
+        p3 = LadderFreeAgent.query.get(match.player3_id)
+        p4 = LadderFreeAgent.query.get(match.player4_id)
+        
+        matches_by_round[match.round_number].append({
+            'match': match,
+            'p1': p1,
+            'p2': p2,
+            'p3': p3,
+            'p4': p4
+        })
+    
+    return render_template("admin_americano_detail.html",
+                         tournament=tournament,
+                         participants=participants,
+                         matches_by_round=matches_by_round,
+                         total_rounds=tournament.total_rounds)
+
+
+@app.route("/admin/ladder/americano/<int:tournament_id>/generate-matches", methods=["POST"])
+@require_admin_auth
+def admin_americano_generate_matches(tournament_id):
+    """Generate Americano matches using the pairing algorithm"""
+    from datetime import datetime
+    import json
+    from utils import generate_americano_pairings, send_email_notification
+    
+    tournament = AmericanoTournament.query.get_or_404(tournament_id)
+    
+    existing_matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).all()
+    if existing_matches:
+        flash("⚠️ Matches already generated for this tournament. Delete existing matches first if you want to regenerate.", "error")
+        return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
+    
+    try:
+        participant_ids = []
+        if tournament.participating_free_agents:
+            participant_ids = json.loads(tournament.participating_free_agents)
+        
+        if len(participant_ids) < 4:
+            flash("Need at least 4 participants to generate matches", "error")
+            return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
+        
+        rounds = generate_americano_pairings(participant_ids)
+        
+        if not rounds:
+            flash("Could not generate pairings", "error")
+            return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
+        
+        total_matches_created = 0
+        for round_num, round_matches in enumerate(rounds, start=1):
+            for court_num, match_tuple in enumerate(round_matches, start=1):
+                p1_id, p2_id, p3_id, p4_id = match_tuple
+                
+                match = AmericanoMatch(
+                    tournament_id=tournament_id,
+                    round_number=round_num,
+                    court_number=court_num,
+                    player1_id=p1_id,
+                    player2_id=p2_id,
+                    player3_id=p3_id,
+                    player4_id=p4_id,
+                    status="pending",
+                    created_at=datetime.now()
+                )
+                db.session.add(match)
+                total_matches_created += 1
+        
+        tournament.total_rounds = len(rounds)
+        tournament.status = "in_progress"
+        db.session.commit()
+        
+        for participant_id in participant_ids:
+            free_agent = LadderFreeAgent.query.get(participant_id)
+            if free_agent and free_agent.email:
+                subject = f"🎾 Americano Tournament Schedule - {tournament.gender.title()}'s Division"
+                body = f"""Hi {free_agent.name},
+
+The match schedule for your Americano Tournament is ready!
+
+Tournament Details:
+📅 Date: {tournament.tournament_date.strftime('%B %d, %Y')}
+📍 Location: {tournament.location or 'TBD'}
+🎯 Total Rounds: {len(rounds)}
+
+Format:
+- You'll play {len(rounds)} matches
+- Partners rotate each round
+- Have fun and play your best!
+
+The admin will update scores after each match. Good luck!
+
+- BD Padel League
+"""
+                send_email_notification(free_agent.email, subject, body)
+        
+        flash(f"✅ Successfully generated {total_matches_created} matches across {len(rounds)} rounds! Schedule emails sent to all participants.", "success")
+        return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
+    
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error generating matches: {str(e)}", "error")
+        return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
+
+
+@app.route("/admin/ladder/americano/<int:tournament_id>/scores", methods=["GET", "POST"])
+@require_admin_auth
+def admin_americano_scores(tournament_id):
+    """Enter scores for Americano matches"""
+    from datetime import datetime
+    import json
+    
+    tournament = AmericanoTournament.query.get_or_404(tournament_id)
+    
+    if request.method == "POST":
+        try:
+            match_id = request.form.get("match_id", type=int)
+            team_a_score = request.form.get("team_a_score", type=int)
+            team_b_score = request.form.get("team_b_score", type=int)
+            
+            if not match_id or team_a_score is None or team_b_score is None:
+                flash("Match ID and scores are required", "error")
+                return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
+            
+            match = AmericanoMatch.query.get(match_id)
+            if not match or match.tournament_id != tournament_id:
+                flash("Invalid match", "error")
+                return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
+            
+            match.score_team_a = str(team_a_score)
+            match.score_team_b = str(team_b_score)
+            
+            if team_a_score > team_b_score:
+                match.winner_team = 'A'
+                match.points_player1 = 3
+                match.points_player2 = 3
+                match.points_player3 = 0
+                match.points_player4 = 0
+            elif team_b_score > team_a_score:
+                match.winner_team = 'B'
+                match.points_player1 = 0
+                match.points_player2 = 0
+                match.points_player3 = 3
+                match.points_player4 = 3
+            else:
+                match.winner_team = None
+                match.points_player1 = 1
+                match.points_player2 = 1
+                match.points_player3 = 1
+                match.points_player4 = 1
+            
+            match.status = "completed"
+            db.session.commit()
+            
+            flash(f"✅ Score recorded: Team A ({team_a_score}) vs Team B ({team_b_score})", "success")
+            return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error recording score: {str(e)}", "error")
+            return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
+    
+    participant_ids = []
+    if tournament.participating_free_agents:
+        participant_ids = json.loads(tournament.participating_free_agents)
+    
+    participants = []
+    for pid in participant_ids:
+        agent = LadderFreeAgent.query.get(pid)
+        if agent:
+            participants.append(agent)
+    
+    matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).order_by(
+        AmericanoMatch.round_number, 
+        AmericanoMatch.id
+    ).all()
+    
+    matches_by_round = {}
+    for match in matches:
+        if match.round_number not in matches_by_round:
+            matches_by_round[match.round_number] = []
+        
+        p1 = LadderFreeAgent.query.get(match.player1_id)
+        p2 = LadderFreeAgent.query.get(match.player2_id)
+        p3 = LadderFreeAgent.query.get(match.player3_id)
+        p4 = LadderFreeAgent.query.get(match.player4_id)
+        
+        matches_by_round[match.round_number].append({
+            'match': match,
+            'p1': p1,
+            'p2': p2,
+            'p3': p3,
+            'p4': p4
+        })
+    
+    return render_template("admin_americano_scores.html",
+                         tournament=tournament,
+                         participants=participants,
+                         matches_by_round=matches_by_round)
+
+
+@app.route("/admin/ladder/americano/<int:tournament_id>/leaderboard")
+@require_admin_auth
+def admin_americano_leaderboard(tournament_id):
+    """View tournament leaderboard"""
+    import json
+    from collections import defaultdict
+    
+    tournament = AmericanoTournament.query.get_or_404(tournament_id)
+    
+    participant_ids = []
+    if tournament.participating_free_agents:
+        participant_ids = json.loads(tournament.participating_free_agents)
+    
+    player_stats = defaultdict(lambda: {
+        'player': None,
+        'matches_played': 0,
+        'wins': 0,
+        'losses': 0,
+        'draws': 0,
+        'total_points': 0
+    })
+    
+    for pid in participant_ids:
+        agent = LadderFreeAgent.query.get(pid)
+        if agent:
+            player_stats[pid]['player'] = agent
+    
+    matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id, status='completed').all()
+    
+    for match in matches:
+        for player_id in [match.player1_id, match.player2_id, match.player3_id, match.player4_id]:
+            if player_id in player_stats:
+                player_stats[player_id]['matches_played'] += 1
+                
+                if player_id == match.player1_id:
+                    points = match.points_player1
+                elif player_id == match.player2_id:
+                    points = match.points_player2
+                elif player_id == match.player3_id:
+                    points = match.points_player3
+                else:
+                    points = match.points_player4
+                
+                player_stats[player_id]['total_points'] += points
+                
+                if points == 3:
+                    player_stats[player_id]['wins'] += 1
+                elif points == 1:
+                    player_stats[player_id]['draws'] += 1
+                else:
+                    player_stats[player_id]['losses'] += 1
+    
+    leaderboard = sorted(
+        player_stats.values(),
+        key=lambda x: (x['total_points'], x['wins']),
+        reverse=True
+    )
+    
+    total_players = len(leaderboard)
+    top_50_percent_count = max(1, total_players // 2)
+    
+    for idx, entry in enumerate(leaderboard, start=1):
+        entry['rank'] = idx
+        entry['is_eligible'] = (idx <= top_50_percent_count)
+    
+    all_matches_completed = AmericanoMatch.query.filter_by(
+        tournament_id=tournament_id, 
+        status='pending'
+    ).count() == 0
+    
+    if all_matches_completed and tournament.status != 'completed':
+        tournament.status = 'completed'
+        tournament.completed_at = datetime.now()
+        db.session.commit()
+    
+    return render_template("admin_americano_leaderboard.html",
+                         tournament=tournament,
+                         leaderboard=leaderboard,
+                         top_50_percent_count=top_50_percent_count)
+
+
+@app.route("/admin/ladder/americano/<int:tournament_id>/pair-agents", methods=["GET", "POST"])
+@require_admin_auth
+def admin_americano_pair_agents(tournament_id):
+    """Pair tournament winners into ladder teams"""
+    from datetime import datetime
+    import json
+    import secrets
+    from utils import send_email_notification, normalize_team_name
+    from collections import defaultdict
+    
+    tournament = AmericanoTournament.query.get_or_404(tournament_id)
+    
+    if request.method == "POST":
+        try:
+            pairs = []
+            pair_index = 0
+            while True:
+                player1_id = request.form.get(f"player1_{pair_index}", type=int)
+                player2_id = request.form.get(f"player2_{pair_index}", type=int)
+                team_name = request.form.get(f"team_name_{pair_index}")
+                
+                if not player1_id or not player2_id or not team_name:
+                    break
+                
+                pairs.append({
+                    'player1_id': player1_id,
+                    'player2_id': player2_id,
+                    'team_name': team_name
+                })
+                pair_index += 1
+            
+            if not pairs:
+                flash("No pairs selected", "error")
+                return redirect(url_for("admin_americano_pair_agents", tournament_id=tournament_id))
+            
+            max_rank = db.session.query(db.func.max(LadderTeam.current_rank)).filter_by(
+                ladder_type=tournament.gender
+            ).scalar() or 0
+            
+            for pair_data in pairs:
+                player1 = LadderFreeAgent.query.get(pair_data['player1_id'])
+                player2 = LadderFreeAgent.query.get(pair_data['player2_id'])
+                
+                if not player1 or not player2:
+                    continue
+                
+                max_rank += 1
+                
+                team = LadderTeam(
+                    team_name=pair_data['team_name'],
+                    team_name_canonical=normalize_team_name(pair_data['team_name']),
+                    player1_name=player1.name,
+                    player1_phone=player1.phone,
+                    player1_email=player1.email,
+                    player2_name=player2.name,
+                    player2_phone=player2.phone,
+                    player2_email=player2.email,
+                    gender=tournament.gender,
+                    ladder_type=tournament.gender,
+                    current_rank=max_rank,
+                    access_token=secrets.token_urlsafe(32),
+                    created_at=datetime.now(),
+                    updated_at=datetime.now()
+                )
+                
+                db.session.add(team)
+                
+                db.session.delete(player1)
+                db.session.delete(player2)
+                
+                for player, partner_name in [(player1, player2.name), (player2, player1.name)]:
+                    if player.email:
+                        subject = f"🎉 Congratulations! You've been paired into the {tournament.gender.title()}'s Ladder"
+                        body = f"""Hi {player.name},
+
+Congratulations on completing the Americano Tournament!
+
+🏆 You've been paired with {partner_name} to form the team: {pair_data['team_name']}
+
+Team Details:
+📊 Starting Rank: #{max_rank}
+🪜 Division: {tournament.gender.title()}'s Ladder
+🎾 Ready to challenge teams above you!
+
+Your team has been added to the bottom of the ladder. You can now:
+1. Challenge teams ranked above you (up to 3 positions)
+2. Accept challenges from teams below you
+3. Climb the ladder through victories!
+
+Welcome to the ladder! Let's see how high you can climb! 🚀
+
+- BD Padel League
+"""
+                        send_email_notification(player.email, subject, body)
+            
+            db.session.commit()
+            
+            flash(f"✅ Successfully created {len(pairs)} new teams from tournament participants! Congratulations emails sent.", "success")
+            return redirect(url_for("admin_americano_leaderboard", tournament_id=tournament_id))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error creating teams: {str(e)}", "error")
+            return redirect(url_for("admin_americano_pair_agents", tournament_id=tournament_id))
+    
+    participant_ids = []
+    if tournament.participating_free_agents:
+        participant_ids = json.loads(tournament.participating_free_agents)
+    
+    player_stats = defaultdict(lambda: {
+        'player': None,
+        'total_points': 0,
+        'matches_played': 0,
+        'wins': 0
+    })
+    
+    for pid in participant_ids:
+        agent = LadderFreeAgent.query.get(pid)
+        if agent:
+            player_stats[pid]['player'] = agent
+    
+    matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id, status='completed').all()
+    
+    for match in matches:
+        for player_id in [match.player1_id, match.player2_id, match.player3_id, match.player4_id]:
+            if player_id in player_stats:
+                player_stats[player_id]['matches_played'] += 1
+                
+                if player_id == match.player1_id:
+                    points = match.points_player1
+                elif player_id == match.player2_id:
+                    points = match.points_player2
+                elif player_id == match.player3_id:
+                    points = match.points_player3
+                else:
+                    points = match.points_player4
+                
+                player_stats[player_id]['total_points'] += points
+                if points == 3:
+                    player_stats[player_id]['wins'] += 1
+    
+    ranked_players = sorted(
+        [(pid, stats) for pid, stats in player_stats.items() if stats['player']],
+        key=lambda x: (x[1]['total_points'], x[1]['wins']),
+        reverse=True
+    )
+    
+    total_players = len(ranked_players)
+    top_50_percent_count = max(1, total_players // 2)
+    
+    eligible_players = []
+    all_players = []
+    
+    for idx, (pid, stats) in enumerate(ranked_players, start=1):
+        entry = {
+            'rank': idx,
+            'player': stats['player'],
+            'total_points': stats['total_points'],
+            'is_eligible': (idx <= top_50_percent_count)
+        }
+        all_players.append(entry)
+        if entry['is_eligible']:
+            eligible_players.append(entry)
+    
+    return render_template("admin_americano_pair_agents.html",
+                         tournament=tournament,
+                         eligible_players=eligible_players,
+                         all_players=all_players,
+                         top_50_percent_count=top_50_percent_count)
+
+
 @app.route("/admin/send-mass-email", methods=["GET", "POST"])
 @require_admin_auth
 def send_mass_email():

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-12">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-12 gap-4">
+    <h2 class="text-2xl sm:text-4xl font-bold text-white">Enter Scores</h2>
+    <div class="flex gap-2">
+      <a href="{{ url_for('admin_americano_detail', tournament_id=tournament.id) }}" 
+         class="bg-gray-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-all">
+        Back to Details
+      </a>
+      <a href="{{ url_for('admin_americano_leaderboard', tournament_id=tournament.id) }}" 
+         class="bg-green-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+        View Leaderboard
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ tournament.tournament_date.strftime('%B %d, %Y') }}</h3>
+    <div class="text-gray-600">{{ tournament.gender.title() }}'s Division • {{ tournament.location or 'TBD' }}</div>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-4">
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+      <h4 class="font-semibold text-blue-900 mb-2">💡 Scoring Instructions</h4>
+      <ul class="text-sm text-blue-800 space-y-1">
+        <li>• Enter the final score for each match (e.g., 32 for winner, lower for loser)</li>
+        <li>• Winners earn 3 points, losers earn 0 points</li>
+        <li>• In case of a draw, both teams earn 1 point each</li>
+        <li>• Individual points are automatically calculated and added to the leaderboard</li>
+      </ul>
+    </div>
+  </div>
+
+  {% for round_num in matches_by_round.keys()|sort %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4 bg-purple-100 px-4 py-2 rounded-lg">
+      Round {{ round_num }}
+    </h3>
+    
+    <div class="space-y-4">
+      {% for match_data in matches_by_round[round_num] %}
+      {% set m = match_data.match %}
+      <div class="bg-gray-50 rounded-lg p-6 border-2 {% if m.status == 'completed' %}border-green-300{% else %}border-gray-200{% endif %}">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="text-center">
+            <div class="font-semibold text-blue-600 mb-2">Team A</div>
+            <div class="text-sm font-semibold">{{ match_data.p1.name }}</div>
+            <div class="text-sm font-semibold">{{ match_data.p2.name }}</div>
+          </div>
+          <div class="flex items-center justify-center text-2xl font-bold text-gray-400">
+            VS
+          </div>
+          <div class="text-center">
+            <div class="font-semibold text-red-600 mb-2">Team B</div>
+            <div class="text-sm font-semibold">{{ match_data.p3.name }}</div>
+            <div class="text-sm font-semibold">{{ match_data.p4.name }}</div>
+          </div>
+        </div>
+
+        {% if m.status == 'completed' %}
+        <div class="bg-green-100 border border-green-300 rounded-lg p-4 text-center">
+          <div class="text-green-800 font-semibold mb-1">✓ Score Recorded</div>
+          <div class="text-2xl font-bold text-green-900">{{ m.score_team_a }} - {{ m.score_team_b }}</div>
+          <div class="text-sm text-green-700 mt-1">
+            Winner: Team {{ m.winner_team or 'Draw' }}
+          </div>
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('admin_americano_scores', tournament_id=tournament.id) }}" class="space-y-3">
+          <input type="hidden" name="match_id" value="{{ m.id }}">
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Team A Score</label>
+              <input type="number" name="team_a_score" min="0" required 
+                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-center text-xl font-bold"
+                     placeholder="0">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Team B Score</label>
+              <input type="number" name="team_b_score" min="0" required 
+                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-center text-xl font-bold"
+                     placeholder="0">
+            </div>
+          </div>
+          
+          <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all">
+            Record Score
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

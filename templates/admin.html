@@ -817,7 +817,7 @@
         {% endif %}
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">🏆</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Rankings</h4>
@@ -842,6 +842,15 @@
             <p class="text-sm text-gray-600 mb-4">Review and verify match scores</p>
             <a href="{{ url_for('admin_ladder_matches', ladder_type='men') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
               Match Results
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">🎾</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Americano Tournaments</h4>
+            <p class="text-sm text-gray-600 mb-4">Pair free agents through tournaments</p>
+            <a href="{{ url_for('admin_americano_tournaments') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Manage Tournaments
             </a>
           </div>
         </div>
@@ -909,7 +918,7 @@
         {% endif %}
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">🏆</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Rankings</h4>
@@ -934,6 +943,15 @@
             <p class="text-sm text-gray-600 mb-4">Review and verify match scores</p>
             <a href="{{ url_for('admin_ladder_matches', ladder_type='women') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
               Match Results
+            </a>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">🎾</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Americano Tournaments</h4>
+            <p class="text-sm text-gray-600 mb-4">Pair free agents through tournaments</p>
+            <a href="{{ url_for('admin_americano_tournaments') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Manage Tournaments
             </a>
           </div>
         </div>

@@ -333,6 +333,7 @@ class AmericanoTournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_date = db.Column(db.DateTime, nullable=False)
     gender = db.Column(db.String(10), nullable=False)
+    location = db.Column(db.String(200), nullable=True)
     status = db.Column(db.String(20), default="setup")
     total_rounds = db.Column(db.Integer, default=0)
     participating_free_agents = db.Column(db.Text, nullable=True)
@@ -357,6 +358,7 @@ class AmericanoMatch(db.Model):
     score_team_a = db.Column(db.String(20))
     score_team_b = db.Column(db.String(20))
     winner_team = db.Column(db.String(1))
+    status = db.Column(db.String(20), default="pending")
     
     points_player1 = db.Column(db.Integer, default=0)
     points_player2 = db.Column(db.Integer, default=0)

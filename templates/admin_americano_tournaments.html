@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-12">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-12 gap-4">
+    <h2 class="text-2xl sm:text-4xl font-bold text-white text-center sm:flex-1">🎾 Americano Tournaments</h2>
+    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+      <a href="{{ url_for('admin_americano_create') }}" 
+         class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create Tournament
+      </a>
+      <a href="{{ url_for('admin') }}" 
+         class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back to Admin
+      </a>
+    </div>
+  </div>
+
+  {% if tournament_data %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8">
+    <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">All Tournaments</h3>
+    
+    <div class="space-y-4">
+      {% for data in tournament_data %}
+      {% set t = data.tournament %}
+      <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+              <h4 class="text-lg font-bold text-gray-900">
+                {{ t.tournament_date.strftime('%B %d, %Y') }}
+              </h4>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if t.status == 'setup' %}bg-yellow-100 text-yellow-800{% elif t.status == 'in_progress' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                {{ t.status|replace('_', ' ')|title }}
+              </span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if t.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                {{ '👨' if t.gender == 'men' else '👩' }} {{ t.gender.title() }}'s
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">📍 Location:</span>
+                <div class="font-semibold text-gray-900">{{ t.location or 'TBD' }}</div>
+              </div>
+              <div>
+                <span class="text-gray-600">👥 Participants:</span>
+                <div class="font-semibold text-gray-900">{{ data.participants_count }}</div>
+              </div>
+              <div>
+                <span class="text-gray-600">🎾 Matches:</span>
+                <div class="font-semibold text-gray-900">{{ data.completed_matches }}/{{ data.matches_count }}</div>
+              </div>
+              <div>
+                <span class="text-gray-600">📊 Rounds:</span>
+                <div class="font-semibold text-gray-900">{{ t.total_rounds or 'Not generated' }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-2">
+            <a href="{{ url_for('admin_americano_detail', tournament_id=t.id) }}" 
+               class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors text-center">
+              View Details
+            </a>
+            
+            {% if t.total_rounds > 0 %}
+            <a href="{{ url_for('admin_americano_scores', tournament_id=t.id) }}" 
+               class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors text-center">
+              Enter Scores
+            </a>
+            
+            <a href="{{ url_for('admin_americano_leaderboard', tournament_id=t.id) }}" 
+               class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors text-center">
+              Leaderboard
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 sm:p-12 text-center">
+    <div class="text-6xl mb-4">🎾</div>
+    <h3 class="text-2xl font-bold text-gray-900 mb-4">No Tournaments Yet</h3>
+    <p class="text-gray-600 mb-6">Create your first Americano tournament to pair free agents into ladder teams!</p>
+    <a href="{{ url_for('admin_americano_create') }}" 
+       class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+      Create First Tournament
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

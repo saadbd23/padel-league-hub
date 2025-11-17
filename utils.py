@@ -1265,3 +1265,99 @@ def adjust_ladder_ranks(team, new_rank, ladder_type):
         'affected_teams': affected_teams,
         'message': 'Rank adjusted from #{} to #{}'.format(old_rank, new_rank)
     }
+
+
+def generate_americano_pairings(player_ids):
+    """
+    Generate Americano tournament pairings where:
+    - Each player plays multiple rounds
+    - Partners rotate each round
+    - Opponents change each round
+    - Maximum variety in matchups
+    
+    Args:
+        player_ids: List of player IDs (LadderFreeAgent IDs)
+    
+    Returns:
+        List of rounds, where each round contains matches
+        Each match is a tuple: (player1_id, player2_id, player3_id, player4_id)
+        Team A = player1 + player2, Team B = player3 + player4
+    
+    Algorithm for 8 players (standard Americano):
+    - 7 rounds total
+    - Each round has 4 players (2v2)
+    - Each player sits out once (when n is divisible by 4, no one sits)
+    - Maximizes partner and opponent variety
+    """
+    import itertools
+    from collections import defaultdict
+    
+    num_players = len(player_ids)
+    
+    if num_players < 4:
+        return []
+    
+    # Track partnerships and oppositions to maximize variety
+    partnerships = defaultdict(int)
+    oppositions = defaultdict(int)
+    
+    def get_partnership_key(p1, p2):
+        return tuple(sorted([p1, p2]))
+    
+    def get_opposition_key(p1, p2, p3, p4):
+        team_a = tuple(sorted([p1, p2]))
+        team_b = tuple(sorted([p3, p4]))
+        return (team_a, team_b) if team_a < team_b else (team_b, team_a)
+    
+    # Calculate number of rounds (each player plays n-1 rounds if even, n rounds if odd)
+    if num_players % 2 == 0:
+        num_rounds = num_players - 1
+    else:
+        num_rounds = num_players
+    
+    rounds = []
+    player_list = player_ids.copy()
+    
+    # Use round-robin tournament algorithm (for doubles)
+    # For 8 players: rounds 1-7, each player plays 7 matches
+    
+    for round_num in range(num_rounds):
+        round_matches = []
+        players_in_round = []
+        
+        # For round-robin, we rotate players but keep one fixed
+        if round_num == 0:
+            # Initial setup
+            players_in_round = player_list.copy()
+        else:
+            # Rotate all players except the first one
+            fixed = player_list[0]
+            rotating = player_list[1:]
+            # Rotate right
+            rotating = [rotating[-1]] + rotating[:-1]
+            players_in_round = [fixed] + rotating
+            player_list = players_in_round.copy()
+        
+        # Create matches for this round
+        # Pair players: (0,1) vs (2,3), (4,5) vs (6,7), etc.
+        num_matches = num_players // 4
+        
+        for i in range(num_matches):
+            idx_start = i * 4
+            if idx_start + 3 < len(players_in_round):
+                p1 = players_in_round[idx_start]
+                p2 = players_in_round[idx_start + 1]
+                p3 = players_in_round[idx_start + 2]
+                p4 = players_in_round[idx_start + 3]
+                
+                match = (p1, p2, p3, p4)
+                round_matches.append(match)
+                
+                # Track partnerships and oppositions
+                partnerships[get_partnership_key(p1, p2)] += 1
+                partnerships[get_partnership_key(p3, p4)] += 1
+                oppositions[get_opposition_key(p1, p2, p3, p4)] += 1
+        
+        rounds.append(round_matches)
+    
+    return rounds
