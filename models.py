@@ -214,6 +214,8 @@ class LadderTeam(db.Model):
     holiday_mode_start = db.Column(db.DateTime, nullable=True)
     holiday_mode_end = db.Column(db.DateTime, nullable=True)
     
+    payment_received = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime, nullable=True)
     updated_at = db.Column(db.DateTime, nullable=True)
     

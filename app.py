@@ -944,6 +944,26 @@ def ladder_register_team():
 - Player 2: {p2_name}
 - Starting Rank: #{current_rank}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 PAYMENT REQUIRED - IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500.
+
+Payment Method: bKash
+Payment Number: 01313399918
+Amount: BDT 500
+
+⚠️ IMPORTANT: When making the payment, you MUST put your team name in the reference/note field:
+
+Reference: {team_name}
+
+Failure to include your team name in the reference may cause delays in listing your team on the ladder rankings.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Once payment is confirmed by admin, your team will be visible on the ladder rankings and you can start challenging other teams.
+
 🔗 Your Team Access Link:
 {access_link}
 
@@ -953,12 +973,6 @@ def ladder_register_team():
 You can either:
 1. Click the access link above to go directly to your team page, OR
 2. Visit the ladder login page and paste your access token
-
-Bookmark this link to:
-- Challenge teams above you
-- View your ladder ranking
-- Submit match scores
-- Track your progress
 
 💬 Join Your Division's WhatsApp Group:
 {whatsapp_link}
@@ -990,6 +1004,26 @@ Good luck climbing the ladder! 🚀
 - Partner: {p1_name}
 - Starting Rank: #{current_rank}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 PAYMENT REQUIRED - IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500.
+
+Payment Method: bKash
+Payment Number: 01313399918
+Amount: BDT 500
+
+⚠️ IMPORTANT: When making the payment, you MUST put your team name in the reference/note field:
+
+Reference: {team_name}
+
+Failure to include your team name in the reference may cause delays in listing your team on the ladder rankings.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Once payment is confirmed by admin, your team will be visible on the ladder rankings and you can start challenging other teams.
+
 🔗 Your Team Access Link:
 {access_link}
 
@@ -999,12 +1033,6 @@ Good luck climbing the ladder! 🚀
 You can either:
 1. Click the access link above to go directly to your team page, OR
 2. Visit the ladder login page and paste your access token
-
-Bookmark this link to:
-- Challenge teams above you
-- View your ladder ranking
-- Submit match scores
-- Track your progress
 
 💬 Join Your Division's WhatsApp Group:
 {whatsapp_link}
@@ -1326,10 +1354,11 @@ def ladder_men():
     """Public Men's Ladder Rankings Page - View Only"""
     ladder_type = 'men'
     
-    # Query by gender='men' instead of ladder_type='men'
-    teams = LadderTeam.query.filter_by(gender='men').order_by(
-        LadderTeam.current_rank.asc()
-    ).all()
+    # Query by gender='men' and only show paid teams
+    teams = LadderTeam.query.filter_by(
+        gender='men',
+        payment_received=True
+    ).order_by(LadderTeam.current_rank.asc()).all()
     
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1372,10 +1401,11 @@ def ladder_women():
     """Public Women's Ladder Rankings Page - View Only"""
     ladder_type = 'women'
     
-    # Query by gender='women' instead of ladder_type='women'
-    teams = LadderTeam.query.filter_by(gender='women').order_by(
-        LadderTeam.current_rank.asc()
-    ).all()
+    # Query by gender='women' and only show paid teams
+    teams = LadderTeam.query.filter_by(
+        gender='women',
+        payment_received=True
+    ).order_by(LadderTeam.current_rank.asc()).all()
     
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -4119,6 +4149,17 @@ def admin_panel():
         ladder_type='women',
         holiday_mode_active=True
     ).count()
+    
+    # Pending payments
+    pending_payments_men = LadderTeam.query.filter_by(
+        gender='men',
+        payment_received=False
+    ).order_by(LadderTeam.created_at.desc()).all()
+    
+    pending_payments_women = LadderTeam.query.filter_by(
+        gender='women',
+        payment_received=False
+    ).order_by(LadderTeam.created_at.desc()).all()
 
     return render_template(
         "admin.html",
@@ -4147,7 +4188,36 @@ def admin_panel():
         disputed_matches_count=disputed_matches_count,
         men_on_holiday_count=men_on_holiday_count,
         women_on_holiday_count=women_on_holiday_count,
+        pending_payments_men=pending_payments_men,
+        pending_payments_women=pending_payments_women,
     )
+
+
+@app.route("/admin/ladder/toggle-payment", methods=["POST"])
+@require_admin_auth
+def admin_ladder_toggle_payment():
+    """Toggle payment status for a ladder team"""
+    team_id = request.form.get("team_id", type=int)
+    
+    if not team_id:
+        flash("Team ID is required", "error")
+        return redirect(url_for('admin_panel'))
+    
+    team = LadderTeam.query.get(team_id)
+    if not team:
+        flash("Team not found", "error")
+        return redirect(url_for('admin_panel'))
+    
+    # Toggle payment status
+    team.payment_received = not team.payment_received
+    db.session.commit()
+    
+    if team.payment_received:
+        flash(f"✓ Payment confirmed for {team.team_name}. Team is now visible in rankings.", "success")
+    else:
+        flash(f"Payment status removed for {team.team_name}. Team hidden from rankings.", "success")
+    
+    return redirect(url_for('admin_ladder_rankings', ladder_type=team.ladder_type))
 
 
 @app.route("/admin/ladder/rankings/<ladder_type>")

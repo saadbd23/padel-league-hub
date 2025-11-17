@@ -56,6 +56,7 @@
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Record</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Sets</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Games</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Payment</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Status</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Last Match</th>
             <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Registered</th>
@@ -108,6 +109,22 @@
                 {% if item.games_diff > 0 %}+{% endif %}{{ item.games_diff }}
               </div>
               <div class="text-xs text-gray-500">{{ t.games_for }}-{{ t.games_against }}</div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <form method="POST" action="{{ url_for('admin_ladder_toggle_payment') }}" class="inline">
+                <input type="hidden" name="team_id" value="{{ t.id }}">
+                <label class="flex items-center justify-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    name="payment_received"
+                    {% if t.payment_received %}checked{% endif %}
+                    onchange="this.form.submit()"
+                    class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                  <span class="ml-2 text-xs {% if t.payment_received %}text-green-700 font-semibold{% else %}text-red-600 font-semibold{% endif %}">
+                    {% if t.payment_received %}✓ Paid{% else %}Unpaid{% endif %}
+                  </span>
+                </label>
+              </form>
             </td>
             <td class="px-4 py-4 text-center">
               {% if item.status == 'available' %}

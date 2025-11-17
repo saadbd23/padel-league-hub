@@ -6,6 +6,40 @@
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 py-12">
   <div class="max-w-6xl mx-auto px-4">
 
+    <!-- Payment Pending Notice (if not paid) -->
+    {% if not team.payment_received %}
+    <div class="bg-red-50 border-4 border-red-500 rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="text-center">
+        <div class="text-6xl mb-4">⚠️</div>
+        <h2 class="text-3xl font-bold text-red-900 mb-4">PAYMENT PENDING</h2>
+        <p class="text-lg text-red-800 mb-6">
+          Your team registration is <strong>incomplete</strong>. To access all ladder features and be listed in the rankings, please complete your payment.
+        </p>
+        
+        <div class="bg-white rounded-xl p-6 max-w-2xl mx-auto border-2 border-red-300">
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Payment Instructions</h3>
+          <div class="text-left space-y-3 text-gray-800">
+            <p><strong>Payment Method:</strong> bKash</p>
+            <p><strong>Payment Number:</strong> <span class="text-2xl font-mono bg-yellow-100 px-3 py-1 rounded">01313399918</span></p>
+            <p><strong>Amount:</strong> <span class="text-2xl font-bold text-red-600">BDT 500</span></p>
+            <p class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+              <strong class="text-yellow-900">⚠️ IMPORTANT:</strong><br>
+              <span class="text-yellow-800">When making the payment, you MUST put your team name in the reference/note field:</span><br>
+              <span class="text-xl font-bold text-purple-900 mt-2 block">Reference: {{ team.team_name }}</span>
+            </p>
+            <p class="text-sm text-gray-600 italic">
+              Failure to include your team name may cause delays in confirming your payment and listing your team on the ladder.
+            </p>
+          </div>
+        </div>
+        
+        <div class="mt-6 text-sm text-red-700">
+          Once payment is confirmed by admin, you will have full access to challenge teams and participate in the ladder tournament.
+        </div>
+      </div>
+    </div>
+    {% else %}
+    
     <!-- Team Overview Card -->
     <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -817,4 +851,7 @@
 
   </div>
 </div>
+{% endif %}
+<!-- End payment check -->
+
 {% endblock %}
