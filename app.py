@@ -3804,6 +3804,8 @@ def team_profile(team_id: int):
 @app.route("/stats")
 def league_stats():
     """League statistics page with various rankings and streaks"""
+    from datetime import datetime, timedelta
+    
     teams = Team.query.all()
 
     # Calculate streaks for each team
@@ -3848,6 +3850,32 @@ def league_stats():
     teams_by_wins = sorted(teams, key=lambda t: t.wins, reverse=True)
     teams_by_streak = sorted(teams, key=lambda t: team_streaks[t.id]['streak'], reverse=True)
 
+    # Ladder Statistics
+    ladder_men_teams = LadderTeam.query.filter_by(ladder_type='men').count()
+    ladder_women_teams = LadderTeam.query.filter_by(ladder_type='women').count()
+    ladder_total_teams = ladder_men_teams + ladder_women_teams
+    
+    active_challenges = LadderChallenge.query.filter(
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).count()
+    
+    first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    ladder_matches_this_month = LadderMatch.query.filter(
+        LadderMatch.verified == True,
+        LadderMatch.completed_at >= first_day_of_month
+    ).count()
+    
+    all_ladder_teams = LadderTeam.query.all()
+    ladder_teams_with_matches = [t for t in all_ladder_teams if t.matches_played > 0]
+    ladder_top_performers = []
+    if ladder_teams_with_matches:
+        sorted_by_win_rate = sorted(
+            ladder_teams_with_matches, 
+            key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), 
+            reverse=True
+        )
+        ladder_top_performers = sorted_by_win_rate[:5]
+
     return render_template(
         "stats.html",
         teams=teams,
@@ -3857,6 +3885,12 @@ def league_stats():
         teams_by_games_diff=teams_by_games_diff,
         teams_by_wins=teams_by_wins,
         teams_by_streak=teams_by_streak,
+        ladder_total_teams=ladder_total_teams,
+        ladder_men_teams=ladder_men_teams,
+        ladder_women_teams=ladder_women_teams,
+        active_challenges=active_challenges,
+        ladder_matches_this_month=ladder_matches_this_month,
+        ladder_top_performers=ladder_top_performers,
     )
 
 @app.route("/admin/login", methods=["GET", "POST"])

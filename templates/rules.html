@@ -2,604 +2,620 @@
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 md:p-12">
-    <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">League Rules</h2>
+    <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">Rules & Regulations</h2>
 
-    <!-- Quick Reference Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8 sm:mb-12">
-      <div class="bg-indigo-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-indigo-200">
-        <h3 class="text-lg sm:text-xl font-bold text-indigo-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">📅</span>
-          Time Commitment
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          <strong>8-10 weeks total.</strong> One match per week during Swiss format (6-8 weeks), then knockout playoffs
-          for top teams (2 weeks).
-        </p>
-      </div>
+    <p class="text-center text-gray-600 mb-8">
+      Welcome to BD Padel! Choose a section below to learn about our different competition formats.
+    </p>
 
-      <div class="bg-purple-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-purple-200">
-        <h3 class="text-lg sm:text-xl font-bold text-purple-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">🎾</span>
-          Match Format
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          All matches are best of 3 sets. Matches are typically played within a 90-minute court booking.
-        </p>
-      </div>
-
-      <div class="bg-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-blue-200">
-        <h3 class="text-lg sm:text-xl font-bold text-blue-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">🔄</span>
-          Rescheduling
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          <strong>2 reschedules</strong> per team. Request by <strong>Wed 23:59</strong>. Makeup by <strong>next Wed
-            23:59</strong>.
-        </p>
-      </div>
-
-      <div class="bg-green-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-green-200">
-        <h3 class="text-lg sm:text-xl font-bold text-green-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">👥</span>
-          Substitutes
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          <strong>2 substitutes</strong> per team during league stage. Admin approval required. No subs in playoffs.
-        </p>
-      </div>
-
-      <div class="bg-amber-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-amber-200">
-        <h3 class="text-lg sm:text-xl font-bold text-amber-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">⭐</span>
-          Free Agents
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          No partner? Register as a <strong>Free Agent</strong> and we'll match you with someone of similar skill!
-        </p>
-      </div>
-
-      <div class="bg-yellow-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-yellow-200">
-        <h3 class="text-lg sm:text-xl font-bold text-yellow-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">⚖️</span>
-          Fair Play
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          Good sportsmanship expected. Admin available for dispute mediation.
-        </p>
-      </div>
-
-      <div class="bg-red-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-red-200">
-        <h3 class="text-lg sm:text-xl font-bold text-red-900 mb-2 sm:mb-3 flex items-center">
-          <span class="text-xl sm:text-2xl mr-2 sm:mr-3">📊</span>
-          Rankings
-        </h3>
-        <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
-          Ranked by: <strong>Points → Sets Diff → Games Diff</strong>. Head-to-head breaks ties.
-        </p>
-      </div>
-    </div>
-
-    <!-- Complete Rulebook Section -->
-    <div
-      class="mt-8 sm:mt-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border-2 border-indigo-300">
-      <h3
-        class="text-2xl sm:text-3xl font-bold text-indigo-900 mb-4 sm:mb-6 text-center flex items-center justify-center">
-        <span class="text-2xl sm:text-3xl mr-2 sm:mr-3">📖</span>
-        Complete Rulebook
-      </h3>
-
-      <!-- Table of Contents - Collapsible on Mobile -->
-      <details class="bg-white rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 shadow-md" open>
-        <summary
-          class="text-lg sm:text-xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors">
-          📑 Table of Contents
-        </summary>
-        <ol class="list-decimal list-inside space-y-2 text-gray-700 mt-4 text-sm sm:text-base">
-          <li><a href="#league-structure" class="text-indigo-600 hover:underline">League Structure & Format</a></li>
-          <li><a href="#registration" class="text-indigo-600 hover:underline">Team & Free Agent Registration</a></li>
-          <li><a href="#match-scheduling" class="text-indigo-600 hover:underline">Match Scheduling & Deadlines</a></li>
-          <li><a href="#match-format" class="text-indigo-600 hover:underline">Match Format & Scoring</a></li>
-          <li><a href="#reschedule-policy" class="text-indigo-600 hover:underline">Reschedule Policy</a></li>
-          <li><a href="#substitute-policy" class="text-indigo-600 hover:underline">Substitute Player Policy</a></li>
-          <li><a href="#score-submission" class="text-indigo-600 hover:underline">Score Submission & Confirmation</a>
-          </li>
-          <li><a href="#standings" class="text-indigo-600 hover:underline">Standings & Rankings</a></li>
-          <li><a href="#walkovers" class="text-indigo-600 hover:underline">Walkovers & No-Shows</a></li>
-          <li><a href="#fair-play" class="text-indigo-600 hover:underline">Fair Play & Conduct</a></li>
-          <li><a href="#disputes" class="text-indigo-600 hover:underline">Disputes & Resolution</a></li>
-          <li><a href="#admin-contact" class="text-indigo-600 hover:underline">Admin Contact & Support</a></li>
-        </ol>
-      </details>
-
-      <!-- Detailed Rules Sections -->
-      <div class="space-y-4 sm:space-y-6">
-
-        <!-- 1. League Structure -->
-        <details id="league-structure" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md" open>
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">1</span>
-            League Structure & Format
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Swiss Format:</strong> The league uses a Swiss tournament format where teams are paired based on
-              their current standings and performance.</p>
-
-            <p><strong>Round Structure:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Each round lasts <strong>one week</strong> (Monday to Sunday)</li>
-              <li>New rounds generated every <strong>Monday morning</strong></li>
-              <li>Round 1 starts on <strong>Monday, November 17, 2025</strong></li>
-              <li>One match per round against different opponents</li>
-            </ul>
-
-            <p><strong>Pairing System:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Teams paired by similar records (wins/losses)</li>
-              <li>No repeat opponents in league stage</li>
-              <li>Byes given if odd number of teams</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 2. Registration -->
-        <details id="registration" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">2</span>
-            Team & Free Agent Registration
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Team Registration:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Register as a complete team (2 players)</li>
-              <li>Provide team name, both players' info</li>
-              <li>Player 2 must confirm via SMS/WhatsApp link</li>
-              <li>Admin reviews and confirms registration</li>
-            </ul>
-
-            <p><strong>Free Agent Registration:</strong></p>
-            <div class="bg-amber-50 border-l-4 border-amber-500 p-3 sm:p-4 mt-2 mb-2 rounded">
-              <p class="font-semibold text-amber-900 text-sm sm:text-base">⭐ Solo Players Welcome!</p>
-              <p class="text-xs sm:text-sm text-amber-800 mt-1">Don't have a partner? Register as a Free Agent and we'll
-                match you with another solo player.</p>
-            </div>
-
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Register with name, phone, email, skill level</li>
-              <li><strong>Skill Levels:</strong> Beginner, Intermediate, Advanced</li>
-              <li>Admin pairs you with similar skill level player</li>
-              <li>Matched pairs auto-convert to teams</li>
-            </ul>
-
-            <p><strong>Skill Level Honesty:</strong></p>
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 mt-2 mb-2 rounded">
-              <p class="font-semibold text-blue-900 text-sm sm:text-base">🎯 Be Honest About Your Skill</p>
-              <p class="text-xs sm:text-sm text-blue-800 mt-1">
-                Accurate self-assessment ensures better matches and more enjoyable games for everyone.
+    <!-- Accordion Sections -->
+    <div class="space-y-4">
+      
+      <!-- Ladder Rules (Expanded by Default) -->
+      <div class="border-2 border-purple-200 rounded-xl overflow-hidden shadow-lg accordion-section">
+        <button onclick="toggleAccordion('ladder')" id="accordion-ladder-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-4 text-left font-bold text-xl flex items-center justify-between hover:from-purple-700 hover:to-indigo-800 transition-all duration-200">
+          <span class="flex items-center">
+            <span class="text-2xl mr-3">🪜</span>
+            Ladder Rules
+          </span>
+          <svg id="accordion-ladder-icon" class="w-6 h-6 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="accordion-ladder" class="accordion-content bg-white">
+          <div class="p-6 space-y-6">
+            
+            <!-- Ladder Overview -->
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 border-2 border-purple-200">
+              <h3 class="text-xl font-bold text-purple-900 mb-3 flex items-center">
+                <span class="text-2xl mr-3">📊</span>
+                What is the Ladder?
+              </h3>
+              <p class="text-gray-700 leading-relaxed">
+                The Ladder is a continuous challenge-based ranking system where teams climb the ranks by challenging and defeating teams positioned above them. Unlike the Swiss League format, the Ladder runs year-round with no fixed seasons, allowing teams to play at their own pace while maintaining their competitive edge.
               </p>
             </div>
 
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>Beginner:</strong> New or &lt;6 months experience</li>
-              <li><strong>Intermediate:</strong> 6mo-2yrs, comfortable with basics</li>
-              <li><strong>Advanced:</strong> 2+ years, strong technical skills</li>
-            </ul>
-          </div>
-        </details>
+            <!-- Quick Rules Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                <h4 class="font-bold text-blue-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🎯</span>
+                  Challenge Range
+                </h4>
+                <p class="text-sm text-gray-700">Challenge teams <strong>up to 3 positions</strong> above you on the ladder</p>
+              </div>
 
-        <!-- 3. Match Scheduling -->
-        <details id="match-scheduling" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">3</span>
-            Match Scheduling & Deadlines
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Weekly Timeline:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>Monday 9AM:</strong> New round generated</li>
-              <li><strong>Mon-Sun:</strong> Coordinate and play match</li>
-              <li><strong>Sunday 23:59:</strong> Match deadline</li>
-            </ul>
+              <div class="bg-green-50 rounded-lg p-4 border-2 border-green-200">
+                <h4 class="font-bold text-green-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🔄</span>
+                  Rank Swapping
+                </h4>
+                <p class="text-sm text-gray-700">Win your challenge to <strong>swap positions</strong> with your opponent</p>
+              </div>
 
-            <p><strong>Booking Process:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Team A proposes date/time</li>
-              <li>Team B confirms or suggests different time</li>
-              <li>Coordinate via WhatsApp/phone first</li>
-              <li>Can schedule any day Monday-Sunday</li>
-            </ul>
+              <div class="bg-amber-50 rounded-lg p-4 border-2 border-amber-200">
+                <h4 class="font-bold text-amber-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🏖️</span>
+                  Holiday Mode
+                </h4>
+                <p class="text-sm text-gray-700"><strong>2 weeks max</strong> protection when unavailable. 1 week grace period after</p>
+              </div>
 
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 mt-2 rounded">
-              <p class="font-semibold text-yellow-900 text-sm sm:text-base">⚠️ Deadline: Sunday 23:59</p>
-              <p class="text-xs sm:text-sm text-yellow-800">If not completed, automatic walkover awarded</p>
-            </div>
-          </div>
-        </details>
-
-        <!-- 4. Match Format -->
-        <details id="match-format" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">4</span>
-            Match Format & Scoring
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Match Format:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Best of 3 sets</li>
-              <li>Standard padel scoring (games to 6, tie-break at 6-6)</li>
-              <li>Win by 2 sets (e.g., 6-4, 6-3 or 6-4, 3-6, 6-2)</li>
-            </ul>
-
-            <p><strong>Court Booking:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Typical booking: 90 minutes</li>
-              <li>May extend if court available</li>
-              <li>Arrive 10 minutes early for warm-up</li>
-            </ul>
-
-            <p><strong>Equipment:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Bring your own paddle</li>
-              <li>Balls provided by venue</li>
-              <li>Appropriate court shoes required</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 5. Reschedule Policy -->
-        <details id="reschedule-policy" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">5</span>
-            Reschedule Policy
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Allowance:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>2 reschedules</strong> per team for entire league</li>
-              <li>No reschedules in playoffs</li>
-              <li>Tracked per team, not per match</li>
-            </ul>
-
-            <div class="bg-orange-50 border-l-4 border-orange-500 p-3 sm:p-4 mt-2 mb-2 rounded">
-              <p class="font-semibold text-orange-900 text-sm sm:text-base">📅 Request by Wednesday 23:59</p>
-              <p class="text-xs sm:text-sm text-orange-800">After Wednesday, requests not accepted for that round</p>
+              <div class="bg-red-50 rounded-lg p-4 border-2 border-red-200">
+                <h4 class="font-bold text-red-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">📅</span>
+                  Activity Rules
+                </h4>
+                <p class="text-sm text-gray-700">Play <strong>2 matches per month</strong> to stay active on the ladder</p>
+              </div>
             </div>
 
-            <p><strong>Reschedule Window:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Only <strong>Monday-Wednesday of following week</strong></li>
-              <li>Thursday-Sunday not available</li>
-              <li>Date picker shows valid dates only</li>
-            </ul>
+            <!-- Detailed Ladder Rules -->
+            <div class="space-y-6 mt-8">
+              
+              <!-- 1. Registration -->
+              <div class="border-l-4 border-purple-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">1. Registration & Team Creation</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Register as a <strong>team of 2 players</strong> or as a <strong>free agent</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Choose your division: <strong>Men's</strong> or <strong>Women's</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>New teams join at the <strong>bottom of the ladder</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Receive unique <strong>access token</strong> to manage your team and challenges</span>
+                  </li>
+                </ul>
+              </div>
 
-            <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mt-2 mb-2 rounded">
-              <p class="font-semibold text-red-900 text-sm sm:text-base">⚠️ Makeup Deadline: Next Wed 23:59</p>
-              <p class="text-xs sm:text-sm text-red-800">If not completed, automatic walkover to opponent</p>
+              <!-- 2. Challenge System -->
+              <div class="border-l-4 border-indigo-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">2. Challenge System</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-indigo-600 mr-2">•</span>
+                    <span>Challenge teams <strong>up to 3 ranks above</strong> you (configurable by admin)</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-indigo-600 mr-2">•</span>
+                    <span>Challenged team has <strong>7 days to accept or decline</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-indigo-600 mr-2">•</span>
+                    <span>Once accepted, match must be completed within <strong>14 days</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-indigo-600 mr-2">•</span>
+                    <span>Teams locked in active challenges <strong>cannot accept new challenges</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-indigo-600 mr-2">•</span>
+                    <span>Contact opponents via their preferred method: <strong>Email or WhatsApp</strong></span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 3. Match Format -->
+              <div class="border-l-4 border-blue-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">3. Match Format & Scoring</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span><strong>Best of 3 sets</strong> format (same as league)</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Standard padel scoring: games to 6, tie-break at 6-6</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Both teams submit scores - must match to be verified</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Score discrepancies flagged for <strong>admin review</strong></span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 4. Rank Swapping -->
+              <div class="border-l-4 border-green-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">4. Rank Swapping Mechanics</h4>
+                <div class="bg-green-50 rounded-lg p-4 mb-3">
+                  <p class="text-sm font-semibold text-green-900 mb-2">When Challenger Wins:</p>
+                  <p class="text-sm text-gray-700">Challenger and challenged team <strong>swap positions</strong> on the ladder</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <p class="text-sm font-semibold text-gray-900 mb-2">When Challenged Team Wins:</p>
+                  <p class="text-sm text-gray-700"><strong>No rank changes</strong> - challenged team defends their position</p>
+                </div>
+                <ul class="space-y-2 text-gray-700 mt-3">
+                  <li class="flex items-start">
+                    <span class="text-green-600 mr-2">•</span>
+                    <span>Rank changes are <strong>automatic</strong> after match verification</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-600 mr-2">•</span>
+                    <span>All team stats updated: W-L-D record, sets, games</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 5. Holiday Mode -->
+              <div class="border-l-4 border-amber-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">5. Holiday Mode & Availability</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-amber-600 mr-2">•</span>
+                    <span>Activate holiday mode for <strong>up to 2 weeks</strong> when unavailable</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-amber-600 mr-2">•</span>
+                    <span>Teams in holiday mode <strong>cannot be challenged</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-amber-600 mr-2">•</span>
+                    <span><strong>1-week grace period</strong> after holiday mode ends before penalties apply</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-amber-600 mr-2">•</span>
+                    <span>Exceeding holiday limits may result in <strong>rank penalties</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-amber-600 mr-2">•</span>
+                    <span>Manage holiday mode through your team dashboard</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 6. Activity Requirements -->
+              <div class="border-l-4 border-red-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">6. Activity Requirements</h4>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
+                  <p class="text-sm font-semibold text-red-900">⚠️ Minimum Activity: 2 Matches Per Month</p>
+                  <p class="text-sm text-red-800 mt-1">Teams must play at least 2 matches per calendar month to remain active</p>
+                </div>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-red-600 mr-2">•</span>
+                    <span>Inactive teams may face <strong>rank penalties</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-red-600 mr-2">•</span>
+                    <span>Extended inactivity (2+ months) may result in <strong>removal from ladder</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-red-600 mr-2">•</span>
+                    <span>Both challenging and defending count toward activity</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-red-600 mr-2">•</span>
+                    <span>Use holiday mode if temporarily unavailable</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 7. No-Show Protocol -->
+              <div class="border-l-4 border-orange-500 pl-4">
+                <h4 class="text-lg font-bold text-gray-900 mb-3">7. No-Show & Dispute Protocol</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li class="flex items-start">
+                    <span class="text-orange-600 mr-2">•</span>
+                    <span>If opponent doesn't show, report <strong>no-show through your dashboard</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-orange-600 mr-2">•</span>
+                    <span>No-show team has <strong>48 hours to dispute</strong> with evidence</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-orange-600 mr-2">•</span>
+                    <span>Admin reviews disputes and makes final decision</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-orange-600 mr-2">•</span>
+                    <span>Confirmed no-shows result in <strong>automatic win (6-0, 6-0)</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-orange-600 mr-2">•</span>
+                    <span>Repeated no-shows may result in <strong>removal from ladder</strong></span>
+                  </li>
+                </ul>
+              </div>
+
             </div>
 
-            <p><strong>Double Match Week:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Will play <strong>2 matches in one week</strong></li>
-              <li>Makeup match + regular match</li>
-              <li>Both count towards standings</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 6. Substitute Policy -->
-        <details id="substitute-policy" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">6</span>
-            Substitute Player Policy
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Allowance:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>2 substitutes</strong> during league stage</li>
-              <li>No subs in playoffs</li>
-              <li>Tracked per team</li>
-            </ul>
-
-            <p><strong>Requirements:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Provide sub's name, phone, email</li>
-              <li>Admin approval required before match</li>
-              <li>Submit in advance (not day of match)</li>
-            </ul>
-
-            <p><strong>Email Notifications:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Request: All 3 parties notified (P1, P2, Sub)</li>
-              <li>Approval: All 3 receive confirmation</li>
-              <li>Denial: All 3 receive notice</li>
-            </ul>
-
-            <p><strong>Restrictions:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Can't be registered players on other teams</li>
-              <li>Same sub can be used multiple times</li>
-              <li>Both members can't be subbed same match</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 7. Score Submission -->
-        <details id="score-submission" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">7</span>
-            Score Submission & Confirmation
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Submission Process:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Winning team submits score first</li>
-              <li>Enter from your team's perspective</li>
-              <li>Format: Set 1, Set 2, Set 3 (if played)</li>
-              <li>Example: Won 6-4, 6-3, enter exactly that</li>
-            </ul>
-
-            <p><strong>Confirmation:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Opponent notified to confirm score</li>
-              <li>They see result with winner and score</li>
-              <li>One-click to approve</li>
-              <li>Can click "Dispute" if incorrect</li>
-            </ul>
-
-            <p><strong>Disputed Scores:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Admin notified immediately</li>
-              <li>Admin contacts both teams to resolve</li>
-              <li>Admin enters correct score after verification</li>
-              <li>Match stays "pending" until resolved</li>
-            </ul>
-
-            <p><strong>Stats Update:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Once confirmed, stats auto-update</li>
-              <li>Team standings: wins, losses, sets, games, points</li>
-              <li>Individual player stats updated</li>
-              <li>Leaderboards update in real-time</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 8. Standings -->
-        <details id="standings" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">8</span>
-            Standings & Rankings
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Ranking Criteria (in order):</strong></p>
-            <ol class="list-decimal list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>Points:</strong> Win=3, Draw=1, Loss=0</li>
-              <li><strong>Head-to-Head:</strong> If tied on points</li>
-              <li><strong>Set Difference:</strong> Sets won - sets lost</li>
-              <li><strong>Game Difference:</strong> Games won - games lost</li>
-              <li><strong>Sets Won:</strong> Total sets won</li>
-              <li><strong>Games Won:</strong> Total games won</li>
-            </ol>
-
-            <p><strong>Leaderboards:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li><strong>Team Leaderboard:</strong> Overall rankings</li>
-              <li><strong>Player Leaderboard:</strong> Individual stats</li>
-              <li>Auto-update after each confirmed match</li>
-              <li>Separate stats tabs for detailed analysis</li>
-            </ul>
-
-            <p><strong>Playoff Qualification:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Top teams qualify (number based on total teams)</li>
-              <li>Format announced after league completion</li>
-              <li>Tiebreakers follow criteria above</li>
-            </ul>
-          </div>
-        </details>
-
-        <!-- 9. Walkovers -->
-        <details id="walkovers" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">9</span>
-            Walkovers & No-Shows
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mt-2 mb-2 rounded">
-              <p class="font-semibold text-red-900 text-sm sm:text-base">Automatic walkovers for:</p>
-              <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1 text-xs sm:text-sm text-red-800 mt-2">
-                <li>Regular match not done by Sunday 23:59</li>
-                <li>Makeup match not done by Wednesday 23:59</li>
+            <!-- Ladder Benefits -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-xl p-6 text-white mt-8">
+              <h4 class="text-xl font-bold mb-3 flex items-center">
+                <span class="text-2xl mr-3">🏆</span>
+                Why Join the Ladder?
+              </h4>
+              <ul class="space-y-2">
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Play at your own pace</strong> - No fixed schedule or weekly commitments</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Continuous competition</strong> - Available year-round, no seasons</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Direct rank advancement</strong> - Challenge and defeat teams to climb</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Fair matchmaking</strong> - Only play teams within 3 ranks</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Flexible scheduling</strong> - Coordinate matches with opponents directly</span>
+                </li>
               </ul>
             </div>
 
-            <p><strong>Walkover Score:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Default: <strong>6-0, 6-0</strong> to ready team</li>
-              <li>Full 3 points to walkover winner</li>
-              <li>Stats auto-update (2 sets, 12 games)</li>
-            </ul>
-
-            <p><strong>Admin Override:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Can reverse in emergency situations</li>
-              <li>Must be genuine emergency only</li>
-              <li>Contact admin immediately if emergency</li>
-            </ul>
           </div>
-        </details>
+        </div>
+      </div>
 
-        <!-- 10. Fair Play -->
-        <details id="fair-play" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">10</span>
-            Fair Play & Conduct
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Expected Behavior:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Demonstrate good sportsmanship</li>
-              <li>Respect opponents and officials</li>
-              <li>Call lines honestly and fairly</li>
-              <li>Be punctual for scheduled matches</li>
-            </ul>
+      <!-- League Rules (Collapsed) -->
+      <div class="border-2 border-indigo-200 rounded-xl overflow-hidden shadow-lg accordion-section">
+        <button onclick="toggleAccordion('league')" id="accordion-league-btn" class="w-full bg-white text-gray-900 px-6 py-4 text-left font-bold text-xl flex items-center justify-between hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200">
+          <span class="flex items-center">
+            <span class="text-2xl mr-3">🏆</span>
+            League Rules (Swiss Format)
+          </span>
+          <svg id="accordion-league-icon" class="w-6 h-6 transform rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="accordion-league" class="accordion-content hidden bg-white">
+          <div class="p-6 space-y-6">
+            
+            <!-- Quick Reference Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div class="bg-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
+                <h4 class="font-bold text-indigo-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">📅</span>
+                  Time Commitment
+                </h4>
+                <p class="text-sm text-gray-700">
+                  <strong>8-10 weeks total.</strong> One match per week during Swiss format (6-8 weeks), then knockout playoffs for top teams (2 weeks).
+                </p>
+              </div>
 
-            <p><strong>Prohibited Conduct:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Unsportsmanlike behavior</li>
-              <li>Verbal abuse or intimidation</li>
-              <li>Intentional cheating</li>
-              <li>Equipment abuse</li>
-            </ul>
+              <div class="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
+                <h4 class="font-bold text-purple-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🎾</span>
+                  Match Format
+                </h4>
+                <p class="text-sm text-gray-700">
+                  All matches are best of 3 sets. Matches are typically played within a 90-minute court booking.
+                </p>
+              </div>
 
-            <p><strong>Violations:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Warning for first offense</li>
-              <li>Point penalty for repeated offense</li>
-              <li>Match forfeit for serious violations</li>
-              <li>League suspension for extreme cases</li>
-            </ul>
-          </div>
-        </details>
+              <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                <h4 class="font-bold text-blue-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🔄</span>
+                  Rescheduling
+                </h4>
+                <p class="text-sm text-gray-700">
+                  <strong>2 reschedules</strong> per team. Request by <strong>Wed 23:59</strong>. Makeup by <strong>next Wed 23:59</strong>.
+                </p>
+              </div>
 
-        <!-- 11. Disputes -->
-        <details id="disputes" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">11</span>
-            Disputes & Resolution
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>Resolution Process:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Try to resolve amicably between teams first</li>
-              <li>If unresolved, contact league admin</li>
-              <li>Admin reviews evidence from both sides</li>
-              <li>Admin makes final decision</li>
-            </ul>
+              <div class="bg-green-50 rounded-lg p-4 border-2 border-green-200">
+                <h4 class="font-bold text-green-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">👥</span>
+                  Substitutes
+                </h4>
+                <p class="text-sm text-gray-700">
+                  <strong>2 substitutes</strong> per team during league stage. Admin approval required. No subs in playoffs.
+                </p>
+              </div>
 
-            <p><strong>Types of Disputes:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Score disagreements</li>
-              <li>Match scheduling conflicts</li>
-              <li>Conduct violations</li>
-              <li>Rule interpretation questions</li>
-            </ul>
+              <div class="bg-amber-50 rounded-lg p-4 border-2 border-amber-200">
+                <h4 class="font-bold text-amber-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">⭐</span>
+                  Free Agents
+                </h4>
+                <p class="text-sm text-gray-700">
+                  No partner? Register as a <strong>Free Agent</strong> and we'll match you with someone of similar skill!
+                </p>
+              </div>
 
-            <p><strong>Evidence Needed:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Screenshots of communications</li>
-              <li>Witness statements if available</li>
-              <li>Match photos/videos if relevant</li>
-              <li>Clear description of the issue</li>
-            </ul>
-          </div>
-        </details>
+              <div class="bg-red-50 rounded-lg p-4 border-2 border-red-200">
+                <h4 class="font-bold text-red-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">📊</span>
+                  Rankings
+                </h4>
+                <p class="text-sm text-gray-700">
+                  Ranked by: <strong>Points → Sets Diff → Games Diff</strong>. Head-to-head breaks ties.
+                </p>
+              </div>
+            </div>
 
-        <!-- 12. Admin Contact -->
-        <details id="admin-contact" class="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-md">
-          <summary
-            class="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
-            <span
-              class="bg-indigo-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">12</span>
-            Admin Contact & Support
-          </summary>
-          <div class="mt-4 space-y-3 text-gray-700 leading-relaxed text-sm sm:text-base">
-            <p><strong>When to Contact Admin:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Technical issues with the platform</li>
-              <li>Score disputes</li>
-              <li>Emergency reschedule requests</li>
-              <li>Conduct violations</li>
-              <li>Rule clarification needed</li>
-            </ul>
-
-            <p><strong>How to Contact:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Use the contact form on the website</li>
-              <li>WhatsApp admin (number provided at registration)</li>
-              <li>Email (check your registration confirmation)</li>
-            </ul>
-
-            <p><strong>Response Time:</strong></p>
-            <ul class="list-disc list-inside ml-2 sm:ml-4 space-y-1">
-              <li>Urgent issues: Within 24 hours</li>
-              <li>General inquiries: Within 48 hours</li>
-              <li>Emergency situations: Same day</li>
-            </ul>
-
-            <div class="bg-green-50 border-l-4 border-green-500 p-3 sm:p-4 mt-4 rounded">
-              <p class="font-semibold text-green-900 text-sm sm:text-base">📞 Need Help?</p>
-              <p class="text-xs sm:text-sm text-green-800 mt-1">
-                The admin is here to ensure fair play and smooth operation of the league. Don't hesitate to reach out
-                with questions or concerns!
+            <!-- League Format Description -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6 border-2 border-indigo-200 mt-6">
+              <h4 class="text-lg font-bold text-indigo-900 mb-3 flex items-center">
+                <span class="text-xl mr-2">ℹ️</span>
+                About Swiss Format
+              </h4>
+              <p class="text-gray-700 leading-relaxed">
+                The Swiss format pairs teams based on their current standings and performance. Each week, teams with similar records face each other, ensuring competitive matches throughout the season. After 6-8 rounds, the top teams advance to knockout playoffs to determine the champion.
               </p>
             </div>
+
+            <div class="text-center mt-6 p-4 bg-gray-50 rounded-lg">
+              <p class="text-gray-600 mb-3">For complete league rules details, visit:</p>
+              <a href="{{ url_for('leaderboard') }}" class="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg">
+                View League Leaderboard →
+              </a>
+            </div>
+
           </div>
-        </details>
-
+        </div>
       </div>
 
-      <!-- Back to Top Button - Mobile Friendly -->
-      <div class="mt-8 text-center">
-        <a href="#"
-          class="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 text-sm sm:text-base">
-          ↑ Back to Top
-        </a>
+      <!-- Americano Tournaments (Collapsed) -->
+      <div class="border-2 border-green-200 rounded-xl overflow-hidden shadow-lg accordion-section">
+        <button onclick="toggleAccordion('americano')" id="accordion-americano-btn" class="w-full bg-white text-gray-900 px-6 py-4 text-left font-bold text-xl flex items-center justify-between hover:bg-gray-50 transition-all duration-200 border-b-2 border-gray-200">
+          <span class="flex items-center">
+            <span class="text-2xl mr-3">🎯</span>
+            Americano Tournaments
+          </span>
+          <svg id="accordion-americano-icon" class="w-6 h-6 transform rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="accordion-americano" class="accordion-content hidden bg-white">
+          <div class="p-6 space-y-6">
+            
+            <!-- Americano Overview -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
+              <h4 class="text-xl font-bold text-green-900 mb-3 flex items-center">
+                <span class="text-2xl mr-3">🎉</span>
+                What is Americano?
+              </h4>
+              <p class="text-gray-700 leading-relaxed">
+                Americano is a fun, rotating tournament format where players are paired with different partners each round. It's perfect for free agents and anyone looking to play with new people, improve their skills, and compete individually for prizes!
+              </p>
+            </div>
+
+            <!-- Quick Facts -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                <h4 class="font-bold text-blue-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">📅</span>
+                  Frequency
+                </h4>
+                <p class="text-sm text-gray-700"><strong>Monthly events</strong> for registered free agents</p>
+              </div>
+
+              <div class="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
+                <h4 class="font-bold text-purple-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">👥</span>
+                  Pairing System
+                </h4>
+                <p class="text-sm text-gray-700"><strong>Rotate partners</strong> each round - play with everyone!</p>
+              </div>
+
+              <div class="bg-amber-50 rounded-lg p-4 border-2 border-amber-200">
+                <h4 class="font-bold text-amber-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">🏆</span>
+                  Scoring
+                </h4>
+                <p class="text-sm text-gray-700"><strong>Individual points</strong> - your personal performance matters!</p>
+              </div>
+
+              <div class="bg-red-50 rounded-lg p-4 border-2 border-red-200">
+                <h4 class="font-bold text-red-900 mb-2 flex items-center">
+                  <span class="text-xl mr-2">⭐</span>
+                  Eligibility
+                </h4>
+                <p class="text-sm text-gray-700"><strong>Top 50% performers</strong> can form permanent teams</p>
+              </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="space-y-4 mt-6">
+              <h4 class="text-lg font-bold text-gray-900">How It Works:</h4>
+              
+              <div class="border-l-4 border-green-500 pl-4">
+                <h5 class="font-bold text-gray-900 mb-2">1. Registration</h5>
+                <ul class="space-y-1 text-gray-700 text-sm">
+                  <li class="flex items-start">
+                    <span class="text-green-600 mr-2">•</span>
+                    <span>Register as a <strong>free agent</strong> with your skill level</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-600 mr-2">•</span>
+                    <span>Admin announces tournament dates monthly</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-green-600 mr-2">•</span>
+                    <span>Sign up for upcoming Americano events</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="border-l-4 border-blue-500 pl-4">
+                <h5 class="font-bold text-gray-900 mb-2">2. Round-Robin Format</h5>
+                <ul class="space-y-1 text-gray-700 text-sm">
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span><strong>Multiple rounds</strong> played in one day/session</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Partners <strong>rotate each round</strong> based on algorithm</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Play with and against different players each round</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-blue-600 mr-2">•</span>
+                    <span>Short match format to fit multiple games in session</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="border-l-4 border-purple-500 pl-4">
+                <h5 class="font-bold text-gray-900 mb-2">3. Individual Scoring</h5>
+                <ul class="space-y-1 text-gray-700 text-sm">
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Points awarded based on <strong>individual performance</strong></span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Win/loss combined with games/sets won contribute to score</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span><strong>Personal leaderboard</strong> tracks your tournament progress</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-purple-600 mr-2">•</span>
+                    <span>Top performers receive prizes and recognition</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="border-l-4 border-amber-500 pl-4">
+                <h5 class="font-bold text-gray-900 mb-2">4. Team Formation Opportunity</h5>
+                <div class="bg-amber-50 rounded-lg p-4 mt-2">
+                  <p class="text-sm font-semibold text-amber-900 mb-2">🏆 Path to Permanent Teams</p>
+                  <p class="text-sm text-gray-700">
+                    Players finishing in the <strong>top 50%</strong> of Americano tournaments are eligible to form permanent teams for the league or ladder. This is a great way for free agents to find compatible partners!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-xl p-6 text-white mt-8">
+              <h4 class="text-xl font-bold mb-3 flex items-center">
+                <span class="text-2xl mr-3">✨</span>
+                Why Play Americano?
+              </h4>
+              <ul class="space-y-2">
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Meet new players</strong> - Play with different partners each round</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Individual recognition</strong> - Your skills shine with personal scoring</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Find a partner</strong> - Connect with players for future teams</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>Fun format</strong> - Dynamic, social, and competitive</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-2">✓</span>
+                  <span><strong>No commitment</strong> - Join monthly events as you're available</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
       </div>
+
     </div>
+
+    <!-- Contact Section -->
+    <div class="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+      <h3 class="text-xl font-bold text-gray-900 mb-3 text-center flex items-center justify-center">
+        <span class="text-2xl mr-3">💬</span>
+        Questions?
+      </h3>
+      <p class="text-center text-gray-700">
+        Contact the admin for any questions, clarifications, or dispute resolution.
+      </p>
+    </div>
+
   </div>
 </div>
 
-<!-- Add custom styles for smooth scrolling -->
+<script>
+function toggleAccordion(section) {
+  const content = document.getElementById('accordion-' + section);
+  const button = document.getElementById('accordion-' + section + '-btn');
+  const icon = document.getElementById('accordion-' + section + '-icon');
+  
+  const allSections = ['ladder', 'league', 'americano'];
+  
+  allSections.forEach(s => {
+    const sContent = document.getElementById('accordion-' + s);
+    const sButton = document.getElementById('accordion-' + s + '-btn');
+    const sIcon = document.getElementById('accordion-' + s + '-icon');
+    
+    if (s === section) {
+      const isHidden = sContent.classList.contains('hidden');
+      
+      if (isHidden) {
+        sContent.classList.remove('hidden');
+        sIcon.classList.remove('rotate-90');
+        sButton.classList.remove('bg-white', 'text-gray-900', 'border-b-2', 'border-gray-200');
+        
+        if (s === 'ladder') {
+          sButton.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-indigo-700', 'text-white');
+        } else if (s === 'league') {
+          sButton.classList.add('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'text-white');
+        } else {
+          sButton.classList.add('bg-gradient-to-r', 'from-green-600', 'to-emerald-700', 'text-white');
+        }
+      } else {
+        sContent.classList.add('hidden');
+        sIcon.classList.add('rotate-90');
+        sButton.classList.add('bg-white', 'text-gray-900', 'border-b-2', 'border-gray-200');
+        sButton.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-indigo-700', 'from-indigo-600', 'to-purple-600', 'from-green-600', 'to-emerald-700', 'text-white');
+      }
+    }
+  });
+}
+</script>
+
 <style>
-  html {
-    scroll-behavior: smooth;
-  }
-
-  details summary {
-    list-style: none;
-  }
-
-  details summary::-webkit-details-marker {
-    display: none;
-  }
-
-  details[open] summary {
-    margin-bottom: 0;
-  }
-
-  details summary::after {
-    content: ' ▼';
-    font-size: 0.8em;
-    color: #6366f1;
-    transition: transform 0.3s ease;
-    display: inline-block;
-    margin-left: 0.5rem;
-  }
-
-  details[open] summary::after {
-    transform: rotate(180deg);
-  }
+.accordion-content {
+  transition: max-height 0.3s ease-in-out;
+}
 </style>
+
 {% endblock %}
