@@ -2596,7 +2596,6 @@ def ladder_login():
     """Team login for ladder system - allows teams to challenge others"""
     if request.method == "POST":
         access_token = request.form.get("access_token", "").strip()
-        ladder_type = request.form.get("ladder_type", "men")
         
         if not access_token:
             flash("Please enter your access token", "error")
@@ -2612,7 +2611,8 @@ def ladder_login():
         session['ladder_team_token'] = access_token
         flash(f"Welcome back, {team.team_name}!", "success")
         
-        if team.ladder_type == 'men':
+        # Redirect based on the team's actual gender/ladder_type
+        if team.gender == 'men' or team.ladder_type == 'men':
             return redirect(url_for('ladder_men'))
         else:
             return redirect(url_for('ladder_women'))
