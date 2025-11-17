@@ -4102,6 +4102,54 @@ def admin_panel():
     )
 
 
+@app.route("/admin/ladder/rankings/<ladder_type>")
+@require_admin_auth
+def admin_ladder_rankings(ladder_type):
+    if ladder_type not in ['men', 'women']:
+        flash("Invalid ladder type", "error")
+        return redirect(url_for('admin_panel'))
+    
+    teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(LadderTeam.current_rank).all()
+    
+    total_teams = len(teams)
+    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    
+    teams_with_status = []
+    for team in teams:
+        status = 'available'
+        status_color = 'green'
+        status_text = 'Available'
+        
+        if team.locked_until:
+            from datetime import datetime
+            if datetime.now() < team.locked_until:
+                status = 'locked'
+                status_color = 'orange'
+                status_text = 'Locked'
+        
+        if team.holiday_mode_active:
+            status = 'holiday'
+            status_color = 'blue'
+            status_text = 'Holiday'
+        
+        teams_with_status.append({
+            'team': team,
+            'status': status,
+            'status_color': status_color,
+            'status_text': status_text,
+            'sets_diff': team.sets_for - team.sets_against,
+            'games_diff': team.games_for - team.games_against,
+        })
+    
+    return render_template(
+        "admin_ladder_rankings.html",
+        teams=teams_with_status,
+        total_teams=total_teams,
+        ladder_type=ladder_type,
+        division_title=division_title
+    )
+
+
 @app.route("/admin/settings", methods=["GET", "POST"])
 @require_admin_auth
 def admin_settings():

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-12">
+  <div class="mb-6 sm:mb-8">
+    <a href="{{ url_for('admin_panel') }}" class="text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-2 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Admin Dashboard
+    </a>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+      <div>
+        <h2 class="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-700 bg-clip-text text-transparent">
+          {{ division_title }} - Ladder Rankings
+        </h2>
+        <p class="text-gray-600 mt-2">Manage teams and track ladder progress</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-3 border-2 border-blue-300">
+          <div class="text-sm font-semibold text-blue-800">Total Teams</div>
+          <div class="text-2xl font-bold text-blue-900">{{ total_teams }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-6 space-y-2">
+          {% for category, message in messages %}
+            <div class="{% if category == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-900{% else %}bg-green-50 border-l-4 border-green-500 text-green-900{% endif %} p-4 rounded-lg">
+              <p class="font-semibold">{{ message }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if teams|length == 0 %}
+    <div class="text-center py-12">
+      <div class="text-6xl mb-4">🪜</div>
+      <p class="text-xl text-gray-600">No teams registered in this division yet</p>
+      <p class="text-sm text-gray-500 mt-2">Teams will appear here once they register</p>
+    </div>
+    {% else %}
+
+    <div class="hidden lg:block overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-gradient-to-r from-purple-50 to-indigo-50 border-b-2 border-purple-300">
+            <th class="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Team Name</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Players</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Record</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Sets</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Games</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Status</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Last Match</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Registered</th>
+            <th class="px-4 py-3 text-center text-xs font-bold text-purple-900 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for item in teams %}
+          {% set t = item.team %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="text-2xl font-bold text-purple-600">#{{ t.current_rank }}</div>
+              </div>
+            </td>
+            <td class="px-4 py-4">
+              <div class="text-sm font-semibold text-gray-900">{{ t.team_name }}</div>
+            </td>
+            <td class="px-4 py-4">
+              <div class="text-sm space-y-1">
+                <div class="font-medium text-gray-900">
+                  {{ t.player1_name }}
+                  {% if t.contact_preference_email and t.player1_email %}
+                    <span class="text-xs text-gray-500 ml-1">({{ t.player1_email }})</span>
+                  {% elif t.contact_preference_whatsapp and t.player1_phone %}
+                    <span class="text-xs text-gray-500 ml-1">({{ t.player1_phone }})</span>
+                  {% endif %}
+                </div>
+                <div class="font-medium text-gray-900">
+                  {{ t.player2_name }}
+                  {% if t.contact_preference_email and t.player2_email %}
+                    <span class="text-xs text-gray-500 ml-1">({{ t.player2_email }})</span>
+                  {% elif t.contact_preference_whatsapp and t.player2_phone %}
+                    <span class="text-xs text-gray-500 ml-1">({{ t.player2_phone }})</span>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm font-semibold text-gray-900">{{ t.wins }}W - {{ t.losses }}L - {{ t.draws }}D</div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm {% if item.sets_diff > 0 %}text-green-600{% elif item.sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %} font-semibold">
+                {% if item.sets_diff > 0 %}+{% endif %}{{ item.sets_diff }}
+              </div>
+              <div class="text-xs text-gray-500">{{ t.sets_for }}-{{ t.sets_against }}</div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm {% if item.games_diff > 0 %}text-green-600{% elif item.games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %} font-semibold">
+                {% if item.games_diff > 0 %}+{% endif %}{{ item.games_diff }}
+              </div>
+              <div class="text-xs text-gray-500">{{ t.games_for }}-{{ t.games_against }}</div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              {% if item.status == 'available' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                  ✓ Available
+                </span>
+              {% elif item.status == 'locked' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                  🔒 Locked
+                </span>
+              {% elif item.status == 'holiday' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                  🏖️ Holiday
+                </span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm text-gray-600">
+                {% if t.last_match_date %}
+                  {{ t.last_match_date.strftime('%b %d, %Y') if t.last_match_date else 'N/A' }}
+                {% else %}
+                  <span class="text-gray-400">No matches</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="text-sm text-gray-600">
+                {{ t.registration_date.strftime('%b %d, %Y') if t.registration_date else 'N/A' }}
+              </div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button 
+                  onclick="alert('Edit functionality coming soon')" 
+                  class="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-colors"
+                  title="Edit Team">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button 
+                  onclick="if(confirm('Are you sure you want to delete this team?')) alert('Delete functionality coming soon')" 
+                  class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
+                  title="Delete Team">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+                <button 
+                  onclick="alert('Adjust rank functionality coming soon')" 
+                  class="bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg transition-colors"
+                  title="Adjust Rank">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                  </svg>
+                </button>
+                <button 
+                  onclick="alert('Toggle holiday functionality coming soon')" 
+                  class="{% if t.holiday_mode_active %}bg-blue-500 hover:bg-blue-600{% else %}bg-gray-400 hover:bg-gray-500{% endif %} text-white p-2 rounded-lg transition-colors"
+                  title="Toggle Holiday Mode">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </button>
+                <button 
+                  onclick="alert('View details functionality coming soon')" 
+                  class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
+                  title="View Details">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="lg:hidden space-y-4">
+      {% for item in teams %}
+      {% set t = item.team %}
+      <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl font-bold text-purple-600">#{{ t.current_rank }}</div>
+            <div>
+              <h4 class="text-lg font-bold text-gray-900">{{ t.team_name }}</h4>
+              {% if item.status == 'available' %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 mt-1">
+                  ✓ Available
+                </span>
+              {% elif item.status == 'locked' %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 mt-1">
+                  🔒 Locked
+                </span>
+              {% elif item.status == 'holiday' %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 mt-1">
+                  🏖️ Holiday
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-2 mb-3">
+          <div class="text-sm">
+            <span class="font-semibold text-gray-700">Players:</span>
+            <div class="text-gray-600 ml-2">
+              <div>• {{ t.player1_name }}</div>
+              <div>• {{ t.player2_name }}</div>
+            </div>
+          </div>
+          <div class="text-sm">
+            <span class="font-semibold text-gray-700">Record:</span>
+            <span class="text-gray-900 ml-1">{{ t.wins }}W - {{ t.losses }}L - {{ t.draws }}D</span>
+          </div>
+          <div class="text-sm">
+            <span class="font-semibold text-gray-700">Sets:</span>
+            <span class="{% if item.sets_diff > 0 %}text-green-600{% elif item.sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %} ml-1 font-semibold">
+              {% if item.sets_diff > 0 %}+{% endif %}{{ item.sets_diff }} ({{ t.sets_for }}-{{ t.sets_against }})
+            </span>
+          </div>
+          <div class="text-sm">
+            <span class="font-semibold text-gray-700">Games:</span>
+            <span class="{% if item.games_diff > 0 %}text-green-600{% elif item.games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %} ml-1 font-semibold">
+              {% if item.games_diff > 0 %}+{% endif %}{{ item.games_diff }} ({{ t.games_for }}-{{ t.games_against }})
+            </span>
+          </div>
+          <div class="text-sm">
+            <span class="font-semibold text-gray-700">Last Match:</span>
+            <span class="text-gray-600 ml-1">
+              {% if t.last_match_date %}
+                {{ t.last_match_date.strftime('%b %d, %Y') }}
+              {% else %}
+                No matches
+              {% endif %}
+            </span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-5 gap-2 mt-4">
+          <button onclick="alert('Edit functionality coming soon')" class="bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+          <button onclick="if(confirm('Are you sure you want to delete this team?')) alert('Delete functionality coming soon')" class="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+          <button onclick="alert('Adjust rank functionality coming soon')" class="bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </button>
+          <button onclick="alert('Toggle holiday functionality coming soon')" class="{% if t.holiday_mode_active %}bg-blue-500 hover:bg-blue-600{% else %}bg-gray-400 hover:bg-gray-500{% endif %} text-white p-3 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <button onclick="alert('View details functionality coming soon')" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
