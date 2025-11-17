@@ -1174,7 +1174,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const selectedDay = selectedDate.getDay();
       if (selectedDay === 0) {
         this.setCustomValidity('Sunday is not allowed. Please select Monday, Tuesday, or Wednesday only.');
-        alert('⚠️ Sunday is NOT allowed for reschedule requests. Please select Monday, Tuesday, or Wednesday of the following week only.');
       } else if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
         this.setCustomValidity('Only Monday, Tuesday, or Wednesday are allowed for reschedule requests.');
       } else {
@@ -1182,15 +1181,55 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
+    // CRITICAL: Add validation on blur for iOS (when picker closes)
+    input.addEventListener('blur', function() {
+      const selectedDate = new Date(this.value + 'T00:00:00');
+      const selectedDay = selectedDate.getDay();
+      
+      // Check if date is outside allowed range
+      const selectedTime = selectedDate.getTime();
+      const minTime = nextMonday.getTime();
+      const maxTime = nextWednesday.getTime();
+      
+      if (selectedTime < minTime || selectedTime > maxTime) {
+        alert(`⚠️ Invalid date! Reschedule requests must be between ${nextMondayStr} and ${nextWednesdayStr} only.`);
+        this.value = '';
+        return;
+      }
+      
+      if (selectedDay === 0 || selectedDay === 6 || selectedDay === 4 || selectedDay === 5) {
+        alert('⚠️ Invalid day! Reschedule requests are ONLY allowed for Monday, Tuesday, or Wednesday of the following week.');
+        this.value = '';
+      }
+    });
+
     // Also add validation on form submission
     const form = input.closest('form');
     if (form) {
       form.addEventListener('submit', function(e) {
+        if (!input.value) {
+          return; // Let browser validation handle empty field
+        }
+        
         const selectedDate = new Date(input.value + 'T00:00:00');
         const selectedDay = selectedDate.getDay();
+        const selectedTime = selectedDate.getTime();
+        const minTime = nextMonday.getTime();
+        const maxTime = nextWednesday.getTime();
+        
+        // Check date range
+        if (selectedTime < minTime || selectedTime > maxTime) {
+          e.preventDefault();
+          alert(`⚠️ Invalid date! Reschedule requests must be between ${nextMondayStr} and ${nextWednesdayStr} only.`);
+          input.focus();
+          return false;
+        }
+        
+        // Check day of week
         if (selectedDay === 0 || selectedDay === 6 || selectedDay === 4 || selectedDay === 5) {
           e.preventDefault();
           alert('⚠️ Invalid day selected. Reschedule requests are ONLY allowed for Monday, Tuesday, or Wednesday of the following week.');
+          input.focus();
           return false;
         }
       });
@@ -1217,6 +1256,44 @@ document.addEventListener('DOMContentLoaded', function() {
     input.setAttribute('max', maxDate);
 
     console.log(`Booking date constraints for Round ${roundNumber}: ${minDate} to ${maxDate}`);
+    
+    // CRITICAL: Add validation on blur for iOS (when picker closes)
+    input.addEventListener('blur', function() {
+      if (!this.value) return;
+      
+      const selectedDate = new Date(this.value + 'T00:00:00');
+      const selectedTime = selectedDate.getTime();
+      const minTime = roundStartDate.getTime();
+      const maxTime = roundEndDate.getTime();
+      
+      if (selectedTime < minTime || selectedTime > maxTime) {
+        alert(`⚠️ Invalid date! Booking must be within round dates (${minDate} to ${maxDate}).`);
+        this.value = '';
+      }
+    });
+    
+    // Add validation on form submission
+    const form = input.closest('form');
+    if (form && !form.dataset.validationAdded) {
+      form.dataset.validationAdded = 'true';
+      form.addEventListener('submit', function(e) {
+        if (!input.value) {
+          return; // Let browser validation handle empty field
+        }
+        
+        const selectedDate = new Date(input.value + 'T00:00:00');
+        const selectedTime = selectedDate.getTime();
+        const minTime = roundStartDate.getTime();
+        const maxTime = roundEndDate.getTime();
+        
+        if (selectedTime < minTime || selectedTime > maxTime) {
+          e.preventDefault();
+          alert(`⚠️ Invalid date! Booking must be within round dates (${minDate} to ${maxDate}).`);
+          input.focus();
+          return false;
+        }
+      });
+    }
   });
 
   // Submit Booking - with round date validation
