@@ -893,8 +893,7 @@ def ladder_register_team():
         # Find max rank in the appropriate gender ladder and add team at bottom
         from datetime import datetime
         max_rank_team = LadderTeam.query.filter_by(
-            gender=gender,
-            ladder_type="ladder"
+            gender=gender
         ).order_by(LadderTeam.current_rank.desc()).first()
         
         current_rank = max_rank_team.current_rank + 1 if max_rank_team else 1
@@ -910,7 +909,7 @@ def ladder_register_team():
             player2_phone=p2_phone_normalized,
             player2_email=p2_email,
             gender=gender,
-            ladder_type="ladder",
+            ladder_type=gender,
             current_rank=current_rank,
             contact_preference_email=contact_email,
             contact_preference_whatsapp=contact_whatsapp,
@@ -4110,7 +4109,7 @@ def admin_ladder_rankings(ladder_type):
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
     
-    teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(LadderTeam.current_rank).all()
+    teams = LadderTeam.query.filter_by(gender=ladder_type).order_by(LadderTeam.current_rank).all()
     
     total_teams = len(teams)
     division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
@@ -4661,7 +4660,7 @@ def admin_ladder_delete_team(team_id):
     
     try:
         teams_to_move_up = LadderTeam.query.filter(
-            LadderTeam.ladder_type == ladder_type,
+            LadderTeam.gender == ladder_type,
             LadderTeam.current_rank > team_rank
         ).all()
         
@@ -4718,7 +4717,7 @@ def admin_ladder_adjust_rank():
         return redirect(url_for('admin_panel'))
     
     team = LadderTeam.query.get_or_404(team_id)
-    ladder_type = team.ladder_type
+    ladder_type = team.gender
     
     try:
         result = adjust_ladder_ranks(team, new_rank, ladder_type)
@@ -4798,7 +4797,7 @@ def admin_ladder_toggle_holiday():
         return redirect(url_for('admin_panel'))
     
     team = LadderTeam.query.get_or_404(team_id)
-    ladder_type = team.ladder_type
+    ladder_type = team.gender
     
     try:
         if team.holiday_mode_active:
@@ -5513,7 +5512,7 @@ def admin_americano_pair_agents(tournament_id):
                 return redirect(url_for("admin_americano_pair_agents", tournament_id=tournament_id))
             
             max_rank = db.session.query(db.func.max(LadderTeam.current_rank)).filter_by(
-                ladder_type=tournament.gender
+                gender=tournament.gender
             ).scalar() or 0
             
             for pair_data in pairs:
