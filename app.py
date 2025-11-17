@@ -927,6 +927,12 @@ def ladder_register_team():
         # Send confirmation email to Player 1
         if p1_email:
             from utils import send_email_notification
+            # Determine WhatsApp group link based on gender
+            if gender == 'men':
+                whatsapp_link = "https://chat.whatsapp.com/Fw54Nxdk6jS9GTMOTnC0UD"
+            else:
+                whatsapp_link = "https://chat.whatsapp.com/GswFleVQhxF4gziShBhstd"
+            
             email_body = f"""Hi {p1_name},
 
 ✅ Your team "{team_name}" has been successfully registered for the Ladder Tournament!
@@ -946,6 +952,11 @@ Bookmark this link to:
 - View your ladder ranking
 - Submit match scores
 - Track your progress
+
+💬 Join Your Division's WhatsApp Group:
+{whatsapp_link}
+
+Stay connected with other teams, coordinate matches, and get updates!
 
 🎾 How the Ladder Works:
 - Challenge teams up to 3 positions above you
@@ -980,6 +991,11 @@ Bookmark this link to:
 - View your ladder ranking
 - Submit match scores
 - Track your progress
+
+💬 Join Your Division's WhatsApp Group:
+{whatsapp_link}
+
+Stay connected with other teams, coordinate matches, and get updates!
 
 🎾 How the Ladder Works:
 - Challenge teams up to 3 positions above you
@@ -1206,6 +1222,12 @@ def ladder_register_freeagent():
         # Send confirmation email
         if email:
             from utils import send_email_notification
+            # Determine WhatsApp group link based on gender
+            if gender == 'men':
+                whatsapp_link = "https://chat.whatsapp.com/BMqHxbPhKg67tmXIyuZwNJ"
+            else:
+                whatsapp_link = "https://chat.whatsapp.com/JdjNaMf3QhnD7yw1saq9lk"
+            
             email_body = f"""Hi {name},
 
 ✅ Welcome to the Ladder Tournament! Your free agent registration has been confirmed.
@@ -1226,6 +1248,11 @@ As a ladder free agent, you'll be invited to participate in our monthly American
 
 🔗 Your Access Link:
 {access_link}
+
+💬 Join Your Free Agents WhatsApp Group:
+{whatsapp_link}
+
+Connect with other free agents, get tournament updates, and find potential partners!
 
 📅 What's Next?
 You'll receive an email notification before each monthly tournament with:
