@@ -962,3 +962,213 @@ def check_reschedule_conflicts(proposed_matches):
                         })
 
     return conflicts
+
+
+# ============================================================================
+# LADDER UTILITY FUNCTIONS
+# ============================================================================
+
+def swap_ladder_ranks(winner_team, loser_team, ladder_type):
+    """
+    Swap ladder ranks between winner and loser after a match.
+    - If winner has lower rank (higher number), they take the loser's rank
+    - All teams between them shift down one rank
+    - Returns dict with old and new ranks for logging
+    
+    Args:
+        winner_team: LadderTeam object (winner)
+        loser_team: LadderTeam object (loser)
+        ladder_type: 'men' or 'women'
+    
+    Returns:
+        dict with rank changes: {'winner': {'old': X, 'new': Y}, 'loser': {...}, 'affected_teams': [...]}
+    """
+    from models import LadderTeam
+    
+    # Don't swap if winner is already higher ranked (lower number)
+    if winner_team.current_rank <= loser_team.current_rank:
+        return {
+            'winner': {'old': winner_team.current_rank, 'new': winner_team.current_rank},
+            'loser': {'old': loser_team.current_rank, 'new': loser_team.current_rank},
+            'affected_teams': [],
+            'message': 'No rank change - winner already higher ranked'
+        }
+    
+    # Check if either team is in holiday mode - don't swap ranks
+    if winner_team.holiday_mode_active or loser_team.holiday_mode_active:
+        return {
+            'winner': {'old': winner_team.current_rank, 'new': winner_team.current_rank},
+            'loser': {'old': loser_team.current_rank, 'new': loser_team.current_rank},
+            'affected_teams': [],
+            'message': 'No rank change - team in holiday mode'
+        }
+    
+    winner_old_rank = winner_team.current_rank
+    loser_old_rank = loser_team.current_rank
+    
+    # Winner takes loser's rank
+    winner_new_rank = loser_old_rank
+    
+    # Get all teams between winner and loser (exclusive)
+    teams_to_shift = LadderTeam.query.filter(
+        LadderTeam.ladder_type == ladder_type,
+        LadderTeam.current_rank >= winner_new_rank,
+        LadderTeam.current_rank < winner_old_rank
+    ).all()
+    
+    affected_teams = []
+    
+    # Shift all teams between them down one rank
+    for team in teams_to_shift:
+        old_rank = team.current_rank
+        team.current_rank += 1
+        affected_teams.append({
+            'team_name': team.team_name,
+            'old_rank': old_rank,
+            'new_rank': team.current_rank
+        })
+    
+    # Set new ranks
+    winner_team.current_rank = winner_new_rank
+    loser_team.current_rank = loser_old_rank + 1  # Loser shifts down by 1
+    
+    db.session.commit()
+    
+    return {
+        'winner': {'old': winner_old_rank, 'new': winner_new_rank},
+        'loser': {'old': loser_old_rank, 'new': loser_team.current_rank},
+        'affected_teams': affected_teams,
+        'message': f'Ranks swapped successfully'
+    }
+
+
+def apply_rank_penalty(team, penalty_ranks, reason, ladder_type):
+    """
+    Apply rank penalty to a team (move them down the ladder).
+    - Shifts team down by penalty_ranks positions
+    - Adjusts all teams between old and new positions
+    - Sends email notification to team
+    
+    Args:
+        team: LadderTeam object
+        penalty_ranks: Number of ranks to penalize (positive integer)
+        reason: String explaining why penalty was applied
+        ladder_type: 'men' or 'women'
+    
+    Returns:
+        dict with rank change info
+    """
+    from models import LadderTeam
+    from datetime import datetime
+    
+    if penalty_ranks <= 0:
+        return {
+            'team': team.team_name,
+            'old_rank': team.current_rank,
+            'new_rank': team.current_rank,
+            'message': 'No penalty applied - penalty_ranks must be positive'
+        }
+    
+    old_rank = team.current_rank
+    new_rank = old_rank + penalty_ranks
+    
+    # Get max rank in ladder to ensure we don't exceed it
+    max_rank_team = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderTeam.current_rank.desc()
+    ).first()
+    
+    if max_rank_team:
+        max_rank = max_rank_team.current_rank
+        if new_rank > max_rank:
+            new_rank = max_rank
+    
+    # Get all teams between old and new rank (move them up)
+    teams_to_shift = LadderTeam.query.filter(
+        LadderTeam.ladder_type == ladder_type,
+        LadderTeam.current_rank > old_rank,
+        LadderTeam.current_rank <= new_rank
+    ).all()
+    
+    affected_teams = []
+    
+    # Shift teams up by 1 rank
+    for t in teams_to_shift:
+        old_r = t.current_rank
+        t.current_rank -= 1
+        affected_teams.append({
+            'team_name': t.team_name,
+            'old_rank': old_r,
+            'new_rank': t.current_rank
+        })
+    
+    # Apply penalty to team
+    team.current_rank = new_rank
+    
+    db.session.commit()
+    
+    # Send email notification
+    penalty_email_body = f"""Hi {team.player1_name},
+
+RANK PENALTY APPLIED
+
+Your team "{team.team_name}" has received a rank penalty on the {ladder_type.title()} Ladder.
+
+Penalty Details:
+- Reason: {reason}
+- Old Rank: #{old_rank}
+- New Rank: #{new_rank}
+- Penalty: {penalty_ranks} rank(s)
+- Date: {datetime.now().strftime('%B %d, %Y')}
+
+If you believe this penalty was applied in error, please contact the admin immediately.
+
+- BD Padel League
+"""
+    
+    if team.player1_email:
+        send_email_notification(team.player1_email, "Rank Penalty Applied", penalty_email_body)
+    if team.player2_email:
+        send_email_notification(team.player2_email, "Rank Penalty Applied", penalty_email_body)
+    
+    return {
+        'team': team.team_name,
+        'old_rank': old_rank,
+        'new_rank': new_rank,
+        'affected_teams': affected_teams,
+        'message': f'Penalty of {penalty_ranks} rank(s) applied successfully'
+    }
+
+
+def update_ladder_team_stats(match, winner_team, loser_team):
+    """
+    Update team statistics after a ladder match is completed.
+    
+    Args:
+        match: LadderMatch object
+        winner_team: LadderTeam object (winner)
+        loser_team: LadderTeam object (loser)
+    """
+    from datetime import datetime
+    
+    # Update winner stats
+    winner_team.wins += 1
+    winner_team.sets_for += match.sets_a if match.winner_id == match.team_a_id else match.sets_b
+    winner_team.sets_against += match.sets_b if match.winner_id == match.team_a_id else match.sets_a
+    winner_team.games_for += match.games_a if match.winner_id == match.team_a_id else match.games_b
+    winner_team.games_against += match.games_b if match.winner_id == match.team_a_id else match.games_a
+    winner_team.last_match_date = datetime.now()
+    winner_team.matches_this_month = (winner_team.matches_this_month or 0) + 1
+    
+    # Update loser stats
+    loser_team.losses += 1
+    loser_team.sets_for += match.sets_b if match.winner_id == match.team_a_id else match.sets_a
+    loser_team.sets_against += match.sets_a if match.winner_id == match.team_a_id else match.sets_b
+    loser_team.games_for += match.games_b if match.winner_id == match.team_a_id else match.games_a
+    loser_team.games_against += match.games_a if match.winner_id == match.team_a_id else match.games_b
+    loser_team.last_match_date = datetime.now()
+    loser_team.matches_this_month = (loser_team.matches_this_month or 0) + 1
+    
+    # Mark stats as calculated
+    match.stats_calculated = True
+    
+    db.session.commit()

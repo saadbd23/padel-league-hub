@@ -4150,6 +4150,397 @@ def admin_ladder_rankings(ladder_type):
     )
 
 
+@app.route("/admin/ladder/challenges/<ladder_type>")
+@require_admin_auth
+def admin_ladder_challenges(ladder_type):
+    """Admin page to manage all ladder challenges for a division"""
+    from datetime import datetime
+    
+    if ladder_type not in ['men', 'women']:
+        flash("Invalid ladder type", "error")
+        return redirect(url_for('admin_panel'))
+    
+    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    
+    all_challenges = LadderChallenge.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderChallenge.created_at.desc()
+    ).all()
+    
+    now = datetime.now()
+    
+    pending_acceptance = []
+    accepted = []
+    expired = []
+    rejected = []
+    
+    for challenge in all_challenges:
+        challenger = LadderTeam.query.get(challenge.challenger_team_id)
+        challenged = LadderTeam.query.get(challenge.challenged_team_id)
+        
+        challenge_data = {
+            'challenge': challenge,
+            'challenger': challenger,
+            'challenged': challenged,
+            'is_overdue': challenge.acceptance_deadline and now > challenge.acceptance_deadline
+        }
+        
+        if challenge.status == 'pending_acceptance':
+            pending_acceptance.append(challenge_data)
+        elif challenge.status == 'accepted':
+            accepted.append(challenge_data)
+        elif challenge.status == 'expired':
+            expired.append(challenge_data)
+        elif challenge.status == 'rejected':
+            rejected.append(challenge_data)
+    
+    return render_template(
+        "admin_ladder_challenges.html",
+        ladder_type=ladder_type,
+        division_title=division_title,
+        pending_acceptance=pending_acceptance,
+        accepted=accepted,
+        expired=expired,
+        rejected=rejected
+    )
+
+
+@app.route("/admin/ladder/matches/<ladder_type>")
+@require_admin_auth
+def admin_ladder_matches(ladder_type):
+    """Admin page to manage all ladder matches for a division"""
+    from datetime import datetime
+    
+    if ladder_type not in ['men', 'women']:
+        flash("Invalid ladder type", "error")
+        return redirect(url_for('admin_panel'))
+    
+    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    
+    all_matches = LadderMatch.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderMatch.created_at.desc()
+    ).all()
+    
+    pending_scores = []
+    pending_verification = []
+    disputed = []
+    no_shows = []
+    completed = []
+    
+    for match in all_matches:
+        team_a = LadderTeam.query.get(match.team_a_id)
+        team_b = LadderTeam.query.get(match.team_b_id)
+        
+        match_data = {
+            'match': match,
+            'team_a': team_a,
+            'team_b': team_b,
+        }
+        
+        if match.disputed:
+            disputed.append(match_data)
+        elif match.reported_no_show_team_id and not match.no_show_verified:
+            no_shows.append(match_data)
+        elif match.status == 'completed':
+            if len(completed) < 20:
+                completed.append(match_data)
+        elif match.team_a_submitted and match.team_b_submitted:
+            pending_verification.append(match_data)
+        elif match.status == 'pending':
+            pending_scores.append(match_data)
+    
+    return render_template(
+        "admin_ladder_matches.html",
+        ladder_type=ladder_type,
+        division_title=division_title,
+        pending_scores=pending_scores,
+        pending_verification=pending_verification,
+        disputed=disputed,
+        no_shows=no_shows,
+        completed=completed
+    )
+
+
+@app.route("/admin/ladder/dispute/resolve/<int:match_id>", methods=["GET", "POST"])
+@require_admin_auth
+def admin_ladder_dispute_resolve(match_id):
+    """Admin page to resolve disputed ladder match scores"""
+    from datetime import datetime
+    from utils import swap_ladder_ranks, update_ladder_team_stats, send_email_notification
+    
+    match = LadderMatch.query.get_or_404(match_id)
+    team_a = LadderTeam.query.get(match.team_a_id)
+    team_b = LadderTeam.query.get(match.team_b_id)
+    
+    if request.method == "POST":
+        try:
+            set1_a = request.form.get("set1_a", type=int)
+            set1_b = request.form.get("set1_b", type=int)
+            set2_a = request.form.get("set2_a", type=int)
+            set2_b = request.form.get("set2_b", type=int)
+            set3_a = request.form.get("set3_a", type=int, default=0)
+            set3_b = request.form.get("set3_b", type=int, default=0)
+            winner_choice = request.form.get("winner")
+            admin_notes = request.form.get("admin_notes", "")
+            
+            if not all([set1_a is not None, set1_b is not None, set2_a is not None, set2_b is not None, winner_choice]):
+                flash("Please fill in all required fields", "error")
+                return redirect(url_for('admin_ladder_dispute_resolve', match_id=match_id))
+            
+            sets_a = 0
+            sets_b = 0
+            games_a = set1_a + set2_a + (set3_a or 0)
+            games_b = set1_b + set2_b + (set3_b or 0)
+            
+            if set1_a > set1_b:
+                sets_a += 1
+            else:
+                sets_b += 1
+            
+            if set2_a > set2_b:
+                sets_a += 1
+            else:
+                sets_b += 1
+            
+            if set3_a and set3_b:
+                if set3_a > set3_b:
+                    sets_a += 1
+                else:
+                    sets_b += 1
+            
+            match.team_a_score_set1 = set1_a
+            match.team_a_score_set2 = set2_a
+            match.team_a_score_set3 = set3_a
+            match.team_b_score_set1 = set1_b
+            match.team_b_score_set2 = set2_b
+            match.team_b_score_set3 = set3_b
+            
+            match.sets_a = sets_a
+            match.sets_b = sets_b
+            match.games_a = games_a
+            match.games_b = games_b
+            
+            if winner_choice == "team_a":
+                match.winner_id = team_a.id
+                winner_team = team_a
+                loser_team = team_b
+            elif winner_choice == "team_b":
+                match.winner_id = team_b.id
+                winner_team = team_b
+                loser_team = team_a
+            else:
+                match.winner_id = None
+                winner_team = None
+                loser_team = None
+            
+            match.status = 'completed'
+            match.disputed = False
+            match.verified = True
+            match.completed_at = datetime.now()
+            
+            if winner_team and loser_team:
+                update_ladder_team_stats(match, winner_team, loser_team)
+                rank_changes = swap_ladder_ranks(winner_team, loser_team, match.ladder_type)
+                
+                match.winner_old_rank = rank_changes['winner']['old']
+                match.winner_new_rank = rank_changes['winner']['new']
+                match.loser_old_rank = rank_changes['loser']['old']
+                match.loser_new_rank = rank_changes['loser']['new']
+            
+            db.session.commit()
+            
+            email_body_a = f"""Hi {team_a.player1_name},
+
+MATCH DISPUTE RESOLVED
+
+Your disputed match has been reviewed and resolved by admin.
+
+Match Details:
+- Opponent: {team_b.team_name}
+- Final Score: {set1_a}-{set1_b}, {set2_a}-{set2_b}{',' + str(set3_a) + '-' + str(set3_b) if set3_a else ''}
+- Winner: {winner_team.team_name if winner_team else 'Draw'}
+- Admin Notes: {admin_notes}
+
+Your new rank: #{team_a.current_rank}
+
+- BD Padel League
+"""
+            
+            email_body_b = f"""Hi {team_b.player1_name},
+
+MATCH DISPUTE RESOLVED
+
+Your disputed match has been reviewed and resolved by admin.
+
+Match Details:
+- Opponent: {team_a.team_name}
+- Final Score: {set1_b}-{set1_a}, {set2_b}-{set2_a}{',' + str(set3_b) + '-' + str(set3_a) if set3_b else ''}
+- Winner: {winner_team.team_name if winner_team else 'Draw'}
+- Admin Notes: {admin_notes}
+
+Your new rank: #{team_b.current_rank}
+
+- BD Padel League
+"""
+            
+            if team_a.player1_email:
+                send_email_notification(team_a.player1_email, "Match Dispute Resolved", email_body_a)
+            if team_a.player2_email:
+                send_email_notification(team_a.player2_email, "Match Dispute Resolved", email_body_a)
+            if team_b.player1_email:
+                send_email_notification(team_b.player1_email, "Match Dispute Resolved", email_body_b)
+            if team_b.player2_email:
+                send_email_notification(team_b.player2_email, "Match Dispute Resolved", email_body_b)
+            
+            flash("Match dispute resolved successfully!", "success")
+            return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error resolving dispute: {str(e)}", "error")
+            return redirect(url_for('admin_ladder_dispute_resolve', match_id=match_id))
+    
+    return render_template(
+        "admin_ladder_dispute_resolve.html",
+        match=match,
+        team_a=team_a,
+        team_b=team_b
+    )
+
+
+@app.route("/admin/ladder/no-show/process/<int:match_id>", methods=["POST"])
+@require_admin_auth
+def admin_ladder_no_show_process(match_id):
+    """Process admin decision on no-show report"""
+    from datetime import datetime
+    from utils import swap_ladder_ranks, apply_rank_penalty, update_ladder_team_stats, send_email_notification
+    
+    match = LadderMatch.query.get_or_404(match_id)
+    team_a = LadderTeam.query.get(match.team_a_id)
+    team_b = LadderTeam.query.get(match.team_b_id)
+    
+    action = request.form.get("action")
+    admin_notes = request.form.get("admin_notes", "")
+    
+    if match.status == 'completed':
+        flash("Cannot process no-show - match already completed", "error")
+        return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
+    
+    try:
+        if action == "approve":
+            no_show_team_id = match.reported_no_show_team_id
+            reporting_team_id = match.reported_by_team_id
+            
+            if no_show_team_id == team_a.id:
+                no_show_team = team_a
+                winner_team = team_b
+            else:
+                no_show_team = team_b
+                winner_team = team_a
+            
+            penalty_result = apply_rank_penalty(no_show_team, 1, f"No-show for match vs {winner_team.team_name}", match.ladder_type)
+            
+            match.winner_id = winner_team.id
+            match.sets_a = 2 if winner_team.id == team_a.id else 0
+            match.sets_b = 2 if winner_team.id == team_b.id else 0
+            match.games_a = 12 if winner_team.id == team_a.id else 0
+            match.games_b = 12 if winner_team.id == team_b.id else 0
+            match.status = 'completed_no_show'
+            match.no_show_verified = True
+            match.verified = True
+            match.completed_at = datetime.now()
+            
+            update_ladder_team_stats(match, winner_team, no_show_team)
+            
+            db.session.commit()
+            
+            email_winner = f"""Hi {winner_team.player1_name},
+
+NO-SHOW APPROVED - YOU WIN
+
+The admin has approved the no-show report for your match.
+
+Match Details:
+- Opponent: {no_show_team.team_name} (No-Show)
+- Result: Win by No-Show
+- Admin Notes: {admin_notes}
+
+Your new rank: #{winner_team.current_rank}
+
+- BD Padel League
+"""
+            
+            email_no_show = f"""Hi {no_show_team.player1_name},
+
+NO-SHOW PENALTY APPLIED
+
+The admin has confirmed your no-show for the match vs {winner_team.team_name}.
+
+Penalties:
+- Match Result: Loss by No-Show
+- Rank Penalty: -1 rank
+- New Rank: #{no_show_team.current_rank}
+- Admin Notes: {admin_notes}
+
+Please ensure you attend all scheduled matches in the future.
+
+- BD Padel League
+"""
+            
+            if winner_team.player1_email:
+                send_email_notification(winner_team.player1_email, "No-Show Approved - You Win", email_winner)
+            if winner_team.player2_email:
+                send_email_notification(winner_team.player2_email, "No-Show Approved - You Win", email_winner)
+            if no_show_team.player1_email:
+                send_email_notification(no_show_team.player1_email, "No-Show Penalty Applied", email_no_show)
+            if no_show_team.player2_email:
+                send_email_notification(no_show_team.player2_email, "No-Show Penalty Applied", email_no_show)
+            
+            flash("No-show approved and penalties applied", "success")
+            
+        elif action == "reject":
+            match.status = 'pending'
+            match.reported_no_show_team_id = None
+            match.reported_by_team_id = None
+            match.no_show_report_date = None
+            match.no_show_notes = None
+            
+            db.session.commit()
+            
+            email_body = f"""Hi,
+
+NO-SHOW REPORT REJECTED
+
+The admin has rejected the no-show report for your match.
+
+Match Details:
+- Teams: {team_a.team_name} vs {team_b.team_name}
+- Status: Match must be played
+- Admin Notes: {admin_notes}
+
+Please coordinate with your opponent to complete the match.
+
+- BD Padel League
+"""
+            
+            if team_a.player1_email:
+                send_email_notification(team_a.player1_email, "No-Show Report Rejected", email_body)
+            if team_a.player2_email:
+                send_email_notification(team_a.player2_email, "No-Show Report Rejected", email_body)
+            if team_b.player1_email:
+                send_email_notification(team_b.player1_email, "No-Show Report Rejected", email_body)
+            if team_b.player2_email:
+                send_email_notification(team_b.player2_email, "No-Show Report Rejected", email_body)
+            
+            flash("No-show report rejected - match reset to pending", "success")
+        
+        return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error processing no-show: {str(e)}", "error")
+        return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
+
+
 @app.route("/admin/settings", methods=["GET", "POST"])
 @require_admin_auth
 def admin_settings():
