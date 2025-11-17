@@ -289,6 +289,18 @@ class LadderMatch(db.Model):
     score_submitted_by_a = db.Column(db.Boolean, default=False)
     score_submitted_by_b = db.Column(db.Boolean, default=False)
     
+    team_a_score_set1 = db.Column(db.Integer, nullable=True)
+    team_a_score_set2 = db.Column(db.Integer, nullable=True)
+    team_a_score_set3 = db.Column(db.Integer, nullable=True)
+    team_b_score_set1 = db.Column(db.Integer, nullable=True)
+    team_b_score_set2 = db.Column(db.Integer, nullable=True)
+    team_b_score_set3 = db.Column(db.Integer, nullable=True)
+    
+    team_a_submitted = db.Column(db.Boolean, default=False)
+    team_b_submitted = db.Column(db.Boolean, default=False)
+    
+    status = db.Column(db.String(30), default="pending")
+    
     winner_id = db.Column(db.Integer, nullable=True)
     sets_a = db.Column(db.Integer, default=0)
     sets_b = db.Column(db.Integer, default=0)

@@ -1491,6 +1491,237 @@ BD Padel Ladder Team
         if team.player2_email and team.player2_email != team.player1_email:
             send_email_notification(team.player2_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
 
+
+def update_ladder_team_stats_from_match(match):
+    """Update ladder team statistics after a verified match"""
+    from datetime import datetime
+    
+    if match.stats_calculated:
+        return
+    
+    team_a = LadderTeam.query.get(match.team_a_id)
+    team_b = LadderTeam.query.get(match.team_b_id)
+    
+    if not team_a or not team_b:
+        return
+    
+    team_a.sets_for += match.sets_a
+    team_a.sets_against += match.sets_b
+    team_a.games_for += match.games_a
+    team_a.games_against += match.games_b
+    
+    team_b.sets_for += match.sets_b
+    team_b.sets_against += match.sets_a
+    team_b.games_for += match.games_b
+    team_b.games_against += match.games_a
+    
+    if match.winner_id == team_a.id:
+        team_a.wins += 1
+        team_b.losses += 1
+    elif match.winner_id == team_b.id:
+        team_b.wins += 1
+        team_a.losses += 1
+    else:
+        team_a.draws += 1
+        team_b.draws += 1
+    
+    team_a.last_match_date = datetime.now()
+    team_b.last_match_date = datetime.now()
+    
+    match.stats_calculated = True
+    db.session.commit()
+
+
+def verify_match_scores(match):
+    """
+    Verify that both teams submitted matching scores.
+    Returns True if scores match, False if there's a dispute.
+    """
+    from datetime import datetime
+    from utils import send_email_notification
+    
+    team_a = LadderTeam.query.get(match.team_a_id)
+    team_b = LadderTeam.query.get(match.team_b_id)
+    
+    if not match.team_a_submitted or not match.team_b_submitted:
+        return False
+    
+    set1_match = (match.team_a_score_set1 == match.team_b_score_set1)
+    set2_match = (match.team_a_score_set2 == match.team_b_score_set2)
+    set3_match = True
+    if match.team_a_score_set3 is not None and match.team_b_score_set3 is not None:
+        set3_match = (match.team_a_score_set3 == match.team_b_score_set3)
+    elif (match.team_a_score_set3 is None) != (match.team_b_score_set3 is None):
+        set3_match = False
+    
+    scores_match = set1_match and set2_match and set3_match
+    
+    if scores_match:
+        match.status = 'completed'
+        match.completed_at = datetime.now()
+        match.verified = True
+        match.disputed = False
+        
+        team_a_sets_won = 0
+        team_b_sets_won = 0
+        team_a_games_total = 0
+        team_b_games_total = 0
+        
+        sets = [
+            (match.team_a_score_set1, match.team_b_score_set1),
+            (match.team_a_score_set2, match.team_b_score_set2),
+        ]
+        if match.team_a_score_set3 is not None:
+            sets.append((match.team_a_score_set3, match.team_b_score_set3))
+        
+        for team_a_games, team_b_games in sets:
+            team_a_games_total += team_a_games
+            team_b_games_total += team_b_games
+            if team_a_games > team_b_games:
+                team_a_sets_won += 1
+            elif team_b_games > team_a_games:
+                team_b_sets_won += 1
+        
+        match.sets_a = team_a_sets_won
+        match.sets_b = team_b_sets_won
+        match.games_a = team_a_games_total
+        match.games_b = team_b_games_total
+        
+        if team_a_sets_won > team_b_sets_won:
+            match.winner_id = team_a.id
+        elif team_b_sets_won > team_a_sets_won:
+            match.winner_id = team_b.id
+        else:
+            match.winner_id = None
+        
+        match.score_a = f"{match.team_a_score_set1}-{match.team_b_score_set1}"
+        if match.team_a_score_set2 is not None:
+            match.score_a += f", {match.team_a_score_set2}-{match.team_b_score_set2}"
+        if match.team_a_score_set3 is not None:
+            match.score_a += f", {match.team_a_score_set3}-{match.team_b_score_set3}"
+        
+        match.score_b = f"{match.team_b_score_set1}-{match.team_a_score_set1}"
+        if match.team_b_score_set2 is not None:
+            match.score_b += f", {match.team_b_score_set2}-{match.team_a_score_set2}"
+        if match.team_b_score_set3 is not None:
+            match.score_b += f", {match.team_b_score_set3}-{match.team_a_score_set3}"
+        
+        update_ladder_team_stats_from_match(match)
+        
+        db.session.commit()
+        
+        winner_name = team_a.team_name if match.winner_id == team_a.id else (team_b.team_name if match.winner_id == team_b.id else "Draw")
+        
+        team_a_message = f"""
+Match Scores Verified!
+
+Your match against {team_b.team_name} has been verified and recorded.
+
+Final Score: {match.score_a}
+Result: {"You Won! 🎉" if match.winner_id == team_a.id else ("You Lost" if match.winner_id == team_b.id else "Draw")}
+
+Both teams submitted matching scores. Your stats have been updated.
+
+Manage your team: {request.url_root}ladder/my-team/{team_a.access_token}
+
+Good game!
+BD Padel Ladder Team
+"""
+        
+        team_b_message = f"""
+Match Scores Verified!
+
+Your match against {team_a.team_name} has been verified and recorded.
+
+Final Score: {match.score_b}
+Result: {"You Won! 🎉" if match.winner_id == team_b.id else ("You Lost" if match.winner_id == team_a.id else "Draw")}
+
+Both teams submitted matching scores. Your stats have been updated.
+
+Manage your team: {request.url_root}ladder/my-team/{team_b.access_token}
+
+Good game!
+BD Padel Ladder Team
+"""
+        
+        if team_a.contact_preference_email:
+            if team_a.player1_email:
+                send_email_notification(team_a.player1_email, f"Match Verified - {team_a.team_name}", team_a_message)
+            if team_a.player2_email and team_a.player2_email != team_a.player1_email:
+                send_email_notification(team_a.player2_email, f"Match Verified - {team_a.team_name}", team_a_message)
+        
+        if team_b.contact_preference_email:
+            if team_b.player1_email:
+                send_email_notification(team_b.player1_email, f"Match Verified - {team_b.team_name}", team_b_message)
+            if team_b.player2_email and team_b.player2_email != team_b.player1_email:
+                send_email_notification(team_b.player2_email, f"Match Verified - {team_b.team_name}", team_b_message)
+        
+        return True
+    else:
+        match.status = 'disputed'
+        match.disputed = True
+        match.verified = False
+        db.session.commit()
+        
+        dispute_message_a = f"""
+Score Dispute Detected
+
+There is a mismatch between the scores submitted by you and {team_b.team_name}.
+
+Your submission:
+- Set 1: {match.team_a_score_set1}-{match.team_b_score_set1}
+- Set 2: {match.team_a_score_set2}-{match.team_b_score_set2}
+{f"- Set 3: {match.team_a_score_set3}-{match.team_b_score_set3}" if match.team_a_score_set3 else ""}
+
+{team_b.team_name}'s submission:
+- Set 1: {match.team_b_score_set1}-{match.team_a_score_set1}
+- Set 2: {match.team_b_score_set2}-{match.team_a_score_set2}
+{f"- Set 3: {match.team_b_score_set3}-{match.team_a_score_set3}" if match.team_b_score_set3 else ""}
+
+An administrator will review and resolve this dispute. You will be notified once it's resolved.
+
+Manage your team: {request.url_root}ladder/my-team/{team_a.access_token}
+
+BD Padel Ladder Team
+"""
+        
+        dispute_message_b = f"""
+Score Dispute Detected
+
+There is a mismatch between the scores submitted by you and {team_a.team_name}.
+
+Your submission:
+- Set 1: {match.team_b_score_set1}-{match.team_a_score_set1}
+- Set 2: {match.team_b_score_set2}-{match.team_a_score_set2}
+{f"- Set 3: {match.team_b_score_set3}-{match.team_a_score_set3}" if match.team_b_score_set3 else ""}
+
+{team_a.team_name}'s submission:
+- Set 1: {match.team_a_score_set1}-{match.team_b_score_set1}
+- Set 2: {match.team_a_score_set2}-{match.team_b_score_set2}
+{f"- Set 3: {match.team_a_score_set3}-{match.team_b_score_set3}" if match.team_a_score_set3 else ""}
+
+An administrator will review and resolve this dispute. You will be notified once it's resolved.
+
+Manage your team: {request.url_root}ladder/my-team/{team_b.access_token}
+
+BD Padel Ladder Team
+"""
+        
+        if team_a.contact_preference_email:
+            if team_a.player1_email:
+                send_email_notification(team_a.player1_email, f"Score Dispute - {team_a.team_name}", dispute_message_a)
+            if team_a.player2_email and team_a.player2_email != team_a.player1_email:
+                send_email_notification(team_a.player2_email, f"Score Dispute - {team_a.team_name}", dispute_message_a)
+        
+        if team_b.contact_preference_email:
+            if team_b.player1_email:
+                send_email_notification(team_b.player1_email, f"Score Dispute - {team_b.team_name}", dispute_message_b)
+            if team_b.player2_email and team_b.player2_email != team_b.player1_email:
+                send_email_notification(team_b.player2_email, f"Score Dispute - {team_b.team_name}", dispute_message_b)
+        
+        return False
+
+
 @app.route("/ladder/my-team/<token>", methods=["GET", "POST"])
 def ladder_my_team(token):
     """Team-specific dashboard for ladder teams to manage matches, challenges, and holiday mode"""
@@ -1531,8 +1762,125 @@ def ladder_my_team(token):
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "submit_score":
-            # Placeholder: Score submission logic will be implemented in next task
-            flash("Score submission functionality will be available soon.", "info")
+            from utils import send_email_notification
+            
+            match_id = request.form.get("match_id")
+            if not match_id:
+                flash("Match ID is required", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            match = LadderMatch.query.get(match_id)
+            if not match:
+                flash("Match not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if match.team_a_id != team.id and match.team_b_id != team.id:
+                flash("You are not authorized to submit scores for this match", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge = LadderChallenge.query.get(match.challenge_id)
+            now = datetime.now()
+            
+            if challenge and challenge.completion_deadline:
+                if now > challenge.completion_deadline:
+                    team_a = LadderTeam.query.get(match.team_a_id)
+                    team_b = LadderTeam.query.get(match.team_b_id)
+                    
+                    if not match.team_a_submitted and not match.team_b_submitted:
+                        apply_rank_penalty(team_a, 1, f"Failed to complete match against {team_b.team_name} before deadline")
+                        apply_rank_penalty(team_b, 1, f"Failed to complete match against {team_a.team_name} before deadline")
+                        flash(f"Match deadline has passed. Both teams have been penalized 1 rank.", "warning")
+            
+            try:
+                set1_team = int(request.form.get("set1_team_score", 0))
+                set1_opp = int(request.form.get("set1_opponent_score", 0))
+                set2_team = int(request.form.get("set2_team_score", 0))
+                set2_opp = int(request.form.get("set2_opponent_score", 0))
+                
+                set3_team_str = request.form.get("set3_team_score", "").strip()
+                set3_opp_str = request.form.get("set3_opponent_score", "").strip()
+                
+                set3_team = int(set3_team_str) if set3_team_str else None
+                set3_opp = int(set3_opp_str) if set3_opp_str else None
+                
+                if set1_team < 0 or set1_opp < 0 or set2_team < 0 or set2_opp < 0:
+                    flash("Scores cannot be negative", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+                
+                if (set3_team is not None and set3_team < 0) or (set3_opp is not None and set3_opp < 0):
+                    flash("Scores cannot be negative", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+                
+                if set1_team > 7 or set1_opp > 7 or set2_team > 7 or set2_opp > 7:
+                    flash("Invalid score: Games in a set cannot exceed 7 in padel", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+                
+                if (set3_team is not None and set3_team > 7) or (set3_opp is not None and set3_opp > 7):
+                    flash("Invalid score: Games in a set cannot exceed 7 in padel", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+                
+            except (ValueError, TypeError):
+                flash("Invalid score format. Please enter valid numbers.", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            is_team_a = (match.team_a_id == team.id)
+            
+            if is_team_a:
+                match.team_a_score_set1 = set1_team
+                match.team_b_score_set1 = set1_opp
+                match.team_a_score_set2 = set2_team
+                match.team_b_score_set2 = set2_opp
+                match.team_a_score_set3 = set3_team
+                match.team_b_score_set3 = set3_opp
+                match.team_a_submitted = True
+                match.score_submitted_by_a = True
+            else:
+                match.team_b_score_set1 = set1_team
+                match.team_a_score_set1 = set1_opp
+                match.team_b_score_set2 = set2_team
+                match.team_a_score_set2 = set2_opp
+                match.team_b_score_set3 = set3_team
+                match.team_a_score_set3 = set3_opp
+                match.team_b_submitted = True
+                match.score_submitted_by_b = True
+            
+            db.session.commit()
+            
+            opponent_team = LadderTeam.query.get(match.team_b_id if is_team_a else match.team_a_id)
+            
+            if match.team_a_submitted and match.team_b_submitted:
+                verification_result = verify_match_scores(match)
+                
+                if verification_result:
+                    flash("Scores verified! Match result has been recorded.", "success")
+                else:
+                    flash("Score mismatch detected. An administrator will review the dispute.", "warning")
+            else:
+                match.status = 'pending_opponent_score'
+                db.session.commit()
+                
+                submission_message = f"""
+Score Submitted
+
+{team.team_name} has submitted their score for your match.
+
+Match: {team.team_name} vs {opponent_team.team_name}
+
+Please submit your score through your team dashboard as soon as possible.
+
+Manage your team: {request.url_root}ladder/my-team/{opponent_team.access_token}
+
+BD Padel Ladder Team
+"""
+                
+                if opponent_team.contact_preference_email:
+                    if opponent_team.player1_email:
+                        send_email_notification(opponent_team.player1_email, f"Score Submission Waiting - {opponent_team.team_name}", submission_message)
+                    if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
+                        send_email_notification(opponent_team.player2_email, f"Score Submission Waiting - {opponent_team.team_name}", submission_message)
+                
+                flash("Your score has been submitted. Waiting for opponent to submit their score.", "success")
+            
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "accept_challenge":
