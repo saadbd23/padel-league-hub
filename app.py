@@ -1532,6 +1532,111 @@ def update_ladder_team_stats_from_match(match):
     db.session.commit()
 
 
+def swap_ladder_ranks(winner_team, loser_team, match):
+    """
+    Swap ladder ranks after a match result.
+    Winner takes loser's rank, and all teams shift accordingly.
+    
+    Args:
+        winner_team: LadderTeam object of the winning team
+        loser_team: LadderTeam object of the losing team
+        match: LadderMatch object
+        
+    Returns:
+        dict with rank change information for logging and notifications
+    """
+    import logging
+    
+    winner_rank = winner_team.current_rank
+    loser_rank = loser_team.current_rank
+    ladder_type = winner_team.ladder_type
+    
+    logging.info(f"[RANK SWAP] Match ID {match.id}: {winner_team.team_name} (#{winner_rank}) vs {loser_team.team_name} (#{loser_rank})")
+    
+    if winner_rank == loser_rank:
+        logging.warning(f"[RANK SWAP] Equal ranks detected (both #{winner_rank}) - no rank change")
+        return {
+            'winner_old_rank': winner_rank,
+            'winner_new_rank': winner_rank,
+            'loser_old_rank': loser_rank,
+            'loser_new_rank': loser_rank,
+            'teams_affected': []
+        }
+    
+    all_teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(LadderTeam.current_rank).all()
+    
+    rank_changes = {
+        'winner_old_rank': winner_rank,
+        'loser_old_rank': loser_rank,
+        'teams_affected': []
+    }
+    
+    if winner_rank > loser_rank:
+        logging.info(f"[RANK SWAP] Winner challenged UP: #{winner_rank} → #{loser_rank}")
+        
+        new_winner_rank = loser_rank
+        new_loser_rank = loser_rank + 1
+        
+        for team in all_teams:
+            if team.id == winner_team.id:
+                team.current_rank = new_winner_rank
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{winner_rank} → #{new_winner_rank} (WINNER)")
+            elif team.id == loser_team.id:
+                team.current_rank = new_loser_rank
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{loser_rank} → #{new_loser_rank} (LOSER)")
+            elif loser_rank <= team.current_rank < winner_rank:
+                old_rank = team.current_rank
+                team.current_rank = old_rank + 1
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{old_rank} → #{team.current_rank} (shifted down)")
+                rank_changes['teams_affected'].append({
+                    'team_name': team.team_name,
+                    'old_rank': old_rank,
+                    'new_rank': team.current_rank
+                })
+        
+        rank_changes['winner_new_rank'] = new_winner_rank
+        rank_changes['loser_new_rank'] = new_loser_rank
+        
+    elif winner_rank < loser_rank:
+        logging.warning(f"[RANK SWAP] Winner challenged DOWN (unusual): #{winner_rank} beating #{loser_rank}")
+        
+        new_winner_rank = winner_rank
+        new_loser_rank = loser_rank + 1
+        
+        for team in all_teams:
+            if team.id == winner_team.id:
+                team.current_rank = new_winner_rank
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{winner_rank} → #{new_winner_rank} (WINNER, no change)")
+            elif team.id == loser_team.id:
+                team.current_rank = new_loser_rank
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{loser_rank} → #{new_loser_rank} (LOSER)")
+            elif team.current_rank > loser_rank:
+                old_rank = team.current_rank
+                team.current_rank = old_rank + 1
+                logging.info(f"[RANK SWAP]   {team.team_name}: #{old_rank} → #{team.current_rank} (shifted down)")
+                rank_changes['teams_affected'].append({
+                    'team_name': team.team_name,
+                    'old_rank': old_rank,
+                    'new_rank': team.current_rank
+                })
+        
+        rank_changes['winner_new_rank'] = new_winner_rank
+        rank_changes['loser_new_rank'] = new_loser_rank
+    
+    db.session.commit()
+    logging.info(f"[RANK SWAP] Rank swap completed successfully")
+    
+    ranks_after = {}
+    for team in all_teams:
+        ranks_after[team.current_rank] = team.team_name
+    
+    for rank in sorted(ranks_after.keys()):
+        if rank <= max(winner_rank, loser_rank) + 2:
+            logging.info(f"[RANK SWAP]   Rank #{rank}: {ranks_after[rank]}")
+    
+    return rank_changes
+
+
 def verify_match_scores(match):
     """
     Verify that both teams submitted matching scores.
@@ -1608,9 +1713,54 @@ def verify_match_scores(match):
         
         update_ladder_team_stats_from_match(match)
         
+        rank_changes = None
+        if match.winner_id:
+            winner_team = team_a if match.winner_id == team_a.id else team_b
+            loser_team = team_b if match.winner_id == team_a.id else team_a
+            
+            rank_changes = swap_ladder_ranks(winner_team, loser_team, match)
+            
+            match.winner_old_rank = rank_changes['winner_old_rank']
+            match.winner_new_rank = rank_changes['winner_new_rank']
+            match.loser_old_rank = rank_changes['loser_old_rank']
+            match.loser_new_rank = rank_changes['loser_new_rank']
+        
         db.session.commit()
         
         winner_name = team_a.team_name if match.winner_id == team_a.id else (team_b.team_name if match.winner_id == team_b.id else "Draw")
+        
+        rank_info_a = ""
+        rank_info_b = ""
+        
+        if rank_changes:
+            if match.winner_id == team_a.id:
+                old_rank = rank_changes['winner_old_rank']
+                new_rank = rank_changes['winner_new_rank']
+                opponent_old = rank_changes['loser_old_rank']
+                opponent_new = rank_changes['loser_new_rank']
+                
+                if new_rank < old_rank:
+                    rank_info_a = f"\n🎯 RANK UPDATE: You moved UP from #{old_rank} to #{new_rank}! ⬆️\n   {team_b.team_name} dropped from #{opponent_old} to #{opponent_new}\n"
+                elif new_rank > old_rank:
+                    rank_info_a = f"\n📊 RANK UPDATE: Your rank changed from #{old_rank} to #{new_rank}\n"
+                else:
+                    rank_info_a = f"\n📊 RANK UPDATE: You remain at rank #{old_rank}\n"
+                
+                rank_info_b = f"\n📉 RANK UPDATE: You dropped from #{opponent_old} to #{opponent_new} ⬇️\n   {team_a.team_name} moved from #{old_rank} to #{new_rank}\n"
+            else:
+                old_rank = rank_changes['loser_old_rank']
+                new_rank = rank_changes['loser_new_rank']
+                opponent_old = rank_changes['winner_old_rank']
+                opponent_new = rank_changes['winner_new_rank']
+                
+                rank_info_a = f"\n📉 RANK UPDATE: You dropped from #{old_rank} to #{new_rank} ⬇️\n   {team_b.team_name} moved from #{opponent_old} to #{opponent_new}\n"
+                
+                if opponent_new < opponent_old:
+                    rank_info_b = f"\n🎯 RANK UPDATE: You moved UP from #{opponent_old} to #{opponent_new}! ⬆️\n   {team_a.team_name} dropped from #{old_rank} to #{new_rank}\n"
+                elif opponent_new > opponent_old:
+                    rank_info_b = f"\n📊 RANK UPDATE: Your rank changed from #{opponent_old} to #{opponent_new}\n"
+                else:
+                    rank_info_b = f"\n📊 RANK UPDATE: You remain at rank #{opponent_old}\n"
         
         team_a_message = f"""
 Match Scores Verified!
@@ -1619,7 +1769,7 @@ Your match against {team_b.team_name} has been verified and recorded.
 
 Final Score: {match.score_a}
 Result: {"You Won! 🎉" if match.winner_id == team_a.id else ("You Lost" if match.winner_id == team_b.id else "Draw")}
-
+{rank_info_a}
 Both teams submitted matching scores. Your stats have been updated.
 
 Manage your team: {request.url_root}ladder/my-team/{team_a.access_token}
@@ -1635,7 +1785,7 @@ Your match against {team_a.team_name} has been verified and recorded.
 
 Final Score: {match.score_b}
 Result: {"You Won! 🎉" if match.winner_id == team_b.id else ("You Lost" if match.winner_id == team_a.id else "Draw")}
-
+{rank_info_b}
 Both teams submitted matching scores. Your stats have been updated.
 
 Manage your team: {request.url_root}ladder/my-team/{team_b.access_token}

@@ -311,6 +311,11 @@ class LadderMatch(db.Model):
     disputed = db.Column(db.Boolean, default=False)
     stats_calculated = db.Column(db.Boolean, default=False)
     
+    winner_old_rank = db.Column(db.Integer, nullable=True)
+    winner_new_rank = db.Column(db.Integer, nullable=True)
+    loser_old_rank = db.Column(db.Integer, nullable=True)
+    loser_new_rank = db.Column(db.Integer, nullable=True)
+    
     match_date = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
