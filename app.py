@@ -1416,6 +1416,187 @@ def ladder_women():
                          top_performers=top_performers,
                          team_map=team_map)
 
+@app.route("/ladder/my-team/<token>", methods=["GET", "POST"])
+def ladder_my_team(token):
+    """Team-specific dashboard for ladder teams to manage matches, challenges, and holiday mode"""
+    from datetime import datetime, timedelta
+    
+    # Verify access token and get team
+    team = LadderTeam.query.filter_by(access_token=token).first()
+    if not team:
+        flash("Invalid access link. Please check your registration email.", "error")
+        return redirect(url_for('index'))
+    
+    # Get ladder settings for grace period calculations
+    settings = LadderSettings.query.first()
+    if not settings:
+        # Create default settings if none exist
+        settings = LadderSettings(
+            challenge_acceptance_hours=48,
+            challenge_completion_days=7,
+            max_challenge_rank_difference=3,
+            acceptance_penalty_ranks=1,
+            no_show_penalty_ranks=1,
+            min_matches_per_month=2,
+            inactivity_penalty_ranks=3,
+            holiday_mode_grace_weeks=2,
+            holiday_mode_weekly_penalty_ranks=1,
+            free_agent_partner_selection_days=3
+        )
+        db.session.add(settings)
+        db.session.commit()
+    
+    # Handle POST requests (placeholders for later implementation)
+    if request.method == "POST":
+        action = request.form.get("action")
+        
+        if action == "toggle_holiday":
+            # Placeholder: Holiday mode toggle logic will be implemented in next task
+            flash("Holiday mode toggle functionality will be available soon.", "info")
+            return redirect(url_for('ladder_my_team', token=token))
+        
+        elif action == "submit_score":
+            # Placeholder: Score submission logic will be implemented in next task
+            flash("Score submission functionality will be available soon.", "info")
+            return redirect(url_for('ladder_my_team', token=token))
+        
+        elif action == "accept_challenge":
+            # Placeholder: Challenge acceptance logic will be implemented in next task
+            flash("Challenge acceptance functionality will be available soon.", "info")
+            return redirect(url_for('ladder_my_team', token=token))
+        
+        elif action == "reject_challenge":
+            # Placeholder: Challenge rejection logic will be implemented in next task
+            flash("Challenge rejection functionality will be available soon.", "info")
+            return redirect(url_for('ladder_my_team', token=token))
+        
+        elif action == "report_no_show":
+            # Placeholder: No-show reporting logic will be implemented in next task
+            flash("No-show reporting functionality will be available soon.", "info")
+            return redirect(url_for('ladder_my_team', token=token))
+    
+    # Query active challenges (sent and received)
+    challenges_sent = LadderChallenge.query.filter(
+        LadderChallenge.challenger_team_id == team.id,
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).order_by(LadderChallenge.created_at.desc()).all()
+    
+    challenges_received = LadderChallenge.query.filter(
+        LadderChallenge.challenged_team_id == team.id,
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).order_by(LadderChallenge.created_at.desc()).all()
+    
+    # Get opponent team info for challenges
+    challenge_details_sent = []
+    for challenge in challenges_sent:
+        opponent = LadderTeam.query.get(challenge.challenged_team_id)
+        if opponent:
+            challenge_details_sent.append({
+                'challenge': challenge,
+                'opponent': opponent,
+                'is_challenger': True
+            })
+    
+    challenge_details_received = []
+    for challenge in challenges_received:
+        opponent = LadderTeam.query.get(challenge.challenger_team_id)
+        if opponent:
+            challenge_details_received.append({
+                'challenge': challenge,
+                'opponent': opponent,
+                'is_challenger': False
+            })
+    
+    # Query ladder matches for this team
+    matches = LadderMatch.query.filter(
+        db.or_(
+            LadderMatch.team_a_id == team.id,
+            LadderMatch.team_b_id == team.id
+        )
+    ).order_by(LadderMatch.created_at.desc()).all()
+    
+    # Separate pending and completed matches
+    pending_matches = []
+    completed_matches = []
+    
+    for match in matches:
+        opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
+        opponent = LadderTeam.query.get(opponent_id)
+        challenge = LadderChallenge.query.get(match.challenge_id)
+        
+        is_team_a = match.team_a_id == team.id
+        
+        match_detail = {
+            'match': match,
+            'opponent': opponent,
+            'challenge': challenge,
+            'is_team_a': is_team_a,
+            'team_score': match.score_a if is_team_a else match.score_b,
+            'opponent_score': match.score_b if is_team_a else match.score_a,
+            'team_submitted': match.score_submitted_by_a if is_team_a else match.score_submitted_by_b,
+            'opponent_submitted': match.score_submitted_by_b if is_team_a else match.score_submitted_by_a,
+        }
+        
+        if match.verified:
+            completed_matches.append(match_detail)
+        else:
+            pending_matches.append(match_detail)
+    
+    # Calculate holiday mode grace period info
+    holiday_info = None
+    if team.holiday_mode_active and team.holiday_mode_start:
+        now = datetime.now()
+        grace_period_end = team.holiday_mode_start + timedelta(weeks=settings.holiday_mode_grace_weeks)
+        days_in_holiday = (now - team.holiday_mode_start).days
+        grace_period_days_remaining = (grace_period_end - now).days
+        
+        # Calculate penalty if beyond grace period
+        weeks_beyond_grace = 0
+        penalty_ranks = 0
+        if grace_period_days_remaining < 0:
+            weeks_beyond_grace = abs(grace_period_days_remaining) // 7 + 1
+            penalty_ranks = weeks_beyond_grace * settings.holiday_mode_weekly_penalty_ranks
+        
+        holiday_info = {
+            'start_date': team.holiday_mode_start,
+            'days_in_holiday': days_in_holiday,
+            'grace_period_days_remaining': max(0, grace_period_days_remaining),
+            'is_in_grace_period': grace_period_days_remaining >= 0,
+            'weeks_beyond_grace': weeks_beyond_grace,
+            'penalty_ranks': penalty_ranks
+        }
+    
+    # Check if team is locked (in active challenge)
+    is_locked = any(c['challenge'].status in ['pending_acceptance', 'accepted'] 
+                    for c in challenge_details_sent + challenge_details_received)
+    
+    # Determine team status
+    if is_locked:
+        team_status = 'locked'
+        status_color = 'orange'
+        status_message = 'In Active Challenge'
+    elif team.holiday_mode_active:
+        team_status = 'holiday'
+        status_color = 'blue'
+        status_message = 'Holiday Mode'
+    else:
+        team_status = 'available'
+        status_color = 'green'
+        status_message = 'Available'
+    
+    return render_template("ladder/my_team.html",
+                         team=team,
+                         challenges_sent=challenge_details_sent,
+                         challenges_received=challenge_details_received,
+                         pending_matches=pending_matches,
+                         completed_matches=completed_matches,
+                         holiday_info=holiday_info,
+                         settings=settings,
+                         is_locked=is_locked,
+                         team_status=team_status,
+                         status_color=status_color,
+                         status_message=status_message)
+
 @app.route("/leaderboard")
 def leaderboard():
     """

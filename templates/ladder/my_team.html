@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.team_name }} - My Ladder Team{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 py-12">
+  <div class="max-w-6xl mx-auto px-4">
+
+    <!-- Team Overview Card -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <!-- Team Info -->
+        <div class="flex-1">
+          <div class="flex items-center gap-4 mb-4">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              {{ team.team_name }}
+            </h1>
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold
+                         {% if status_color == 'green' %}bg-green-100 text-green-800
+                         {% elif status_color == 'orange' %}bg-orange-100 text-orange-800
+                         {% elif status_color == 'blue' %}bg-blue-100 text-blue-800
+                         {% else %}bg-gray-100 text-gray-800{% endif %}">
+              {% if team_status == 'locked' %}🔒
+              {% elif team_status == 'holiday' %}🏖️
+              {% else %}✓{% endif %}
+              {{ status_message }}
+            </span>
+          </div>
+
+          <!-- Players -->
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center text-gray-700">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              <span class="font-medium">{{ team.player1_name }}</span>
+              {% if team.contact_preference_whatsapp %}
+                <a href="https://wa.me/{{ team.player1_phone }}" target="_blank" class="ml-2 text-green-600 hover:text-green-700">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                  </svg>
+                </a>
+              {% endif %}
+            </div>
+            <div class="flex items-center text-gray-700">
+              <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              <span class="font-medium">{{ team.player2_name }}</span>
+              {% if team.contact_preference_whatsapp %}
+                <a href="https://wa.me/{{ team.player2_phone }}" target="_blank" class="ml-2 text-green-600 hover:text-green-700">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                  </svg>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="flex gap-6">
+          <div class="text-center">
+            <div class="text-sm text-gray-600 mb-1">Current Rank</div>
+            <div class="text-4xl font-bold">
+              {% if team.current_rank == 1 %}🥇
+              {% elif team.current_rank == 2 %}🥈
+              {% elif team.current_rank == 3 %}🥉
+              {% else %}<span class="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">#{{ team.current_rank }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-sm text-gray-600 mb-1">Record</div>
+            <div class="text-2xl font-bold text-gray-900">
+              <span class="text-green-600">{{ team.wins }}</span>-<span class="text-gray-500">{{ team.draws }}</span>-<span class="text-red-600">{{ team.losses }}</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-sm text-gray-600 mb-1">Sets Diff</div>
+            <div class="text-2xl font-bold {% if team.sets_diff > 0 %}text-green-600{% elif team.sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+              {% if team.sets_diff > 0 %}+{% endif %}{{ team.sets_diff }}
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-sm text-gray-600 mb-1">Games Diff</div>
+            <div class="text-2xl font-bold {% if team.games_diff > 0 %}text-green-600{% elif team.games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+              {% if team.games_diff > 0 %}+{% endif %}{{ team.games_diff }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          <div class="text-sm text-blue-800">
+            <strong>Private Link:</strong> This is your team's secure dashboard. Bookmark this URL to manage your ladder challenges and matches anytime!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Holiday Mode Management -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+          <svg class="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"/>
+          </svg>
+          <h2 class="text-2xl font-bold text-gray-900">Holiday Mode</h2>
+        </div>
+        <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline">
+          <input type="hidden" name="action" value="toggle_holiday">
+          <button type="submit" class="px-6 py-2 rounded-lg font-semibold transition
+                                       {% if team.holiday_mode_active %}bg-green-100 text-green-700 hover:bg-green-200
+                                       {% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">
+            {% if team.holiday_mode_active %}Deactivate{% else %}Activate{% endif %} Holiday Mode
+          </button>
+        </form>
+      </div>
+
+      {% if team.holiday_mode_active and holiday_info %}
+      <!-- Holiday Mode Active -->
+      <div class="space-y-4">
+        <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div class="text-sm text-gray-600">Start Date</div>
+              <div class="text-lg font-semibold text-gray-900">{{ holiday_info.start_date.strftime('%b %d, %Y') }}</div>
+            </div>
+            <div>
+              <div class="text-sm text-gray-600">Days in Holiday</div>
+              <div class="text-lg font-semibold text-gray-900">{{ holiday_info.days_in_holiday }} days</div>
+            </div>
+            <div>
+              <div class="text-sm text-gray-600">Grace Period Remaining</div>
+              <div class="text-lg font-semibold {% if holiday_info.is_in_grace_period %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if holiday_info.is_in_grace_period %}
+                  {{ holiday_info.grace_period_days_remaining }} days
+                {% else %}
+                  Expired {{ holiday_info.weeks_beyond_grace }} week(s) ago
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if not holiday_info.is_in_grace_period %}
+        <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-red-800">
+              <strong>Warning:</strong> You've exceeded the {{ settings.holiday_mode_grace_weeks }}-week grace period!
+              You're currently being penalized <strong>{{ holiday_info.penalty_ranks }} rank(s)</strong>.
+              Deactivate holiday mode to stop accumulating penalties.
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <!-- Holiday Mode Explanation -->
+      <div class="text-gray-700 space-y-2">
+        <p>🏖️ <strong>Holiday Mode</strong> lets you take a break from the ladder without losing your position permanently.</p>
+        <p>• <strong>{{ settings.holiday_mode_grace_weeks }}-week grace period:</strong> No rank penalties during this time</p>
+        <p>• <strong>After grace period:</strong> Drop {{ settings.holiday_mode_weekly_penalty_ranks }} rank(s) per week</p>
+        <p>• <strong>While on holiday:</strong> You cannot be challenged and cannot challenge others</p>
+        <p>• <strong>Deactivate anytime</strong> to return to active status</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Active Challenges Section -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+        <svg class="w-6 h-6 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+        </svg>
+        Active Challenges
+      </h2>
+
+      {% if challenges_sent or challenges_received %}
+      <div class="space-y-6">
+        <!-- Challenges You've Sent -->
+        {% if challenges_sent %}
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Challenges Sent</h3>
+          <div class="space-y-3">
+            {% for detail in challenges_sent %}
+            {% set c = detail.challenge %}
+            {% set opp = detail.opponent %}
+            <div class="border-2 border-purple-200 rounded-lg p-4 bg-purple-50">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 text-lg">vs {{ opp.team_name }}</div>
+                  <div class="text-sm text-gray-600">{{ opp.player1_name }} & {{ opp.player2_name }}</div>
+                  <div class="text-xs text-gray-500 mt-1">Rank #{{ opp.current_rank }}</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-sm text-gray-600">Status</div>
+                  <div class="font-semibold {% if c.status == 'accepted' %}text-green-600{% else %}text-yellow-600{% endif %}">
+                    {{ c.status.replace('_', ' ').title() }}
+                  </div>
+                  {% if c.status == 'pending_acceptance' %}
+                  <div class="text-xs text-gray-500 mt-1">
+                    Deadline: {{ c.acceptance_deadline.strftime('%b %d, %I:%M %p') }}
+                  </div>
+                  {% elif c.status == 'accepted' and c.completion_deadline %}
+                  <div class="text-xs text-gray-500 mt-1">
+                    Complete by: {{ c.completion_deadline.strftime('%b %d, %Y') }}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Challenges You've Received -->
+        {% if challenges_received %}
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Challenges Received</h3>
+          <div class="space-y-3">
+            {% for detail in challenges_received %}
+            {% set c = detail.challenge %}
+            {% set opp = detail.opponent %}
+            <div class="border-2 border-indigo-200 rounded-lg p-4 bg-indigo-50">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 text-lg">Challenge from {{ opp.team_name }}</div>
+                  <div class="text-sm text-gray-600">{{ opp.player1_name }} & {{ opp.player2_name }}</div>
+                  <div class="text-xs text-gray-500 mt-1">Rank #{{ opp.current_rank }}</div>
+                </div>
+                <div>
+                  {% if c.status == 'pending_acceptance' %}
+                  <div class="flex gap-2">
+                    <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline">
+                      <input type="hidden" name="action" value="accept_challenge">
+                      <input type="hidden" name="challenge_id" value="{{ c.id }}">
+                      <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+                        Accept
+                      </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline">
+                      <input type="hidden" name="action" value="reject_challenge">
+                      <input type="hidden" name="challenge_id" value="{{ c.id }}">
+                      <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
+                        Reject
+                      </button>
+                    </form>
+                  </div>
+                  <div class="text-xs text-gray-500 mt-2 text-center">
+                    Deadline: {{ c.acceptance_deadline.strftime('%b %d, %I:%M %p') }}
+                  </div>
+                  {% else %}
+                  <div class="text-center">
+                    <div class="text-sm text-gray-600">Status</div>
+                    <div class="font-semibold text-green-600">Accepted</div>
+                    {% if c.completion_deadline %}
+                    <div class="text-xs text-gray-500 mt-1">
+                      Complete by: {{ c.completion_deadline.strftime('%b %d, %Y') }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+        </svg>
+        <p class="text-gray-600 text-lg">No active challenges</p>
+        <p class="text-gray-500 text-sm mt-2">Visit the ladder rankings to challenge other teams!</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Pending Matches Section -->
+    {% if pending_matches %}
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+        <svg class="w-6 h-6 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        Pending Matches
+      </h2>
+
+      <div class="space-y-4">
+        {% for detail in pending_matches %}
+        {% set m = detail.match %}
+        {% set opp = detail.opponent %}
+        <div class="border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+            <div class="flex-1">
+              <div class="font-bold text-gray-900 text-lg mb-2">vs {{ opp.team_name }}</div>
+              <div class="text-sm text-gray-600">{{ opp.player1_name }} & {{ opp.player2_name }}</div>
+              
+              <!-- Contact Info -->
+              <div class="mt-3 space-y-1">
+                {% if opp.contact_preference_whatsapp %}
+                <div class="text-xs text-gray-600">
+                  <a href="https://wa.me/{{ opp.player1_phone }}" target="_blank" class="text-green-600 hover:text-green-700">
+                    📱 {{ opp.player1_name }}: WhatsApp
+                  </a>
+                </div>
+                <div class="text-xs text-gray-600">
+                  <a href="https://wa.me/{{ opp.player2_phone }}" target="_blank" class="text-green-600 hover:text-green-700">
+                    📱 {{ opp.player2_name }}: WhatsApp
+                  </a>
+                </div>
+                {% endif %}
+                {% if opp.contact_preference_email %}
+                <div class="text-xs text-gray-600">
+                  📧 Contact via email
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Score Submission Status -->
+            <div class="text-sm">
+              {% if detail.team_submitted and detail.opponent_submitted %}
+                {% if m.disputed %}
+                <div class="p-3 bg-red-100 rounded border border-red-300">
+                  <div class="font-semibold text-red-800">⚠️ Scores Disputed</div>
+                  <div class="text-xs text-red-700 mt-1">Admin review required</div>
+                </div>
+                {% else %}
+                <div class="p-3 bg-blue-100 rounded border border-blue-300">
+                  <div class="font-semibold text-blue-800">⏳ Awaiting Verification</div>
+                  <div class="text-xs text-blue-700 mt-1">Both teams submitted</div>
+                </div>
+                {% endif %}
+              {% elif detail.team_submitted %}
+              <div class="p-3 bg-green-100 rounded border border-green-300">
+                <div class="font-semibold text-green-800">✓ You Submitted</div>
+                <div class="text-xs text-green-700 mt-1">Waiting for opponent</div>
+              </div>
+              {% elif detail.opponent_submitted %}
+              <div class="p-3 bg-orange-100 rounded border border-orange-300">
+                <div class="font-semibold text-orange-800">⏳ Opponent Submitted</div>
+                <div class="text-xs text-orange-700 mt-1">Please submit your score</div>
+              </div>
+              {% else %}
+              <div class="p-3 bg-yellow-100 rounded border border-yellow-300">
+                <div class="font-semibold text-yellow-800">📝 Awaiting Scores</div>
+                <div class="text-xs text-yellow-700 mt-1">No submissions yet</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Score Submission Form (Placeholder) -->
+          {% if not detail.team_submitted %}
+          <div class="mt-4 p-4 bg-white rounded-lg border-2 border-purple-200">
+            <h4 class="font-semibold text-gray-900 mb-3">Submit Match Score</h4>
+            <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}">
+              <input type="hidden" name="action" value="submit_score">
+              <input type="hidden" name="match_id" value="{{ m.id }}">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Your Score (e.g., 6-4, 6-3)</label>
+                  <input type="text" name="your_score" placeholder="6-4, 6-3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Opponent Score</label>
+                  <input type="text" name="opponent_score" placeholder="4-6, 3-6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                </div>
+              </div>
+              <button type="submit" class="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition">
+                Submit Score
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Match History -->
+    {% if completed_matches %}
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+        <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+        </svg>
+        Match History
+      </h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Opponent</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Date</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Score</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Result</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for detail in completed_matches %}
+            {% set m = detail.match %}
+            {% set opp = detail.opponent %}
+            <tr class="hover:bg-purple-50 transition-colors">
+              <td class="px-4 py-3">
+                <div class="font-semibold text-gray-900">{{ opp.team_name }}</div>
+                <div class="text-xs text-gray-600">{{ opp.player1_name }} & {{ opp.player2_name }}</div>
+              </td>
+              <td class="px-4 py-3 text-center text-sm text-gray-600">
+                {% if m.completed_at %}
+                  {{ m.completed_at.strftime('%b %d, %Y') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-center">
+                <div class="text-sm font-semibold text-gray-900">
+                  {{ detail.team_score }}
+                </div>
+                <div class="text-xs text-gray-500">vs</div>
+                <div class="text-sm font-semibold text-gray-900">
+                  {{ detail.opponent_score }}
+                </div>
+              </td>
+              <td class="px-4 py-3 text-center">
+                {% if m.winner_id == team.id %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                  ✓ WIN
+                </span>
+                {% elif m.winner_id == opp.id %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                  LOSS
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                  DRAW
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl shadow-2xl p-8">
+      <h2 class="text-2xl font-bold text-white mb-6">Quick Actions</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a href="{{ url_for('ladder_men' if team.ladder_type == 'men' else 'ladder_women') }}" 
+           class="flex items-center justify-center gap-2 px-6 py-4 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+          </svg>
+          View Ladder Rankings
+        </a>
+        {% if not is_locked and not team.holiday_mode_active %}
+        <button onclick="alert('Challenge functionality coming soon! Visit the ladder rankings to see teams you can challenge.');" 
+                class="flex items-center justify-center gap-2 px-6 py-4 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+          </svg>
+          Challenge a Team
+        </button>
+        {% else %}
+        <div class="flex items-center justify-center gap-2 px-6 py-4 bg-gray-500/50 text-white/70 rounded-lg font-semibold cursor-not-allowed">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+          </svg>
+          Challenge Locked
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
