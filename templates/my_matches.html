@@ -1132,20 +1132,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const currentDayOfWeek = nowForCalendar.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
   // Calculate the Monday of the FOLLOWING week (next round)
-  // If today is Sunday (last day of current round), following Monday is tomorrow (1 day away)
-  // If today is Monday (first day of current round), following Monday is 7 days away (start of next round)
-  // If today is Tue-Sat, following Monday is the Monday that starts the next round
+  // Rounds run Mon 09:00 - Sun 23:59
+  // Reschedule requests can only be for Mon-Wed of the NEXT round
   let daysUntilFollowingMonday;
 
   if (currentDayOfWeek === 0) {
-    // Sunday: Next round starts tomorrow (Monday)
+    // Sunday (last day of current round): Next round starts TOMORROW (Monday)
     daysUntilFollowingMonday = 1;
-  } else if (currentDayOfWeek === 1) {
-    // Monday: Following Monday is 7 days away
-    daysUntilFollowingMonday = 7;
   } else {
-    // Tue-Sat: Calculate days to next Monday
-    daysUntilFollowingMonday = 8 - currentDayOfWeek;
+    // Mon-Sat: Calculate days until the NEXT Monday (following week)
+    // For Monday: 7 days (next Monday, not this Monday)
+    // For Tue-Sat: days until next Monday
+    daysUntilFollowingMonday = (8 - currentDayOfWeek) % 7;
+    if (daysUntilFollowingMonday === 0) {
+      daysUntilFollowingMonday = 7; // If today is Monday, next Monday is 7 days away
+    }
   }
 
   const nextMonday = new Date(nowForCalendar);
@@ -1168,16 +1169,32 @@ document.addEventListener('DOMContentLoaded', function() {
     input.setAttribute('max', nextWednesdayStr);
     console.log(`Set reschedule date input min: ${nextMondayStr}, max: ${nextWednesdayStr}`);
 
-    // Add custom validation to only allow Mon/Tue/Wed
+    // Add custom validation to only allow Mon/Tue/Wed of NEXT WEEK
     input.addEventListener('input', function() {
       const selectedDate = new Date(this.value + 'T00:00:00');
       const selectedDay = selectedDate.getDay();
+      const selectedTime = selectedDate.getTime();
+      const minTime = nextMonday.getTime();
+      const maxTime = nextWednesday.getTime();
+      
+      // Block Sunday completely
       if (selectedDay === 0) {
-        this.setCustomValidity('Sunday is not allowed. Please select Monday, Tuesday, or Wednesday only.');
-      } else if (selectedDay !== 1 && selectedDay !== 2 && selectedDay !== 3) {
+        this.setCustomValidity('Sunday is not allowed. Reschedules are only for Mon-Wed of the FOLLOWING week.');
+      } 
+      // Block Thursday-Saturday
+      else if (selectedDay === 4 || selectedDay === 5 || selectedDay === 6) {
         this.setCustomValidity('Only Monday, Tuesday, or Wednesday are allowed for reschedule requests.');
-      } else {
+      }
+      // Block dates outside the allowed range (next Mon-Wed)
+      else if (selectedTime < minTime || selectedTime > maxTime) {
+        this.setCustomValidity(`Date must be between ${nextMondayStr} and ${nextWednesdayStr} (Mon-Wed of following week only).`);
+      }
+      // Allow Mon/Tue/Wed within the correct range
+      else if (selectedDay === 1 || selectedDay === 2 || selectedDay === 3) {
         this.setCustomValidity('');
+      } 
+      else {
+        this.setCustomValidity('Invalid date selection.');
       }
     });
 
