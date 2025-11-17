@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="flex items-center justify-between mb-12">
+    <h2 class="text-4xl font-bold text-white text-center flex-1">🪜 Ladder Settings</h2>
+    <a href="{{ url_for('admin_panel') }}" 
+       class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-700 transition-all duration-200 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Admin
+    </a>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Ladder Configuration</h3>
+    
+    <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">⚠️</div>
+        <div>
+          <div class="font-semibold text-yellow-900">Warning: Changing Settings</div>
+          <div class="text-sm text-yellow-700 mt-1">
+            Changes to these settings will affect all future challenges and matches. Existing challenges and matches will continue using the settings that were active when they were created.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_ladder_settings') }}" onsubmit="return confirm('Are you sure you want to update ladder settings? This will affect all future challenges and matches.')">
+      <div class="space-y-8">
+        
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">🎯</span>
+            Challenge Settings
+          </h4>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Challenge Acceptance Deadline
+                <span class="text-gray-500 font-normal ml-2">(hours)</span>
+              </label>
+              <input 
+                type="number" 
+                name="challenge_acceptance_hours" 
+                value="{{ settings.challenge_acceptance_hours }}" 
+                min="1" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 How many hours the challenged team has to accept or decline a challenge
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Max Challenge Rank Difference
+                <span class="text-gray-500 font-normal ml-2">(ranks)</span>
+              </label>
+              <input 
+                type="number" 
+                name="max_challenge_rank_difference" 
+                value="{{ settings.max_challenge_rank_difference }}" 
+                min="1" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 How many positions higher a team can challenge (e.g., rank 5 can challenge up to rank 2 if set to 3)
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Acceptance Penalty
+                <span class="text-gray-500 font-normal ml-2">(rank positions)</span>
+              </label>
+              <input 
+                type="number" 
+                name="acceptance_penalty_ranks" 
+                value="{{ settings.acceptance_penalty_ranks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Rank penalty for teams that fail to accept/decline a challenge within the deadline
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">🎾</span>
+            Match Settings
+          </h4>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Match Completion Deadline
+                <span class="text-gray-500 font-normal ml-2">(days)</span>
+              </label>
+              <input 
+                type="number" 
+                name="match_completion_days" 
+                value="{{ settings.match_completion_days }}" 
+                min="1" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Number of days teams have to complete a match after accepting the challenge
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Completion Penalty
+                <span class="text-gray-500 font-normal ml-2">(rank positions)</span>
+              </label>
+              <input 
+                type="number" 
+                name="completion_penalty_ranks" 
+                value="{{ settings.completion_penalty_ranks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Rank penalty for teams that fail to complete a match within the deadline
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">🏖️</span>
+            Holiday Mode Settings
+          </h4>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Grace Period
+                <span class="text-gray-500 font-normal ml-2">(weeks)</span>
+              </label>
+              <input 
+                type="number" 
+                name="holiday_mode_grace_weeks" 
+                value="{{ settings.holiday_mode_grace_weeks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Number of weeks a team can be on holiday mode without any penalty
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Weekly Penalty (after grace period)
+                <span class="text-gray-500 font-normal ml-2">(rank positions per week)</span>
+              </label>
+              <input 
+                type="number" 
+                name="holiday_mode_weekly_penalty_ranks" 
+                value="{{ settings.holiday_mode_weekly_penalty_ranks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Rank penalty applied per week after the grace period expires
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">📊</span>
+            Activity Settings
+          </h4>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Minimum Matches Per Month
+                <span class="text-gray-500 font-normal ml-2">(matches)</span>
+              </label>
+              <input 
+                type="number" 
+                name="min_matches_per_month" 
+                value="{{ settings.min_matches_per_month }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Minimum number of matches teams must play per month to avoid inactivity penalty
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Inactivity Penalty
+                <span class="text-gray-500 font-normal ml-2">(rank positions)</span>
+              </label>
+              <input 
+                type="number" 
+                name="inactivity_penalty_ranks" 
+                value="{{ settings.inactivity_penalty_ranks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Rank penalty for teams that don't meet the minimum matches requirement
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 border-2 border-red-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">❌</span>
+            No-Show Settings
+          </h4>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                No-Show Penalty
+                <span class="text-gray-500 font-normal ml-2">(rank positions)</span>
+              </label>
+              <input 
+                type="number" 
+                name="no_show_penalty_ranks" 
+                value="{{ settings.no_show_penalty_ranks }}" 
+                min="0" 
+                required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
+              >
+              <p class="text-xs text-gray-600 mt-2">
+                📋 Rank penalty for verified no-shows (teams that don't show up to scheduled matches)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">⚙️</span>
+            Registration Controls
+          </h4>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-semibold text-gray-700">Men's Division Registration</label>
+                <p class="text-sm text-gray-600">Allow new teams to register for men's ladder</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="men_registration_open" class="sr-only peer" {% if settings.men_registration_open %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-semibold text-gray-700">Women's Division Registration</label>
+                <p class="text-sm text-gray-600">Allow new teams to register for women's ladder</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="women_registration_open" class="sr-only peer" {% if settings.women_registration_open %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            💾 Save Settings
+          </button>
+          <a href="{{ url_for('admin_panel') }}" class="bg-gray-500 text-white px-8 py-4 rounded-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200">
+            Cancel
+          </a>
+        </div>
+      </div>
+    </form>
+
+    <div class="mt-8 p-4 bg-gray-50 border-l-4 border-gray-400 rounded-lg">
+      <h4 class="font-semibold text-gray-900 mb-2">💡 Current Settings Summary</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+        <div>• Challenge acceptance: <strong>{{ settings.challenge_acceptance_hours }} hours</strong></div>
+        <div>• Match completion: <strong>{{ settings.match_completion_days }} days</strong></div>
+        <div>• Max challenge distance: <strong>{{ settings.max_challenge_rank_difference }} ranks</strong></div>
+        <div>• Holiday grace period: <strong>{{ settings.holiday_mode_grace_weeks }} weeks</strong></div>
+        <div>• Min matches/month: <strong>{{ settings.min_matches_per_month }}</strong></div>
+        <div>• No-show penalty: <strong>{{ settings.no_show_penalty_ranks }} ranks</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

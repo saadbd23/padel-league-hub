@@ -4926,6 +4926,120 @@ def admin_settings():
     return render_template("admin_settings.html", settings=settings)
 
 
+@app.route("/admin/ladder/settings", methods=["GET", "POST"])
+@require_admin_auth
+def admin_ladder_settings():
+    """Admin settings page for ladder configuration"""
+    settings = LadderSettings.query.first()
+    if not settings:
+        settings = LadderSettings(
+            challenge_acceptance_hours=48,
+            max_challenge_rank_difference=3,
+            acceptance_penalty_ranks=1,
+            match_completion_days=7,
+            completion_penalty_ranks=1,
+            holiday_mode_grace_weeks=2,
+            holiday_mode_weekly_penalty_ranks=1,
+            min_matches_per_month=2,
+            inactivity_penalty_ranks=3,
+            no_show_penalty_ranks=1,
+            men_registration_open=True,
+            women_registration_open=True
+        )
+        db.session.add(settings)
+        db.session.commit()
+
+    if request.method == "POST":
+        try:
+            challenge_acceptance_hours = request.form.get("challenge_acceptance_hours", type=int)
+            max_challenge_rank_difference = request.form.get("max_challenge_rank_difference", type=int)
+            acceptance_penalty_ranks = request.form.get("acceptance_penalty_ranks", type=int)
+            match_completion_days = request.form.get("match_completion_days", type=int)
+            completion_penalty_ranks = request.form.get("completion_penalty_ranks", type=int)
+            holiday_mode_grace_weeks = request.form.get("holiday_mode_grace_weeks", type=int)
+            holiday_mode_weekly_penalty_ranks = request.form.get("holiday_mode_weekly_penalty_ranks", type=int)
+            min_matches_per_month = request.form.get("min_matches_per_month", type=int)
+            inactivity_penalty_ranks = request.form.get("inactivity_penalty_ranks", type=int)
+            no_show_penalty_ranks = request.form.get("no_show_penalty_ranks", type=int)
+            men_registration_open = request.form.get("men_registration_open") == "on"
+            women_registration_open = request.form.get("women_registration_open") == "on"
+
+            if challenge_acceptance_hours and challenge_acceptance_hours <= 0:
+                flash("Challenge acceptance hours must be greater than 0", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if max_challenge_rank_difference and max_challenge_rank_difference <= 0:
+                flash("Max challenge rank difference must be greater than 0", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if acceptance_penalty_ranks is not None and acceptance_penalty_ranks < 0:
+                flash("Acceptance penalty ranks cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if match_completion_days and match_completion_days <= 0:
+                flash("Match completion days must be greater than 0", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if completion_penalty_ranks is not None and completion_penalty_ranks < 0:
+                flash("Completion penalty ranks cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if holiday_mode_grace_weeks is not None and holiday_mode_grace_weeks < 0:
+                flash("Holiday mode grace weeks cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if holiday_mode_weekly_penalty_ranks is not None and holiday_mode_weekly_penalty_ranks < 0:
+                flash("Holiday mode weekly penalty cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if min_matches_per_month is not None and min_matches_per_month < 0:
+                flash("Minimum matches per month cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if inactivity_penalty_ranks is not None and inactivity_penalty_ranks < 0:
+                flash("Inactivity penalty ranks cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if no_show_penalty_ranks is not None and no_show_penalty_ranks < 0:
+                flash("No-show penalty ranks cannot be negative", "error")
+                return redirect(url_for("admin_ladder_settings"))
+
+            if challenge_acceptance_hours:
+                settings.challenge_acceptance_hours = challenge_acceptance_hours
+            if max_challenge_rank_difference:
+                settings.max_challenge_rank_difference = max_challenge_rank_difference
+            if acceptance_penalty_ranks is not None:
+                settings.acceptance_penalty_ranks = acceptance_penalty_ranks
+            if match_completion_days:
+                settings.match_completion_days = match_completion_days
+            if completion_penalty_ranks is not None:
+                settings.completion_penalty_ranks = completion_penalty_ranks
+            if holiday_mode_grace_weeks is not None:
+                settings.holiday_mode_grace_weeks = holiday_mode_grace_weeks
+            if holiday_mode_weekly_penalty_ranks is not None:
+                settings.holiday_mode_weekly_penalty_ranks = holiday_mode_weekly_penalty_ranks
+            if min_matches_per_month is not None:
+                settings.min_matches_per_month = min_matches_per_month
+            if inactivity_penalty_ranks is not None:
+                settings.inactivity_penalty_ranks = inactivity_penalty_ranks
+            if no_show_penalty_ranks is not None:
+                settings.no_show_penalty_ranks = no_show_penalty_ranks
+
+            settings.men_registration_open = men_registration_open
+            settings.women_registration_open = women_registration_open
+
+            db.session.commit()
+            flash("✅ Ladder settings updated successfully!", "success")
+            return redirect(url_for("admin_ladder_settings"))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating ladder settings: {str(e)}", "error")
+            return redirect(url_for("admin_ladder_settings"))
+
+    return render_template("admin_ladder_settings.html", settings=settings)
+
+
 @app.route("/admin/send-mass-email", methods=["GET", "POST"])
 @require_admin_auth
 def send_mass_email():
