@@ -175,3 +175,187 @@ class LeagueSettings(db.Model):
     qualified_team_ids = db.Column(db.Text, nullable=True)
     team_registration_open = db.Column(db.Boolean, default=True)
     freeagent_registration_open = db.Column(db.Boolean, default=True)
+
+
+class LadderTeam(db.Model):
+    __tablename__ = 'ladder_team'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    team_name = db.Column(db.String(100), nullable=False)
+    team_name_canonical = db.Column(db.String(120), index=True)
+    player1_name = db.Column(db.String(100))
+    player1_phone = db.Column(db.String(20))
+    player1_email = db.Column(db.String(120))
+    player2_name = db.Column(db.String(100))
+    player2_phone = db.Column(db.String(20))
+    player2_email = db.Column(db.String(120))
+    
+    gender = db.Column(db.String(10), nullable=False)
+    ladder_type = db.Column(db.String(10), nullable=False)
+    current_rank = db.Column(db.Integer, nullable=False)
+    
+    contact_preference_email = db.Column(db.Boolean, default=True)
+    contact_preference_whatsapp = db.Column(db.Boolean, default=False)
+    access_token = db.Column(db.String(64), unique=True, index=True)
+    
+    wins = db.Column(db.Integer, default=0)
+    losses = db.Column(db.Integer, default=0)
+    draws = db.Column(db.Integer, default=0)
+    
+    sets_for = db.Column(db.Integer, default=0)
+    sets_against = db.Column(db.Integer, default=0)
+    games_for = db.Column(db.Integer, default=0)
+    games_against = db.Column(db.Integer, default=0)
+    
+    last_match_date = db.Column(db.DateTime, nullable=True)
+    matches_this_month = db.Column(db.Integer, default=0)
+    
+    holiday_mode_active = db.Column(db.Boolean, default=False)
+    holiday_mode_start = db.Column(db.DateTime, nullable=True)
+    holiday_mode_end = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, nullable=True)
+    updated_at = db.Column(db.DateTime, nullable=True)
+    
+    @property
+    def sets_diff(self):
+        return self.sets_for - self.sets_against
+    
+    @property
+    def games_diff(self):
+        return self.games_for - self.games_against
+    
+    @property
+    def matches_played(self):
+        return self.wins + self.losses + self.draws
+
+
+class LadderFreeAgent(db.Model):
+    __tablename__ = 'ladder_free_agent'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    gender = db.Column(db.String(10), nullable=False)
+    
+    contact_preference_email = db.Column(db.Boolean, default=True)
+    contact_preference_whatsapp = db.Column(db.Boolean, default=False)
+    access_token = db.Column(db.String(64), unique=True, index=True)
+    
+    skill_level = db.Column(db.String(20), nullable=True)
+    playstyle = db.Column(db.String(50), nullable=True)
+    availability = db.Column(db.String(100), nullable=True)
+    
+    partner_requested = db.Column(db.Boolean, default=False)
+    partner_request_deadline = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, nullable=True)
+
+
+class LadderChallenge(db.Model):
+    __tablename__ = 'ladder_challenge'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    challenger_team_id = db.Column(db.Integer, nullable=False)
+    challenged_team_id = db.Column(db.Integer, nullable=False)
+    ladder_type = db.Column(db.String(10), nullable=False)
+    
+    status = db.Column(db.String(30), default="pending_acceptance")
+    acceptance_deadline = db.Column(db.DateTime, nullable=False)
+    completion_deadline = db.Column(db.DateTime, nullable=True)
+    
+    no_show_reported_by = db.Column(db.Integer, nullable=True)
+    no_show_dispute = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, nullable=True)
+    accepted_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+
+class LadderMatch(db.Model):
+    __tablename__ = 'ladder_match'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    challenge_id = db.Column(db.Integer, nullable=False)
+    team_a_id = db.Column(db.Integer, nullable=False)
+    team_b_id = db.Column(db.Integer, nullable=False)
+    ladder_type = db.Column(db.String(10), nullable=False)
+    
+    score_a = db.Column(db.String(50))
+    score_b = db.Column(db.String(50))
+    score_submission_a = db.Column(db.Text)
+    score_submission_b = db.Column(db.Text)
+    score_submitted_by_a = db.Column(db.Boolean, default=False)
+    score_submitted_by_b = db.Column(db.Boolean, default=False)
+    
+    winner_id = db.Column(db.Integer, nullable=True)
+    sets_a = db.Column(db.Integer, default=0)
+    sets_b = db.Column(db.Integer, default=0)
+    games_a = db.Column(db.Integer, default=0)
+    games_b = db.Column(db.Integer, default=0)
+    
+    verified = db.Column(db.Boolean, default=False)
+    disputed = db.Column(db.Boolean, default=False)
+    stats_calculated = db.Column(db.Boolean, default=False)
+    
+    match_date = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+
+class AmericanoTournament(db.Model):
+    __tablename__ = 'americano_tournament'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_date = db.Column(db.DateTime, nullable=False)
+    gender = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.String(20), default="setup")
+    total_rounds = db.Column(db.Integer, default=0)
+    participating_free_agents = db.Column(db.Text, nullable=True)
+    
+    created_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+
+class AmericanoMatch(db.Model):
+    __tablename__ = 'americano_match'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, nullable=False)
+    round_number = db.Column(db.Integer, nullable=False)
+    court_number = db.Column(db.Integer, nullable=True)
+    
+    player1_id = db.Column(db.Integer, nullable=False)
+    player2_id = db.Column(db.Integer, nullable=False)
+    player3_id = db.Column(db.Integer, nullable=False)
+    player4_id = db.Column(db.Integer, nullable=False)
+    
+    score_team_a = db.Column(db.String(20))
+    score_team_b = db.Column(db.String(20))
+    winner_team = db.Column(db.String(1))
+    
+    points_player1 = db.Column(db.Integer, default=0)
+    points_player2 = db.Column(db.Integer, default=0)
+    points_player3 = db.Column(db.Integer, default=0)
+    points_player4 = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, nullable=True)
+
+
+class LadderSettings(db.Model):
+    __tablename__ = 'ladder_settings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    challenge_acceptance_hours = db.Column(db.Integer, default=48)
+    challenge_completion_days = db.Column(db.Integer, default=7)
+    max_challenge_rank_difference = db.Column(db.Integer, default=3)
+    acceptance_penalty_ranks = db.Column(db.Integer, default=1)
+    no_show_penalty_ranks = db.Column(db.Integer, default=1)
+    min_matches_per_month = db.Column(db.Integer, default=2)
+    inactivity_penalty_ranks = db.Column(db.Integer, default=3)
+    holiday_mode_grace_weeks = db.Column(db.Integer, default=2)
+    holiday_mode_weekly_penalty_ranks = db.Column(db.Integer, default=1)
+    free_agent_partner_selection_days = db.Column(db.Integer, default=3)
+    team_registration_open = db.Column(db.Boolean, default=True)
+    free_agent_registration_open = db.Column(db.Boolean, default=True)
