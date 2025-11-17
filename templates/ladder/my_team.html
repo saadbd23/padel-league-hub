@@ -231,7 +231,33 @@
             {% for detail in challenges_received %}
             {% set c = detail.challenge %}
             {% set opp = detail.opponent %}
-            <div class="border-2 border-indigo-200 rounded-lg p-4 bg-indigo-50">
+            <div class="border-2 {% if detail.is_deadline_approaching %}border-red-400 bg-red-50{% elif detail.is_past_deadline %}border-gray-400 bg-gray-100{% else %}border-indigo-200 bg-indigo-50{% endif %} rounded-lg p-4">
+              
+              {% if detail.is_deadline_approaching %}
+              <div class="mb-3 p-3 bg-red-100 border-l-4 border-red-500 rounded">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  <div>
+                    <div class="font-bold text-red-900">⚠️ URGENT - Deadline Approaching!</div>
+                    <div class="text-sm text-red-800">You have less than {{ "%.1f"|format(detail.hours_until_deadline) }} hours to respond or face a penalty!</div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if detail.is_past_deadline %}
+              <div class="mb-3 p-3 bg-gray-200 border-l-4 border-gray-500 rounded">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                  </svg>
+                  <div class="font-bold text-gray-900">Deadline Passed - Penalty will be applied</div>
+                </div>
+              </div>
+              {% endif %}
+              
               <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="flex-1">
                   <div class="font-bold text-gray-900 text-lg">Challenge from {{ opp.team_name }}</div>
@@ -256,7 +282,7 @@
                       </button>
                     </form>
                   </div>
-                  <div class="text-xs text-gray-500 mt-2 text-center">
+                  <div class="text-xs {% if detail.is_deadline_approaching %}text-red-700 font-bold{% else %}text-gray-500{% endif %} mt-2 text-center">
                     Deadline: {{ c.acceptance_deadline.strftime('%b %d, %I:%M %p') }}
                   </div>
                   {% else %}

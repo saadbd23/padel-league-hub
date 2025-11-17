@@ -1432,6 +1432,65 @@ def ladder_women():
                          logged_in_team=logged_in_team,
                          settings=settings)
 
+def apply_rank_penalty(team, penalty_amount, reason):
+    """
+    Apply rank penalty to a team and adjust other teams accordingly.
+    
+    Args:
+        team: LadderTeam object to penalize
+        penalty_amount: Number of ranks to move down (positive number)
+        reason: String describing the penalty reason
+    """
+    from datetime import datetime
+    from utils import send_email_notification
+    
+    if penalty_amount <= 0:
+        return
+    
+    old_rank = team.current_rank
+    new_rank = old_rank + penalty_amount
+    
+    teams_in_ladder = LadderTeam.query.filter_by(ladder_type=team.ladder_type).all()
+    max_rank = len(teams_in_ladder)
+    
+    if new_rank > max_rank:
+        new_rank = max_rank
+    
+    teams_to_adjust = LadderTeam.query.filter(
+        LadderTeam.ladder_type == team.ladder_type,
+        LadderTeam.current_rank > old_rank,
+        LadderTeam.current_rank <= new_rank,
+        LadderTeam.id != team.id
+    ).all()
+    
+    for t in teams_to_adjust:
+        t.current_rank -= 1
+    
+    team.current_rank = new_rank
+    
+    db.session.commit()
+    
+    penalty_message = f"""
+Penalty Applied to {team.team_name}
+
+Reason: {reason}
+Previous Rank: #{old_rank}
+New Rank: #{new_rank}
+Penalty: {penalty_amount} rank(s) down
+Date: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+
+This penalty was automatically applied by the ladder system. If you believe this is an error, please contact the league administrator.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    if team.contact_preference_email:
+        if team.player1_email:
+            send_email_notification(team.player1_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
+        if team.player2_email and team.player2_email != team.player1_email:
+            send_email_notification(team.player2_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
+
 @app.route("/ladder/my-team/<token>", methods=["GET", "POST"])
 def ladder_my_team(token):
     """Team-specific dashboard for ladder teams to manage matches, challenges, and holiday mode"""
@@ -1477,13 +1536,208 @@ def ladder_my_team(token):
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "accept_challenge":
-            # Placeholder: Challenge acceptance logic will be implemented in next task
-            flash("Challenge acceptance functionality will be available soon.", "info")
+            challenge_id = request.form.get("challenge_id")
+            if not challenge_id:
+                flash("Challenge ID is required", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge = LadderChallenge.query.get(challenge_id)
+            if not challenge:
+                flash("Challenge not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if challenge.challenged_team_id != team.id:
+                flash("You are not authorized to accept this challenge", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            now = datetime.now()
+            
+            if now > challenge.acceptance_deadline:
+                apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
+                                 f"Failed to accept challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
+                challenge.status = 'expired'
+                db.session.commit()
+                flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s).", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge.status = 'accepted'
+            challenge.accepted_at = now
+            challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
+            
+            match = LadderMatch(
+                team_a_id=challenge.challenger_team_id,
+                team_b_id=challenge.challenged_team_id,
+                challenge_id=challenge.id,
+                ladder_type=team.ladder_type,
+                created_at=now
+            )
+            db.session.add(match)
+            db.session.commit()
+            
+            challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+            challenged_team = team
+            
+            challenger_message = f"""
+Challenge Accepted!
+
+Great news! {challenged_team.team_name} has accepted your challenge!
+
+Match Details:
+- Opponent: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+- Match Deadline: {challenge.completion_deadline.strftime('%B %d, %Y')}
+
+You have {settings.challenge_completion_days} days to complete this match and submit scores.
+
+Please coordinate with your opponent to schedule a time to play. You can contact them via:
+- {challenged_team.player1_name}: {challenged_team.player1_phone}
+- {challenged_team.player2_name}: {challenged_team.player2_phone}
+
+After playing, both teams must submit scores through your team dashboard.
+
+Good luck!
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            challenged_message = f"""
+Challenge Accepted!
+
+You have successfully accepted the challenge from {challenger_team.team_name}!
+
+Match Details:
+- Opponent: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+- Match Deadline: {challenge.completion_deadline.strftime('%B %d, %Y')}
+
+You have {settings.challenge_completion_days} days to complete this match and submit scores.
+
+Please coordinate with your opponent to schedule a time to play. You can contact them via:
+- {challenger_team.player1_name}: {challenger_team.player1_phone}
+- {challenger_team.player2_name}: {challenger_team.player2_phone}
+
+After playing, both teams must submit scores through your team dashboard.
+
+Good luck!
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            from utils import send_email_notification
+            
+            if challenger_team.contact_preference_email:
+                if challenger_team.player1_email:
+                    send_email_notification(challenger_team.player1_email, 
+                                          f"Challenge Accepted - {challenger_team.team_name}", 
+                                          challenger_message)
+                if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+                    send_email_notification(challenger_team.player2_email, 
+                                          f"Challenge Accepted - {challenger_team.team_name}", 
+                                          challenger_message)
+            
+            if challenged_team.contact_preference_email:
+                if challenged_team.player1_email:
+                    send_email_notification(challenged_team.player1_email, 
+                                          f"Challenge Accepted - {challenged_team.team_name}", 
+                                          challenged_message)
+                if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+                    send_email_notification(challenged_team.player2_email, 
+                                          f"Challenge Accepted - {challenged_team.team_name}", 
+                                          challenged_message)
+            
+            flash(f"Challenge accepted! You have until {challenge.completion_deadline.strftime('%B %d, %Y')} to complete the match.", "success")
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "reject_challenge":
-            # Placeholder: Challenge rejection logic will be implemented in next task
-            flash("Challenge rejection functionality will be available soon.", "info")
+            challenge_id = request.form.get("challenge_id")
+            if not challenge_id:
+                flash("Challenge ID is required", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge = LadderChallenge.query.get(challenge_id)
+            if not challenge:
+                flash("Challenge not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            if challenge.challenged_team_id != team.id:
+                flash("You are not authorized to reject this challenge", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            now = datetime.now()
+            
+            if now > challenge.acceptance_deadline:
+                apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
+                                 f"Failed to respond to challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
+                challenge.status = 'expired'
+                db.session.commit()
+                flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s) for late rejection.", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            challenge.status = 'rejected'
+            db.session.commit()
+            
+            challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+            challenged_team = team
+            
+            challenger_message = f"""
+Challenge Rejected
+
+{challenged_team.team_name} has declined your challenge.
+
+Challenge Details:
+- Challenged Team: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+- Status: Rejected
+
+Both teams are now unlocked and available to send or receive new challenges.
+
+You can challenge other teams by visiting the ladder rankings page.
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            challenged_message = f"""
+Challenge Rejected
+
+You have successfully rejected the challenge from {challenger_team.team_name}.
+
+Challenge Details:
+- Challenger Team: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+- Status: Rejected
+
+Both teams are now unlocked and available to send or receive new challenges.
+
+Regards,
+BD Padel Ladder Team
+"""
+            
+            from utils import send_email_notification
+            
+            if challenger_team.contact_preference_email:
+                if challenger_team.player1_email:
+                    send_email_notification(challenger_team.player1_email, 
+                                          f"Challenge Rejected - {challenger_team.team_name}", 
+                                          challenger_message)
+                if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+                    send_email_notification(challenger_team.player2_email, 
+                                          f"Challenge Rejected - {challenger_team.team_name}", 
+                                          challenger_message)
+            
+            if challenged_team.contact_preference_email:
+                if challenged_team.player1_email:
+                    send_email_notification(challenged_team.player1_email, 
+                                          f"Challenge Rejected - {challenged_team.team_name}", 
+                                          challenged_message)
+                if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+                    send_email_notification(challenged_team.player2_email, 
+                                          f"Challenge Rejected - {challenged_team.team_name}", 
+                                          challenged_message)
+            
+            flash("Challenge rejected successfully. Both teams are now unlocked.", "success")
             return redirect(url_for('ladder_my_team', token=token))
         
         elif action == "report_no_show":
@@ -1514,13 +1768,21 @@ def ladder_my_team(token):
             })
     
     challenge_details_received = []
+    now = datetime.now()
     for challenge in challenges_received:
         opponent = LadderTeam.query.get(challenge.challenger_team_id)
         if opponent:
+            hours_until_deadline = (challenge.acceptance_deadline - now).total_seconds() / 3600
+            is_deadline_approaching = hours_until_deadline < 24 and hours_until_deadline > 0
+            is_past_deadline = hours_until_deadline <= 0
+            
             challenge_details_received.append({
                 'challenge': challenge,
                 'opponent': opponent,
-                'is_challenger': False
+                'is_challenger': False,
+                'hours_until_deadline': max(0, hours_until_deadline),
+                'is_deadline_approaching': is_deadline_approaching,
+                'is_past_deadline': is_past_deadline
             })
     
     # Query ladder matches for this team
