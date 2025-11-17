@@ -4120,13 +4120,6 @@ def admin_ladder_rankings(ladder_type):
         status_color = 'green'
         status_text = 'Available'
         
-        if team.locked_until:
-            from datetime import datetime
-            if datetime.now() < team.locked_until:
-                status = 'locked'
-                status_color = 'orange'
-                status_text = 'Locked'
-        
         if team.holiday_mode_active:
             status = 'holiday'
             status_color = 'blue'
@@ -4539,6 +4532,344 @@ Please coordinate with your opponent to complete the match.
         db.session.rollback()
         flash(f"Error processing no-show: {str(e)}", "error")
         return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
+
+
+@app.route("/admin/ladder/team/edit/<int:team_id>", methods=["GET", "POST"])
+@require_admin_auth
+def admin_ladder_edit_team(team_id):
+    """Edit ladder team details"""
+    from datetime import datetime
+    from utils import normalize_phone_number, normalize_team_name, send_email_notification
+    
+    team = LadderTeam.query.get_or_404(team_id)
+    ladder_type = team.ladder_type
+    
+    if request.method == "POST":
+        try:
+            team_name = request.form.get("team_name", "").strip()
+            player1_name = request.form.get("player1_name", "").strip()
+            player1_email = request.form.get("player1_email", "").strip()
+            player1_phone = request.form.get("player1_phone", "").strip()
+            player2_name = request.form.get("player2_name", "").strip()
+            player2_email = request.form.get("player2_email", "").strip()
+            player2_phone = request.form.get("player2_phone", "").strip()
+            contact_preference_email = request.form.get("contact_preference_email") == "on"
+            contact_preference_whatsapp = request.form.get("contact_preference_whatsapp") == "on"
+            
+            if not all([team_name, player1_name, player1_phone, player2_name, player2_phone]):
+                flash("All required fields must be filled", "error")
+                return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
+            
+            canonical_name = normalize_team_name(team_name)
+            existing_team = LadderTeam.query.filter(
+                LadderTeam.team_name_canonical == canonical_name,
+                LadderTeam.id != team_id,
+                LadderTeam.ladder_type == ladder_type
+            ).first()
+            
+            if existing_team:
+                flash(f"Team name '{team_name}' is already taken in this division", "error")
+                return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
+            
+            old_team_name = team.team_name
+            
+            team.team_name = team_name
+            team.team_name_canonical = canonical_name
+            team.player1_name = player1_name
+            team.player1_email = player1_email or None
+            team.player1_phone = normalize_phone_number(player1_phone)
+            team.player2_name = player2_name
+            team.player2_email = player2_email or None
+            team.player2_phone = normalize_phone_number(player2_phone)
+            team.contact_preference_email = contact_preference_email
+            team.contact_preference_whatsapp = contact_preference_whatsapp
+            team.updated_at = datetime.now()
+            
+            db.session.commit()
+            
+            email_body = f"""Hi {team.player1_name},
+
+TEAM DETAILS UPDATED
+
+Your ladder team details have been updated by an administrator.
+
+Updated Team: {team.team_name}
+Previous Name: {old_team_name}
+Division: {ladder_type.capitalize()} Ladder
+Current Rank: #{team.current_rank}
+
+Player 1: {team.player1_name} ({team.player1_email or team.player1_phone})
+Player 2: {team.player2_name} ({team.player2_email or team.player2_phone})
+
+If you have any questions about these changes, please contact the admin.
+
+- BD Padel League
+"""
+            
+            if team.contact_preference_email:
+                if team.player1_email:
+                    send_email_notification(team.player1_email, "Team Details Updated", email_body)
+                if team.player2_email and team.player2_email != team.player1_email:
+                    send_email_notification(team.player2_email, "Team Details Updated", email_body)
+            
+            flash(f"Team '{team.team_name}' updated successfully!", "success")
+            return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating team: {str(e)}", "error")
+            return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
+    
+    return render_template("admin_edit_team.html", team=team, is_ladder=True)
+
+
+@app.route("/admin/ladder/team/delete/<int:team_id>", methods=["POST"])
+@require_admin_auth
+def admin_ladder_delete_team(team_id):
+    """Delete ladder team and adjust rankings"""
+    from utils import send_email_notification
+    
+    team = LadderTeam.query.get_or_404(team_id)
+    ladder_type = team.ladder_type
+    team_rank = team.current_rank
+    team_name = team.team_name
+    
+    active_challenges = LadderChallenge.query.filter(
+        db.or_(
+            LadderChallenge.challenger_team_id == team_id,
+            LadderChallenge.challenged_team_id == team_id
+        ),
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).count()
+    
+    if active_challenges > 0:
+        flash(f"Cannot delete team - they have {active_challenges} active challenge(s). Please resolve or cancel these first.", "error")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+    
+    pending_matches = LadderMatch.query.filter(
+        db.or_(
+            LadderMatch.team_a_id == team_id,
+            LadderMatch.team_b_id == team_id
+        ),
+        LadderMatch.status == 'pending'
+    ).count()
+    
+    if pending_matches > 0:
+        flash(f"Cannot delete team - they have {pending_matches} pending match(es). Please resolve these first.", "error")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+    
+    try:
+        teams_to_move_up = LadderTeam.query.filter(
+            LadderTeam.ladder_type == ladder_type,
+            LadderTeam.current_rank > team_rank
+        ).all()
+        
+        for t in teams_to_move_up:
+            t.current_rank -= 1
+        
+        player1_email = team.player1_email
+        player2_email = team.player2_email
+        contact_email = team.contact_preference_email
+        
+        db.session.delete(team)
+        db.session.commit()
+        
+        email_body = f"""Hi {team.player1_name},
+
+TEAM REMOVED FROM LADDER
+
+Your team "{team_name}" has been removed from the {ladder_type.capitalize()} Ladder by an administrator.
+
+Previous Rank: #{team_rank}
+Reason: Administrative decision
+
+If you believe this was done in error or have questions, please contact the admin immediately.
+
+- BD Padel League
+"""
+        
+        if contact_email:
+            if player1_email:
+                send_email_notification(player1_email, "Team Removed from Ladder", email_body)
+            if player2_email and player2_email != player1_email:
+                send_email_notification(player2_email, "Team Removed from Ladder", email_body)
+        
+        flash(f"Team '{team_name}' deleted successfully. {len(teams_to_move_up)} team(s) moved up in rankings.", "success")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting team: {str(e)}", "error")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+
+
+@app.route("/admin/ladder/team/adjust-rank", methods=["POST"])
+@require_admin_auth
+def admin_ladder_adjust_rank():
+    """Manually adjust a team's rank on the ladder"""
+    from utils import adjust_ladder_ranks, send_email_notification
+    
+    team_id = request.form.get("team_id", type=int)
+    new_rank = request.form.get("new_rank", type=int)
+    
+    if not team_id or not new_rank:
+        flash("Team ID and new rank are required", "error")
+        return redirect(url_for('admin_panel'))
+    
+    team = LadderTeam.query.get_or_404(team_id)
+    ladder_type = team.ladder_type
+    
+    try:
+        result = adjust_ladder_ranks(team, new_rank, ladder_type)
+        
+        if not result.get('success'):
+            flash(result.get('message', 'Failed to adjust rank'), "error")
+            return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+        
+        old_rank = result['old_rank']
+        new_rank = result['new_rank']
+        affected_teams = result['affected_teams']
+        
+        email_body = f"""Hi {team.player1_name},
+
+RANK ADJUSTED BY ADMIN
+
+Your team's rank has been manually adjusted by an administrator.
+
+Team: {team.team_name}
+Old Rank: #{old_rank}
+New Rank: #{new_rank}
+Change: {"+" if new_rank > old_rank else ""}{new_rank - old_rank} positions
+
+If you have questions about this adjustment, please contact the admin.
+
+- BD Padel League
+"""
+        
+        if team.contact_preference_email:
+            if team.player1_email:
+                send_email_notification(team.player1_email, f"Rank Adjusted: #{old_rank} → #{new_rank}", email_body)
+            if team.player2_email and team.player2_email != team.player1_email:
+                send_email_notification(team.player2_email, f"Rank Adjusted: #{old_rank} → #{new_rank}", email_body)
+        
+        for affected in affected_teams:
+            affected_team = LadderTeam.query.get(affected['team_id'])
+            if affected_team and affected_team.contact_preference_email:
+                affected_email = f"""Hi {affected_team.player1_name},
+
+RANK ADJUSTMENT NOTIFICATION
+
+Due to an admin rank adjustment, your team's rank has been updated.
+
+Team: {affected_team.team_name}
+Old Rank: #{affected['old_rank']}
+New Rank: #{affected['new_rank']}
+
+This change was made to accommodate the adjustment of another team.
+
+- BD Padel League
+"""
+                if affected_team.player1_email:
+                    send_email_notification(affected_team.player1_email, "Rank Update", affected_email)
+                if affected_team.player2_email and affected_team.player2_email != affected_team.player1_email:
+                    send_email_notification(affected_team.player2_email, "Rank Update", affected_email)
+        
+        flash(f"Rank adjusted successfully! {team.team_name}: #{old_rank} → #{new_rank}. {len(affected_teams)} other team(s) affected.", "success")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adjusting rank: {str(e)}", "error")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+
+
+@app.route("/admin/ladder/team/toggle-holiday", methods=["POST"])
+@require_admin_auth
+def admin_ladder_toggle_holiday():
+    """Toggle holiday mode for a ladder team"""
+    from datetime import datetime
+    from utils import send_email_notification
+    
+    team_id = request.form.get("team_id", type=int)
+    
+    if not team_id:
+        flash("Team ID is required", "error")
+        return redirect(url_for('admin_panel'))
+    
+    team = LadderTeam.query.get_or_404(team_id)
+    ladder_type = team.ladder_type
+    
+    try:
+        if team.holiday_mode_active:
+            team.holiday_mode_active = False
+            team.holiday_mode_end = datetime.now()
+            action = "deactivated"
+            
+            email_body = f"""Hi {team.player1_name},
+
+HOLIDAY MODE DEACTIVATED
+
+An administrator has deactivated holiday mode for your team.
+
+Team: {team.team_name}
+Division: {ladder_type.capitalize()} Ladder
+Current Rank: #{team.current_rank}
+Status: Now AVAILABLE for challenges
+
+You can now be challenged by other teams again.
+
+- BD Padel League
+"""
+            
+        else:
+            active_challenges = LadderChallenge.query.filter(
+                db.or_(
+                    LadderChallenge.challenger_team_id == team_id,
+                    LadderChallenge.challenged_team_id == team_id
+                ),
+                LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+            ).count()
+            
+            if active_challenges > 0:
+                flash(f"Cannot activate holiday mode - team has {active_challenges} active challenge(s)", "error")
+                return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+            
+            team.holiday_mode_active = True
+            team.holiday_mode_start = datetime.now()
+            team.holiday_mode_end = None
+            action = "activated"
+            
+            email_body = f"""Hi {team.player1_name},
+
+HOLIDAY MODE ACTIVATED
+
+An administrator has activated holiday mode for your team.
+
+Team: {team.team_name}
+Division: {ladder_type.capitalize()} Ladder
+Current Rank: #{team.current_rank}
+Status: Now ON HOLIDAY (cannot be challenged)
+
+While on holiday mode, you cannot be challenged by other teams and your rank is protected.
+
+- BD Padel League
+"""
+        
+        db.session.commit()
+        
+        if team.contact_preference_email:
+            if team.player1_email:
+                send_email_notification(team.player1_email, f"Holiday Mode {action.capitalize()}", email_body)
+            if team.player2_email and team.player2_email != team.player1_email:
+                send_email_notification(team.player2_email, f"Holiday Mode {action.capitalize()}", email_body)
+        
+        flash(f"Holiday mode {action} for '{team.team_name}'", "success")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error toggling holiday mode: {str(e)}", "error")
+        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
 
 
 @app.route("/admin/settings", methods=["GET", "POST"])

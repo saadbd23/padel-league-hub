@@ -1172,3 +1172,96 @@ def update_ladder_team_stats(match, winner_team, loser_team):
     match.stats_calculated = True
     
     db.session.commit()
+
+
+def adjust_ladder_ranks(team, new_rank, ladder_type):
+    """
+    Admin function to manually adjust a team's rank on the ladder.
+    Similar to apply_rank_penalty but handles both moving up and down.
+    
+    Args:
+        team: LadderTeam object to adjust
+        new_rank: Target rank (1-indexed)
+        ladder_type: 'men' or 'women'
+    
+    Returns:
+        dict with adjustment details and affected teams
+    """
+    from models import LadderTeam
+    from datetime import datetime
+    
+    old_rank = team.current_rank
+    
+    if new_rank == old_rank:
+        return {
+            'success': False,
+            'message': 'Team is already at rank #{}'.format(new_rank)
+        }
+    
+    # Validate new_rank is within bounds
+    max_rank_team = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
+        LadderTeam.current_rank.desc()
+    ).first()
+    
+    if max_rank_team:
+        max_rank = max_rank_team.current_rank
+        if new_rank < 1 or new_rank > max_rank:
+            return {
+                'success': False,
+                'message': 'New rank must be between 1 and {}'.format(max_rank)
+            }
+    
+    affected_teams = []
+    
+    if new_rank < old_rank:
+        # Moving up (lower rank number) - teams between new_rank and old_rank move down
+        teams_to_shift = LadderTeam.query.filter(
+            LadderTeam.ladder_type == ladder_type,
+            LadderTeam.current_rank >= new_rank,
+            LadderTeam.current_rank < old_rank
+        ).all()
+        
+        # Shift teams down by 1 rank
+        for t in teams_to_shift:
+            old_r = t.current_rank
+            t.current_rank += 1
+            affected_teams.append({
+                'team_id': t.id,
+                'team_name': t.team_name,
+                'old_rank': old_r,
+                'new_rank': t.current_rank
+            })
+    
+    else:
+        # Moving down (higher rank number) - teams between old_rank and new_rank move up
+        teams_to_shift = LadderTeam.query.filter(
+            LadderTeam.ladder_type == ladder_type,
+            LadderTeam.current_rank > old_rank,
+            LadderTeam.current_rank <= new_rank
+        ).all()
+        
+        # Shift teams up by 1 rank
+        for t in teams_to_shift:
+            old_r = t.current_rank
+            t.current_rank -= 1
+            affected_teams.append({
+                'team_id': t.id,
+                'team_name': t.team_name,
+                'old_rank': old_r,
+                'new_rank': t.current_rank
+            })
+    
+    # Apply the new rank to the target team
+    team.current_rank = new_rank
+    team.updated_at = datetime.now()
+    
+    db.session.commit()
+    
+    return {
+        'success': True,
+        'team': team.team_name,
+        'old_rank': old_rank,
+        'new_rank': new_rank,
+        'affected_teams': affected_teams,
+        'message': 'Rank adjusted from #{} to #{}'.format(old_rank, new_rank)
+    }
