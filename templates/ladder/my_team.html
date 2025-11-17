@@ -710,6 +710,97 @@
     </div>
     {% endif %}
 
+    <!-- Challenge Teams Section -->
+    {% if challengeable_teams %}
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+        <svg class="w-6 h-6 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+        </svg>
+        Challenge Teams (Up to {{ settings.max_challenge_rank_difference if settings else 3 }} Ranks Above)
+      </h2>
+
+      <div class="space-y-4">
+        {% for challengeable in challengeable_teams %}
+        <div class="border-2 border-purple-200 rounded-lg p-6 bg-purple-50 hover:bg-purple-100 transition">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="text-2xl font-bold text-purple-600">#{challengeable.current_rank}</div>
+                <div>
+                  <div class="font-bold text-gray-900 text-lg">{{ challengeable.team_name }}</div>
+                  <div class="text-sm text-gray-600">{{ challengeable.player1_name }} & {{ challengeable.player2_name }}</div>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-3 gap-4 mt-3">
+                <div class="text-center">
+                  <div class="text-xs text-gray-500">Record</div>
+                  <div class="text-sm font-semibold">
+                    <span class="text-green-600">{{ challengeable.wins }}</span>-<span class="text-gray-500">{{ challengeable.draws }}</span>-<span class="text-red-600">{{ challengeable.losses }}</span>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-xs text-gray-500">Sets Diff</div>
+                  <div class="text-sm font-semibold {% if challengeable.sets_diff > 0 %}text-green-600{% elif challengeable.sets_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                    {% if challengeable.sets_diff > 0 %}+{% endif %}{{ challengeable.sets_diff }}
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-xs text-gray-500">Games Diff</div>
+                  <div class="text-sm font-semibold {% if challengeable.games_diff > 0 %}text-green-600{% elif challengeable.games_diff < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                    {% if challengeable.games_diff > 0 %}+{% endif %}{{ challengeable.games_diff }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+                <div class="font-semibold text-gray-700 text-sm mb-2">Contact Details:</div>
+                <div class="space-y-1 text-xs text-gray-600">
+                  {% if challengeable.contact_preference_email and challengeable.player1_email %}
+                  <div>📧 {{ challengeable.player1_name }}: {{ challengeable.player1_email }}</div>
+                  {% endif %}
+                  {% if challengeable.contact_preference_whatsapp %}
+                  <div>📱 {{ challengeable.player1_name }}: {{ challengeable.player1_phone }}</div>
+                  {% endif %}
+                  {% if challengeable.contact_preference_email and challengeable.player2_email %}
+                  <div>📧 {{ challengeable.player2_name }}: {{ challengeable.player2_email }}</div>
+                  {% endif %}
+                  {% if challengeable.contact_preference_whatsapp %}
+                  <div>📱 {{ challengeable.player2_name }}: {{ challengeable.player2_phone }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="md:w-48">
+              <form method="POST" action="{{ url_for('ladder_challenge_create') }}">
+                <input type="hidden" name="challenged_team_id" value="{{ challengeable.id }}">
+                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                  </svg>
+                  Challenge
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% elif not is_locked and not team.holiday_mode_active and team.current_rank > 1 %}
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="text-center py-8">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <p class="text-gray-600 text-lg">No teams available to challenge right now</p>
+        <p class="text-gray-500 text-sm mt-2">All teams within {{ settings.max_challenge_rank_difference if settings else 3 }} ranks above you are currently locked or on holiday</p>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Quick Actions -->
     <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl shadow-2xl p-8">
       <h2 class="text-2xl font-bold text-white mb-6">Quick Actions</h2>
@@ -721,22 +812,6 @@
           </svg>
           View Ladder Rankings
         </a>
-        {% if not is_locked and not team.holiday_mode_active %}
-        <button onclick="alert('Challenge functionality coming soon! Visit the ladder rankings to see teams you can challenge.');" 
-                class="flex items-center justify-center gap-2 px-6 py-4 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
-          </svg>
-          Challenge a Team
-        </button>
-        {% else %}
-        <div class="flex items-center justify-center gap-2 px-6 py-4 bg-gray-500/50 text-white/70 rounded-lg font-semibold cursor-not-allowed">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-          </svg>
-          Challenge Locked
-        </div>
-        {% endif %}
       </div>
     </div>
 

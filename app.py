@@ -1276,7 +1276,7 @@ Access Link: {access_link}
 
 @app.route("/ladder/men/")
 def ladder_men():
-    """Public Men's Ladder Rankings Page"""
+    """Public Men's Ladder Rankings Page - View Only"""
     ladder_type = 'men'
     
     teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
@@ -1307,10 +1307,6 @@ def ladder_men():
     
     team_map = {t.id: t for t in teams}
     
-    logged_in_team = None
-    if 'ladder_team_id' in session:
-        logged_in_team = LadderTeam.query.get(session['ladder_team_id'])
-    
     settings = LadderSettings.query.first()
     
     return render_template("ladder/ladder_rankings.html",
@@ -1320,12 +1316,12 @@ def ladder_men():
                          recent_matches=recent_matches,
                          top_performers=top_performers,
                          team_map=team_map,
-                         logged_in_team=logged_in_team,
-                         settings=settings)
+                         settings=settings,
+                         is_public=True)
 
 @app.route("/ladder/women/")
 def ladder_women():
-    """Public Women's Ladder Rankings Page"""
+    """Public Women's Ladder Rankings Page - View Only"""
     ladder_type = 'women'
     
     teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(
@@ -1356,10 +1352,6 @@ def ladder_women():
     
     team_map = {t.id: t for t in teams}
     
-    logged_in_team = None
-    if 'ladder_team_id' in session:
-        logged_in_team = LadderTeam.query.get(session['ladder_team_id'])
-    
     settings = LadderSettings.query.first()
     
     return render_template("ladder/ladder_rankings.html",
@@ -1369,8 +1361,8 @@ def ladder_women():
                          recent_matches=recent_matches,
                          top_performers=top_performers,
                          team_map=team_map,
-                         logged_in_team=logged_in_team,
-                         settings=settings)
+                         settings=settings,
+                         is_public=True)
 
 def apply_rank_penalty(team, penalty_amount, reason):
     """
@@ -2578,6 +2570,33 @@ BD Padel Ladder System
         status_color = 'green'
         status_message = 'Available'
     
+    # Get teams that can be challenged (3 ranks above)
+    challengeable_teams = []
+    if not is_locked and not team.holiday_mode_active:
+        max_rank_diff = settings.max_challenge_rank_difference if settings else 3
+        min_challengeable_rank = max(1, team.current_rank - max_rank_diff)
+        max_challengeable_rank = team.current_rank - 1
+        
+        if max_challengeable_rank >= min_challengeable_rank:
+            potential_teams = LadderTeam.query.filter(
+                LadderTeam.ladder_type == team.ladder_type,
+                LadderTeam.gender == team.gender,
+                LadderTeam.current_rank >= min_challengeable_rank,
+                LadderTeam.current_rank <= max_challengeable_rank,
+                LadderTeam.id != team.id
+            ).order_by(LadderTeam.current_rank.asc()).all()
+            
+            # Filter out locked and holiday teams
+            for potential_team in potential_teams:
+                is_team_locked = any(
+                    c['challenge'].challenger_team_id == potential_team.id or 
+                    c['challenge'].challenged_team_id == potential_team.id 
+                    for c in challenge_details_sent + challenge_details_received
+                )
+                
+                if not is_team_locked and not potential_team.holiday_mode_active:
+                    challengeable_teams.append(potential_team)
+    
     return render_template("ladder/my_team.html",
                          team=team,
                          challenges_sent=challenge_details_sent,
@@ -2589,7 +2608,8 @@ BD Padel Ladder System
                          is_locked=is_locked,
                          team_status=team_status,
                          status_color=status_color,
-                         status_message=status_message)
+                         status_message=status_message,
+                         challengeable_teams=challengeable_teams)
 
 @app.route("/ladder/login", methods=["GET", "POST"])
 def ladder_login():
@@ -2666,9 +2686,14 @@ def ladder_challenge_create():
         db.session.add(settings)
         db.session.commit()
     
+    # Prevent cross-gender challenges
     if challenger.ladder_type != challenged.ladder_type:
         flash("You can only challenge teams in your own ladder", "error")
-        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+        return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
+    
+    if challenger.gender != challenged.gender:
+        flash(f"You cannot challenge teams from a different gender category. You are in the {challenger.gender.title()}'s division.", "error")
+        return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
     
     if challenger.holiday_mode_active:
         flash("You cannot challenge while in holiday mode", "error")
