@@ -4702,11 +4702,6 @@ If you believe this was done in error or have questions, please contact the admi
         db.session.rollback()
         flash(f"Error deleting team: {str(e)}", "error")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error deleting team: {str(e)}", "error")
-        return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
 
 
 @app.route("/admin/ladder/team/adjust-rank", methods=["POST"])
