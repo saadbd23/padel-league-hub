@@ -68,7 +68,7 @@
           <span class="text-2xl">⏳</span>
           Pending Acceptance ({{ pending_acceptance|length }})
         </h3>
-        
+
         <div class="hidden lg:block overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -178,7 +178,7 @@
           <span class="text-2xl">✅</span>
           Accepted - Awaiting Match ({{ accepted|length }})
         </h3>
-        
+
         <div class="hidden lg:block overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -259,7 +259,7 @@
           Expired ({{ expired|length }})
         </h3>
         <div class="text-sm text-gray-600 mb-3">Challenges that were not accepted in time</div>
-        
+
         <div class="space-y-2">
           {% for item in expired %}
           <div class="bg-white rounded-lg p-3 border border-gray-200 text-sm">
@@ -281,7 +281,7 @@
           Rejected ({{ rejected|length }})
         </h3>
         <div class="text-sm text-gray-600 mb-3">Challenges that were declined</div>
-        
+
         <div class="space-y-2">
           {% for item in rejected %}
           <div class="bg-white rounded-lg p-3 border border-red-200 text-sm">
