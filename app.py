@@ -947,6 +947,13 @@ def ladder_register_team():
 🔗 Your Team Access Link:
 {access_link}
 
+🔑 Access Token (for team login page):
+{access_token}
+
+You can either:
+1. Click the access link above to go directly to your team page, OR
+2. Visit the ladder login page and paste your access token
+
 Bookmark this link to:
 - Challenge teams above you
 - View your ladder ranking
@@ -985,6 +992,13 @@ Good luck climbing the ladder! 🚀
 
 🔗 Your Team Access Link:
 {access_link}
+
+🔑 Access Token (for team login page):
+{access_token}
+
+You can either:
+1. Click the access link above to go directly to your team page, OR
+2. Visit the ladder login page and paste your access token
 
 Bookmark this link to:
 - Challenge teams above you
@@ -1248,6 +1262,13 @@ As a ladder free agent, you'll be invited to participate in our monthly American
 
 🔗 Your Access Link:
 {access_link}
+
+🔑 Access Token (for team login page):
+{access_token}
+
+You can either:
+1. Click the access link above to go directly to your profile, OR
+2. Visit the ladder login page and paste your access token
 
 💬 Join Your Free Agents WhatsApp Group:
 {whatsapp_link}
