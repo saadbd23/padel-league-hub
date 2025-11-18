@@ -46,6 +46,173 @@
   <!-- LEAGUE TAB CONTENT -->
   <div id="league-tab-content" class="tab-content">
     
+  <!-- Today's Matches Calendar -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('todaymatches')">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">📅 Today's Matches</h3>
+      <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="todaymatches-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+    <div id="todaymatches-content" class="collapsible-content">
+      {% set todays_matches = [] %}
+      {% set today_date = None %}
+      {% if matches %}
+        {% set today_date = matches[0].match_datetime.date() if matches[0].match_datetime else None %}
+        {% for m in matches %}
+          {% if m.match_datetime and m.match_datetime.date() == today_date %}
+            {% set _ = todays_matches.append(m) %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% if todays_matches|length > 0 %}
+        <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <div class="text-sm font-semibold text-blue-900">
+            {{ todays_matches|length }} match{{ 'es' if todays_matches|length != 1 else '' }} scheduled for {{ today_date.strftime('%A, %B %d, %Y') if today_date else 'today' }}
+          </div>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Time</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Round</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Match</th>
+                <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Status</th>
+                <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Flags</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for m in todays_matches|sort(attribute='match_datetime') %}
+                {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
+                {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
+                {% set has_substitute = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+                {% set is_rescheduled = reschedules_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+                <tr class="hover:bg-purple-50 transition-colors">
+                  <td class="px-4 py-3 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">
+                      {{ m.match_datetime.strftime('%I:%M %p') if m.match_datetime else 'TBD' }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                      Round {{ m.round }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-sm font-semibold text-gray-900">{{ team_a.team_name if team_a else 'Unknown' }}</div>
+                    <div class="text-xs text-gray-600">vs</div>
+                    <div class="text-sm font-semibold text-gray-900">{{ team_b.team_name if team_b else 'BYE' }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
+                      {% if m.status == 'completed' %}bg-green-100 text-green-800
+                      {% elif m.status == 'bye' %}bg-blue-100 text-blue-800
+                      {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                      {{ m.status|capitalize }}
+                    </span>
+                    {% if m.booking_confirmed %}
+                      <div class="mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          ✓ Booking Confirmed
+                        </span>
+                      </div>
+                    {% elif m.booking_details %}
+                      <div class="mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                          ⏳ Booking Pending
+                        </span>
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <div class="flex flex-col gap-1 items-center">
+                      {% if has_substitute %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                          👤 Substitute
+                        </span>
+                      {% endif %}
+                      {% if is_rescheduled %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                          🔄 Rescheduled
+                        </span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden space-y-4">
+          {% for m in todays_matches|sort(attribute='match_datetime') %}
+            {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
+            {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
+            {% set has_substitute = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+            {% set is_rescheduled = reschedules_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <div class="text-lg font-bold text-purple-700">
+                    {{ m.match_datetime.strftime('%I:%M %p') if m.match_datetime else 'TBD' }}
+                  </div>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 mt-1">
+                    Round {{ m.round }}
+                  </span>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
+                  {% if m.status == 'completed' %}bg-green-100 text-green-800
+                  {% elif m.status == 'bye' %}bg-blue-100 text-blue-800
+                  {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                  {{ m.status|capitalize }}
+                </span>
+              </div>
+
+              <div class="mb-3">
+                <div class="text-base font-bold text-gray-900">{{ team_a.team_name if team_a else 'Unknown' }}</div>
+                <div class="text-xs text-gray-500 my-1">vs</div>
+                <div class="text-base font-bold text-gray-900">{{ team_b.team_name if team_b else 'BYE' }}</div>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                {% if m.booking_confirmed %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                    ✓ Booking Confirmed
+                  </span>
+                {% elif m.booking_details %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                    ⏳ Booking Pending
+                  </span>
+                {% endif %}
+                {% if has_substitute %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                    👤 Substitute
+                  </span>
+                {% endif %}
+                {% if is_rescheduled %}
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                    🔄 Rescheduled
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="text-4xl mb-3">📭</div>
+          <p class="text-gray-600 font-medium">No matches scheduled for today</p>
+          <p class="text-sm text-gray-500 mt-1">Check back later or view the full match schedule below</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- Generate Round Section -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
     <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Generate Round Pairings</h3>
@@ -1093,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const savedLadderSubTab = localStorage.getItem('admin-ladder-subtab') || 'men';
   switchLadderSubTab(savedLadderSubTab);
 
-  const sections = ['teams', 'freeagents', 'matches', 'reschedules', 'substitutes'];
+  const sections = ['todaymatches', 'teams', 'freeagents', 'matches', 'reschedules', 'substitutes'];
 
   sections.forEach(function(sectionId) {
     const content = document.getElementById(sectionId + '-content');
