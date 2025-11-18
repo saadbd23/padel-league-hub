@@ -33,7 +33,7 @@
   <div class="mb-6 sm:mb-8">
     <div class="border-b border-gray-700">
       <nav class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4" aria-label="Tabs">
-        <button onclick="switchTab('league')" id="league-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
+        <button onclick="switchTab('league')" id="league-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200 active">
           🏆 League
         </button>
         <button onclick="switchTab('ladder')" id="ladder-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
@@ -45,7 +45,7 @@
 
   <!-- LEAGUE TAB CONTENT -->
   <div id="league-tab-content" class="tab-content">
-    
+
   <!-- Today's Matches Calendar -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
     <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('todaymatches')">
@@ -56,9 +56,7 @@
     </div>
     <div id="todaymatches-content" class="collapsible-content">
       {% set todays_matches = [] %}
-      {% set today_date = None %}
-      {% if matches %}
-        {% set today_date = matches[0].match_datetime.date() if matches[0].match_datetime else None %}
+      {% if matches and today_date %}
         {% for m in matches %}
           {% if m.match_datetime and m.match_datetime.date() == today_date %}
             {% set _ = todays_matches.append(m) %}
@@ -432,7 +430,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
     </div>
-    
+
     <!-- Deprecation Notice -->
     <div class="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
       <div class="flex items-start">
@@ -453,7 +451,7 @@
         </div>
       </div>
     </div>
-    
+
     <div id="freeagents-content" class="collapsible-content">
     {% if free_agent_status|length > 0 %}
     <div class="mb-4">
@@ -897,7 +895,7 @@
 
   <!-- LADDER TAB CONTENT -->
   <div id="ladder-tab-content" class="tab-content hidden">
-    
+
     <!-- Ladder Settings Header -->
     <div class="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
       <div class="text-xl sm:text-2xl font-bold text-white">Ladder Management</div>
@@ -910,11 +908,11 @@
         Ladder Settings
       </a>
     </div>
-    
+
     <!-- Ladder Sub-tabs -->
     <div class="mb-6">
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 border-b border-gray-300">
-        <button onclick="switchLadderSubTab('men')" id="men-subtab-btn" class="ladder-subtab-button px-4 py-2 text-sm font-semibold transition-all duration-200">
+        <button onclick="switchLadderSubTab('men')" id="men-subtab-btn" class="ladder-subtab-button px-4 py-2 text-sm font-semibold transition-all duration-200 active">
           👨 Men's Division
         </button>
         <button onclick="switchLadderSubTab('women')" id="women-subtab-btn" class="ladder-subtab-button px-4 py-2 text-sm font-semibold transition-all duration-200">
@@ -927,7 +925,7 @@
     <div id="men-ladder-content" class="ladder-subtab-content">
       <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
         <h3 class="text-2xl font-bold text-gray-900 mb-6">Men's Division Overview</h3>
-        
+
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-300">
@@ -993,7 +991,7 @@
               View Rankings
             </a>
           </div>
-          
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">💳</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Pending Payments</h4>
@@ -1005,7 +1003,7 @@
               Review Payments
             </button>
           </div>
-          
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">⚔️</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Challenges</h4>
@@ -1014,7 +1012,7 @@
               Manage Challenges
             </a>
           </div>
-          
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">📋</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Match Results</h4>
@@ -1023,7 +1021,7 @@
               Match Results
             </a>
           </div>
-          
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">🎾</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Americano Tournaments</h4>
@@ -1040,7 +1038,7 @@
     <div id="women-ladder-content" class="ladder-subtab-content hidden">
       <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6">
         <h3 class="text-2xl font-bold text-gray-900 mb-6">Women's Division Overview</h3>
-        
+
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border-2 border-pink-300">
@@ -1106,7 +1104,19 @@
               View Rankings
             </a>
           </div>
-          
+
+          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <div class="text-4xl mb-3">💳</div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Pending Payments</h4>
+            <p class="text-sm text-gray-600 mb-4">
+              Men: <span class="font-bold text-red-600">{{ pending_payments_men|length }}</span> | 
+              Women: <span class="font-bold text-red-600">{{ pending_payments_women|length }}</span>
+            </p>
+            <button onclick="document.getElementById('pendingPaymentsModal').classList.remove('hidden')" class="inline-block bg-gradient-to-r from-red-600 to-pink-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+              Review Payments
+            </button>
+          </div>
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">⚔️</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Challenges</h4>
@@ -1115,22 +1125,13 @@
               Manage Challenges
             </a>
           </div>
-          
+
           <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
             <div class="text-4xl mb-3">📋</div>
             <h4 class="text-lg font-semibold text-gray-900 mb-2">Match Results</h4>
             <p class="text-sm text-gray-600 mb-4">Review and verify match scores</p>
             <a href="{{ url_for('admin_ladder_matches', ladder_type='women') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
               Match Results
-            </a>
-          </div>
-          
-          <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-            <div class="text-4xl mb-3">🎾</div>
-            <h4 class="text-lg font-semibold text-gray-900 mb-2">Americano Tournaments</h4>
-            <p class="text-sm text-gray-600 mb-4">Pair free agents through tournaments</p>
-            <a href="{{ url_for('admin_americano_tournaments') }}" class="inline-block bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
-              Manage Tournaments
             </a>
           </div>
         </div>
@@ -1205,7 +1206,7 @@ function switchTab(tabName) {
   }
 
   localStorage.setItem('admin-active-tab', tabName);
-  
+
   const url = new URL(window.location);
   url.searchParams.set('tab', tabName);
   window.history.replaceState({}, '', url);
@@ -1254,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const urlTab = urlParams.get('tab');
   const savedTab = localStorage.getItem('admin-active-tab');
   const activeTab = urlTab || savedTab || 'league';
-  
+
   switchTab(activeTab);
 
   const savedLadderSubTab = localStorage.getItem('admin-ladder-subtab') || 'men';
@@ -1316,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span>👨 Men's Division</span>
           <span class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full">{{ pending_payments_men|length }} unpaid</span>
         </h4>
-        
+
         {% if pending_payments_men|length == 0 %}
         <p class="text-gray-600 italic">✓ All teams have paid</p>
         {% else %}
@@ -1351,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span>👩 Women's Division</span>
           <span class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full">{{ pending_payments_women|length }} unpaid</span>
         </h4>
-        
+
         {% if pending_payments_women|length == 0 %}
         <p class="text-gray-600 italic">✓ All teams have paid</p>
         {% else %}

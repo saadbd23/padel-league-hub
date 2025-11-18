@@ -1222,7 +1222,7 @@ def ladder_register_freeagent():
         
         existing_league_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
         if existing_league_fa_phone:
-            flash(f"This WhatsApp number is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
+            fla�sh(f"This WhatsApp number is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
         
         # Check ladder free agents (duplicate within ladder free agents)
@@ -1437,7 +1437,7 @@ def ladder_women():
                          teams=teams,
                          ladder_type=ladder_type,
                          locked_team_ids=locked_team_ids,
-                         recent_matches=recent_matches,
+                         recent_matches=recent�_matches,
                          top_performers=top_performers,
                          team_map=team_map,
                          settings=settings,
@@ -1665,7 +1665,7 @@ def swap_ladder_ranks(winner_team, loser_team, match):
                 old_rank = team.current_rank
                 team.current_rank = old_rank + 1
                 logging.info(f"[RANK SWAP]   {team.team_name}: #{old_rank} → #{team.current_rank} (shifted down)")
-                rank_changes['teams_affected'].append({
+                rank_changes['teams_affected'].a�ppend({
                     'team_name': team.team_name,
                     'old_rank': old_rank,
                     'new_rank': team.current_rank
@@ -1855,7 +1855,7 @@ BD Padel Ladder Team
             if team_b.player1_email:
                 send_email_notification(team_b.player1_email, f"Match Verified - {team_b.team_name}", team_b_message)
             if team_b.player2_email and team_b.player2_email != team_b.player1_email:
-                send_email_notification(team_b.player2_email, f"Match Verified - {team_b.team_name}", team_b_message)
+                send�_email_notification(team_b.player2_email, f"Match Verified - {team_b.team_name}", team_b_message)
         
         return True
     else:
@@ -2046,7 +2046,7 @@ BD Padel Ladder Team
                 if team.contact_preference_email:
                     if team.player1_email:
                         send_email_notification(team.player1_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
-                    if team.player2_email and team.player2_email != team.player1_email:
+                    if team.player2_email and team.player2_em�ail != team.player1_email:
                         send_email_notification(team.player2_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
                 
                 flash(f"Holiday mode activated! You have {grace_period_days} days of grace period before any penalties apply.", "success")
@@ -2201,7 +2201,7 @@ BD Padel Ladder Team
             
             challenge.status = 'accepted'
             challenge.accepted_at = now
-            challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
+       �     challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
             
             match = LadderMatch(
                 team_a_id=challenge.challenger_team_id,
@@ -2379,7 +2379,7 @@ BD Padel Ladder Team
             flash("Challenge rejected successfully. Both teams are now unlocked.", "success")
             return redirect(url_for('ladder_my_team', token=token))
         
-        elif action == "report_no_show":
+        eli�f action == "report_no_show":
             from utils import send_email_notification
             
             match_id = request.form.get("match_id")
@@ -2563,7 +2563,7 @@ BD Padel Ladder System
     challenge_details_sent = []
     for challenge in challenges_sent:
         opponent = LadderTeam.query.get(challenge.challenged_team_id)
-        if opponent:
+  �      if opponent:
             challenge_details_sent.append({
                 'challenge': challenge,
                 'opponent': opponent,
@@ -2763,7 +2763,7 @@ def ladder_challenge_create():
             max_challenge_rank_difference=3
         )
         db.session.add(settings)
-        db.session.commit()
+     �   db.session.commit()
     
     # Prevent cross-gender challenges
     if challenger.ladder_type != challenged.ladder_type:
@@ -2967,7 +2967,7 @@ def player_profile(player_id: int):
         if on_team_a:
             won = match.winner_id == match.team_a_id
             score = match.score_a
-        else:
+        e�lse:
             won = match.winner_id == match.team_b_id
             score = match.score_b
 
@@ -3167,7 +3167,7 @@ See you on the court! 🎾
             except:
                 pass
 
-        # Store this team's booking (waiting for opponent confirmation)
+        # Store this team's booking (waiting for oppo�nent confirmation)
         formatted_datetime = match_datetime.strftime("%A, %B %d at %I:%M %p")
         match.booking_details = f"{formatted_datetime}\nCourt assigned on arrival\nWaiting for {opponent.team_name} to confirm..."
         match.match_datetime = match_datetime  # Store for potential confirmation
@@ -3365,7 +3365,7 @@ def confirm_score(token):
                 )
                 match.verified = True
                 match.status = "completed"
-                match.stats_calculated = False  # Trigger stats recalculation
+                matc�h.stats_calculated = False  # Trigger stats recalculation
 
                 # Update team statistics
                 update_team_stats_from_match(match)
@@ -3572,7 +3572,7 @@ Check the leaderboard for updated standings!
                     "message": "Score verified! Match complete.",
                     "verified": True,
                     "winner": winner_name,
-                    "score": match.score_a
+           �         "score": match.score_a
                 }
             else:
                 # Scores don't match - need admin intervention
@@ -3772,7 +3772,7 @@ Team Reschedules Used: {team.reschedules_used}/2
 
 {team.team_name} has submitted a reschedule request for your match.
 
-Match Details:
+Matc�h Details:
 - Round: {match.round}
 - Proposed Time: {proposed_time_formatted}
 - Deadline: {deadline_text}
@@ -4000,7 +4000,7 @@ def league_stats():
     # Ladder Statistics
     ladder_men_teams = LadderTeam.query.filter_by(ladder_type='men').count()
     ladder_women_teams = LadderTeam.query.filter_by(ladder_type='women').count()
-    ladder_total_teams = ladder_men_teams + ladder_women_teams
+  �  ladder_total_teams = ladder_men_teams + ladder_women_teams
     
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
@@ -4161,10 +4161,6 @@ def admin_panel():
         payment_received=False
     ).order_by(LadderTeam.created_at.desc()).all()
 
-    # Get today's date for Today's Matches section
-    from datetime import datetime
-    today_date = datetime.now().date()
-    
     return render_template(
         "admin.html",
         teams=teams,
@@ -4194,7 +4190,6 @@ def admin_panel():
         women_on_holiday_count=women_on_holiday_count,
         pending_payments_men=pending_payments_men,
         pending_payments_women=pending_payments_women,
-        today_date=today_date,
     )
 
 
@@ -4228,7 +4223,7 @@ def admin_ladder_toggle_payment():
 @app.route("/admin/ladder/rankings/<ladder_type>")
 @require_admin_auth
 def admin_ladder_rankings(ladder_type):
-    if ladder_type not in ['men', 'women']:
+    if ladde�r_type not in ['men', 'women']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
     
@@ -4459,7 +4454,7 @@ def admin_ladder_dispute_resolve(match_id):
                 
                 match.winner_old_rank = rank_changes['winner']['old']
                 match.winner_new_rank = rank_changes['winner']['new']
-                match.loser_old_rank = rank_changes['loser']['old']
+                match.loser_old_rank = rank_changes['�loser']['old']
                 match.loser_new_rank = rank_changes['loser']['new']
             
             db.session.commit()
@@ -4676,7 +4671,7 @@ def admin_ladder_edit_team(team_id):
             player2_name = request.form.get("player2_name", "").strip()
             player2_email = request.form.get("player2_email", "").strip()
             player2_phone = request.form.get("player2_phone", "").strip()
-            contact_preference_email = request.form.get("contact_preference_email") == "on"
+            contact_pref�erence_email = request.form.get("contact_preference_email") == "on"
             contact_preference_whatsapp = request.form.get("contact_preference_whatsapp") == "on"
             
             if not all([team_name, player1_name, player1_phone, player2_name, player2_phone]):
@@ -4882,7 +4877,7 @@ If you have questions about this adjustment, please contact the admin.
 
 RANK ADJUSTMENT NOTIFICATION
 
-Due to an admin rank adjustment, your team's rank has been updated.
+Due to an admin rank adjustment, you�r team's rank has been updated.
 
 Team: {affected_team.team_name}
 Old Rank: #{affected['old_rank']}
@@ -5083,7 +5078,7 @@ def admin_ladder_settings():
             holiday_mode_weekly_penalty_ranks = request.form.get("holiday_mode_weekly_penalty_ranks", type=int)
             min_matches_per_month = request.form.get("min_matches_per_month", type=int)
             inactivity_penalty_ranks = request.form.get("inactivity_penalty_ranks", type=int)
-            no_show_penalty_ranks = request.form.get("no_show_penalty_ranks", type=int)
+            no_show_penalty_ranks = request.�form.get("no_show_penalty_ranks", type=int)
             men_registration_open = request.form.get("men_registration_open") == "on"
             women_registration_open = request.form.get("women_registration_open") == "on"
 
@@ -5255,7 +5250,7 @@ You've been invited to participate in an Americano Tournament!
 Tournament Details:
 📅 Date: {tournament_date.strftime('%B %d, %Y')}
 📍 Location: {location or 'TBD'}
-🏆 Division: {gender.title()}'s
+🏆 Divisio�n: {gender.title()}'s
 
 What is Americano Format?
 - Multiple rounds of doubles matches
@@ -5465,7 +5460,7 @@ def admin_americano_scores(tournament_id):
                 match.winner_team = None
                 match.points_player1 = 1
                 match.points_player2 = 1
-                match.points_player3 = 1
+                match.poi�nts_player3 = 1
                 match.points_player4 = 1
             
             match.status = "completed"
@@ -5683,7 +5678,7 @@ Team Details:
 🪜 Division: {tournament.gender.title()}'s Ladder
 🎾 Ready to challenge teams above you!
 
-Your team has been added to the bottom of the ladder. You can now:
+Your team has been added to the bottom� of the ladder. You can now:
 1. Challenge teams ranked above you (up to 3 positions)
 2. Accept challenges from teams below you
 3. Climb the ladder through victories!
@@ -5905,7 +5900,7 @@ def playoff_approval_page():
     settings = LeagueSettings.query.first()
     if not settings or settings.current_phase != "playoff_preview":
         flash("No playoff preview available", "warning")
-        return redirect(url_for("admin_panel"))
+        return redirect(�url_for("admin_panel"))
 
     # Get qualified team IDs
     if not settings.qualified_team_ids:
@@ -6127,7 +6122,7 @@ def pair_agents():
 
 Team Details:
 - Team Name: {team_name}
-- Your Partner: {agent2.name}
+- Your Partner: {agent2.name}�
 - Partner Email: {agent2.email}
 - Partner Phone: {agent2.phone}
 
@@ -6345,7 +6340,7 @@ Good luck! May the best team win! 🏆
     walkovers = check_deadline_violations()
 
     # Show regular deadline violations (Sunday)
-    if walkovers['regular']:
+    if walkovers[�'regular']:
         for walkover in walkovers['regular']:
             flash(f"⚠️ Sunday Deadline Missed: {walkover['team_a']} vs {walkover['team_b']} - Round {walkover['round']} (walkover awarded)", "warning")
 
@@ -6548,7 +6543,7 @@ def approve_reschedule(reschedule_id):
         if match:
             # Parse the proposed time
             proposed_time = reschedule.proposed_time
-            if " at " in proposed_time:
+            if " at " in �proposed_time:
                 date_str, time_str = proposed_time.split(" at ")
                 match.match_date = date_str
                 match.court = f"Court assignment pending - Rescheduled to {proposed_time}"
@@ -6759,7 +6754,7 @@ You'll automatically advance to the next round. Enjoy your break!
 
 - BD Padel League
 """
-                    if bye_team.player1_email:
+                    if bye�_team.player1_email:
                         if send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body):
                             emails_sent += 1
                         else:
@@ -6974,7 +6969,7 @@ def update_match(match_id):
                 match.winner_id = None
         
         db.session.commit()
-        flash(f"Match scores updated successfully for {match.team_a.team_name} vs {match.team_b.team_name}", "success")
+        flash(f"Match scores updated successfully for {match.team_a.team_name} vs {match.team_b�.team_name}", "success")
         return redirect(url_for("admin_panel"))
     
     except Exception as e:
@@ -7194,7 +7189,7 @@ Padel League Hub"""
             send_email_notification(team.player2_email, subject, body2)
 
         # Email to Substitute
-        if substitute.email:
+        if substi�tute.email:
             sub_body = f"""Hello {substitute.name},
 
 ✅ CONGRATULATIONS! Your substitute request has been APPROVED by the admin.
@@ -7414,7 +7409,7 @@ def override_match(match_id):
                 else:
                     match.winner_id = team_b.id
                     team_b.wins += 1
-                    team_b.points += 3
+               �     team_b.points += 3
                     team_a.losses += 1
         elif action == "void":
             match.score_a = None
@@ -7647,7 +7642,7 @@ def rules():
 
 
 # Error Handlers for Production
-@app.errorhandler(404)
+@app.errorhandler�(404)
 def page_not_found(e):
     """Handle 404 errors"""
     return render_template('base.html'), 404
