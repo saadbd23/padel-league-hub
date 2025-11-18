@@ -39,6 +39,9 @@
         <button onclick="switchTab('ladder')" id="ladder-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
           🪜 Ladder
         </button>
+        <button onclick="switchTab('freeagents')" id="freeagents-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
+          🙋 Free Agents
+        </button>
       </nav>
     </div>
   </div>
@@ -1133,6 +1136,206 @@
   </div>
   <!-- END LADDER TAB CONTENT -->
 
+  <!-- FREE AGENTS TAB CONTENT -->
+  <div id="freeagents-tab-content" class="tab-content hidden">
+    
+    <!-- Free Agents Statistics -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Free Agents Overview</h3>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-300">
+          <div class="text-sm font-semibold text-purple-800 mb-1">👥 Total Free Agents</div>
+          <div class="text-3xl font-bold text-purple-900">{{ ladder_free_agents|length }}</div>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-300">
+          <div class="text-sm font-semibold text-blue-800 mb-1">👨 Men</div>
+          <div class="text-3xl font-bold text-blue-900">{{ ladder_free_agents|selectattr('gender', 'equalto', 'men')|list|length }}</div>
+        </div>
+        <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border-2 border-pink-300">
+          <div class="text-sm font-semibold text-pink-800 mb-1">👩 Women</div>
+          <div class="text-3xl font-bold text-pink-900">{{ ladder_free_agents|selectattr('gender', 'equalto', 'women')|list|length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registered Free Agents Section -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+      <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('registeredfreeagents')">
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">👥 Registered Free Agents</h3>
+        <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="registeredfreeagents-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      
+      <div id="registeredfreeagents-content" class="collapsible-content">
+        {% if ladder_free_agents|length > 0 %}
+          <!-- Desktop Table View -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Name</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Gender</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Skill Level</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Contact</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Registration Date</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                {% for agent in ladder_free_agents %}
+                <tr class="hover:bg-purple-50 transition-colors">
+                  <td class="px-4 py-3">
+                    <div class="text-sm font-bold text-gray-900">{{ agent.name }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
+                      {% if agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                      {{ '👨 Men' if agent.gender == 'men' else '👩 Women' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                      {{ agent.skill_level|title if agent.skill_level else 'N/A' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-sm text-gray-700">📧 {{ agent.email }}</div>
+                    <div class="text-sm text-gray-700">📱 {{ agent.phone }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <div class="text-sm text-gray-600">
+                      {{ agent.created_at.strftime('%b %d, %Y') if agent.created_at else 'N/A' }}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Card View -->
+          <div class="md:hidden space-y-4">
+            {% for agent in ladder_free_agents %}
+            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h4 class="text-base font-bold text-gray-900">{{ agent.name }}</h4>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold mt-1
+                    {% if agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                    {{ '👨 Men' if agent.gender == 'men' else '👩 Women' }}
+                  </span>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                  {{ agent.skill_level|title if agent.skill_level else 'N/A' }}
+                </span>
+              </div>
+              <div class="space-y-1 text-sm">
+                <div class="text-gray-700">📧 {{ agent.email }}</div>
+                <div class="text-gray-700">📱 {{ agent.phone }}</div>
+                <div class="text-gray-600 text-xs mt-2">
+                  Registered: {{ agent.created_at.strftime('%b %d, %Y') if agent.created_at else 'N/A' }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-8">
+            <div class="text-4xl mb-3">🙋</div>
+            <p class="text-gray-600 font-medium">No free agents registered yet</p>
+            <p class="text-sm text-gray-500 mt-1">Free agents can register through the ladder registration page</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Americano Tournaments Section -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+        <div class="flex items-center cursor-pointer collapsible-header" onclick="toggleSection('americanotournaments')">
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-900">🎾 Americano Tournaments</h3>
+          <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon ml-3" id="americanotournaments-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+        <a href="{{ url_for('admin_americano_create') }}" 
+           class="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto text-center">
+          ➕ Create New Tournament
+        </a>
+      </div>
+      
+      <div id="americanotournaments-content" class="collapsible-content">
+        {% if tournament_data|length > 0 %}
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {% for data in tournament_data %}
+              {% set t = data.tournament %}
+              <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-6 border-2 border-gray-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 class="text-lg font-bold text-gray-900">
+                      {{ t.tournament_date.strftime('%b %d, %Y') if t.tournament_date else 'TBD' }}
+                    </h4>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
+                        {% if t.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                        {{ '👨 Men' if t.gender == 'men' else '👩 Women' }}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
+                    {% if t.status == 'completed' %}bg-green-100 text-green-800
+                    {% elif t.status == 'ongoing' %}bg-yellow-100 text-yellow-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ t.status|title }}
+                  </span>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                  <div class="flex items-center text-sm text-gray-700">
+                    <span class="font-semibold mr-2">📍 Location:</span>
+                    {{ t.location if t.location else 'TBD' }}
+                  </div>
+                  <div class="flex items-center text-sm text-gray-700">
+                    <span class="font-semibold mr-2">👥 Participants:</span>
+                    {{ data.participants_count }}
+                  </div>
+                  <div class="flex items-center text-sm text-gray-700">
+                    <span class="font-semibold mr-2">🎾 Matches:</span>
+                    {{ data.completed_matches }}/{{ data.matches_count }} completed
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <a href="{{ url_for('admin_americano_detail', tournament_id=t.id) }}" 
+                     class="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-600 transition-colors text-center">
+                    📋 View Details
+                  </a>
+                  <a href="{{ url_for('admin_americano_scores', tournament_id=t.id) }}" 
+                     class="bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-600 transition-colors text-center">
+                    ✍️ Enter Scores
+                  </a>
+                  <a href="{{ url_for('admin_americano_leaderboard', tournament_id=t.id) }}" 
+                     class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors text-center">
+                    🏆 Leaderboard
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-8">
+            <div class="text-4xl mb-3">🎾</div>
+            <p class="text-gray-600 font-medium">No Americano tournaments created yet</p>
+            <p class="text-sm text-gray-500 mt-1">Click "Create New Tournament" to get started</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+  <!-- END FREE AGENTS TAB CONTENT -->
+
 </div>
 
 <style>
@@ -1182,19 +1385,27 @@
 function switchTab(tabName) {
   const leagueContent = document.getElementById('league-tab-content');
   const ladderContent = document.getElementById('ladder-tab-content');
+  const freeagentsContent = document.getElementById('freeagents-tab-content');
   const leagueBtn = document.getElementById('league-tab-btn');
   const ladderBtn = document.getElementById('ladder-tab-btn');
+  const freeagentsBtn = document.getElementById('freeagents-tab-btn');
+
+  leagueContent.classList.add('hidden');
+  ladderContent.classList.add('hidden');
+  freeagentsContent.classList.add('hidden');
+  leagueBtn.classList.remove('active');
+  ladderBtn.classList.remove('active');
+  freeagentsBtn.classList.remove('active');
 
   if (tabName === 'league') {
     leagueContent.classList.remove('hidden');
-    ladderContent.classList.add('hidden');
     leagueBtn.classList.add('active');
-    ladderBtn.classList.remove('active');
-  } else {
-    leagueContent.classList.add('hidden');
+  } else if (tabName === 'ladder') {
     ladderContent.classList.remove('hidden');
-    leagueBtn.classList.remove('active');
     ladderBtn.classList.add('active');
+  } else if (tabName === 'freeagents') {
+    freeagentsContent.classList.remove('hidden');
+    freeagentsBtn.classList.add('active');
   }
 
   localStorage.setItem('admin-active-tab', tabName);
@@ -1253,7 +1464,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const savedLadderSubTab = localStorage.getItem('admin-ladder-subtab') || 'men';
   switchLadderSubTab(savedLadderSubTab);
 
-  const sections = ['todaymatches', 'teams', 'freeagents', 'matches', 'reschedules', 'substitutes'];
+  const sections = ['todaymatches', 'teams', 'freeagents', 'matches', 'reschedules', 'substitutes', 'registeredfreeagents', 'americanotournaments'];
 
   sections.forEach(function(sectionId) {
     const content = document.getElementById(sectionId + '-content');

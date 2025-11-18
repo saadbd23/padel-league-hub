@@ -4171,6 +4171,34 @@ def admin_panel():
         if match.match_datetime and match.match_datetime.date() == today_date:
             todays_matches.append(match)
     
+    # Free Agents tab data
+    ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
+    
+    # Americano tournaments data (similar to admin_americano_tournaments route)
+    tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
+    tournament_data = []
+    for tournament in tournaments:
+        participating_ids = []
+        if tournament.participating_free_agents:
+            import json
+            try:
+                participating_ids = json.loads(tournament.participating_free_agents)
+            except:
+                pass
+        
+        participants_count = len(participating_ids)
+        
+        matches_americano = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
+        matches_count = len(matches_americano)
+        completed_matches = len([m for m in matches_americano if m.status == 'completed'])
+        
+        tournament_data.append({
+            'tournament': tournament,
+            'participants_count': participants_count,
+            'matches_count': matches_count,
+            'completed_matches': completed_matches
+        })
+    
     return render_template(
         "admin.html",
         teams=teams,
@@ -4202,6 +4230,8 @@ def admin_panel():
         pending_payments_men=pending_payments_men,
         pending_payments_women=pending_payments_women,
         today_date=today_date,
+        ladder_free_agents=ladder_free_agents,
+        tournament_data=tournament_data,
     )
 
 
