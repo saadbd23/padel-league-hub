@@ -3238,8 +3238,9 @@ def confirm_booking(token):
             booking_lines = match.booking_details.split('\n')
             datetime_str = booking_lines[0].strip()  # "Wednesday, October 22 at 06:30 PM"
 
-            # Convert to datetime object
-            match_datetime = datetime.strptime(datetime_str, "%A, %B %d at %I:%M %p")
+            # Convert to datetime object - parse without year, then replace with current year
+            parsed_datetime = datetime.strptime(datetime_str, "%A, %B %d at %I:%M %p")
+            match_datetime = parsed_datetime.replace(year=datetime.now().year)
 
             # Get opponent
             opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
