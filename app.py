@@ -5260,6 +5260,9 @@ def admin_americano_create():
             tournament_date_str = request.form.get("tournament_date")
             location = request.form.get("location", "")
             participant_ids = request.form.getlist("participants")
+            points_per_match = request.form.get("points_per_match", type=int, default=24)
+            time_limit_minutes = request.form.get("time_limit_minutes", type=int, default=20)
+            serves_before_rotation = request.form.get("serves_before_rotation", type=int, default=2)
             
             if not gender or not tournament_date_str:
                 flash("Gender and tournament date are required", "error")
@@ -5269,6 +5272,19 @@ def admin_americano_create():
                 flash("At least 4 participants are required for Americano tournament", "error")
                 return redirect(url_for("admin_americano_create"))
             
+            # Validate format settings
+            if points_per_match not in [16, 24, 32]:
+                flash("Points per match must be 16, 24, or 32", "error")
+                return redirect(url_for("admin_americano_create"))
+            
+            if time_limit_minutes not in [10, 20]:
+                flash("Time limit must be 10 or 20 minutes", "error")
+                return redirect(url_for("admin_americano_create"))
+            
+            if serves_before_rotation not in [2, 4]:
+                flash("Serves rotation must be 2 or 4", "error")
+                return redirect(url_for("admin_americano_create"))
+            
             tournament_date = datetime.strptime(tournament_date_str, "%Y-%m-%d")
             
             tournament = AmericanoTournament(
@@ -5276,6 +5292,10 @@ def admin_americano_create():
                 gender=gender,
                 location=location,
                 status="setup",
+                scoring_format="points",
+                points_per_match=points_per_match,
+                time_limit_minutes=time_limit_minutes,
+                serves_before_rotation=serves_before_rotation,
                 participating_free_agents=json.dumps([int(p) for p in participant_ids]),
                 created_at=datetime.now()
             )
@@ -5486,32 +5506,31 @@ def admin_americano_scores(tournament_id):
                 flash("Invalid match", "error")
                 return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
             
-            match.score_team_a = str(team_a_score)
-            match.score_team_b = str(team_b_score)
+            # Validate scores
+            if team_a_score < 0 or team_b_score < 0:
+                flash("Scores cannot be negative", "error")
+                return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
             
-            if team_a_score > team_b_score:
-                match.winner_team = 'A'
-                match.points_player1 = 3
-                match.points_player2 = 3
-                match.points_player3 = 0
-                match.points_player4 = 0
-            elif team_b_score > team_a_score:
-                match.winner_team = 'B'
-                match.points_player1 = 0
-                match.points_player2 = 0
-                match.points_player3 = 3
-                match.points_player4 = 3
-            else:
-                match.winner_team = None
-                match.points_player1 = 1
-                match.points_player2 = 1
-                match.points_player3 = 1
-                match.points_player4 = 1
+            # Maximum validation: points_per_match + 10% buffer
+            max_allowed = int(tournament.points_per_match * 1.1)
+            if team_a_score > max_allowed or team_b_score > max_allowed:
+                flash(f"Individual scores cannot exceed {max_allowed} (10% buffer over {tournament.points_per_match})", "error")
+                return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
+            
+            # Points-based scoring: each player gets their team's score
+            match.score_team_a = team_a_score
+            match.score_team_b = team_b_score
+            
+            # Each player receives points equal to their team's score
+            match.points_player1 = team_a_score  # Team A Player 1
+            match.points_player2 = team_a_score  # Team A Player 2
+            match.points_player3 = team_b_score  # Team B Player 3
+            match.points_player4 = team_b_score  # Team B Player 4
             
             match.status = "completed"
             db.session.commit()
             
-            flash(f"✅ Score recorded: Team A ({team_a_score}) vs Team B ({team_b_score})", "success")
+            flash(f"✅ Points recorded: Team A ({team_a_score}) vs Team B ({team_b_score}). Each player receives their team's points.", "success")
             return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
         
         except Exception as e:

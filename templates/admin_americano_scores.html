@@ -22,13 +22,17 @@
 
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-4">
     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
-      <h4 class="font-semibold text-blue-900 mb-2">💡 Scoring Instructions</h4>
-      <ul class="text-sm text-blue-800 space-y-1">
-        <li>• Enter the final score for each match (e.g., 32 for winner, lower for loser)</li>
-        <li>• Winners earn 3 points, losers earn 0 points</li>
-        <li>• In case of a draw, both teams earn 1 point each</li>
-        <li>• Individual points are automatically calculated and added to the leaderboard</li>
-      </ul>
+      <h4 class="font-semibold text-blue-900 mb-2">💡 Points-Based Scoring</h4>
+      <div class="text-sm text-blue-800 space-y-2">
+        <p><strong>Format:</strong> {{ tournament.points_per_match }} points OR {{ tournament.time_limit_minutes }} minutes (whichever first)</p>
+        <p><strong>Serves rotation:</strong> Every {{ tournament.serves_before_rotation }} serves</p>
+        <ul class="space-y-1 mt-2">
+          <li>• Each ball won = 1 point for the team</li>
+          <li>• Each player gets points equal to their team's score</li>
+          <li>• Example: Team A wins 18-14 → Player 1 & 2 each get 18 points, Player 3 & 4 each get 14 points</li>
+          <li>• If time expires before reaching {{ tournament.points_per_match }} points, enter the score at time-up</li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -72,21 +76,23 @@
           
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Team A Score</label>
-              <input type="number" name="team_a_score" min="0" required 
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Team A Points</label>
+              <input type="number" name="team_a_score" min="0" max="{{ tournament.points_per_match + 5 }}" required 
                      class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-center text-xl font-bold"
                      placeholder="0">
+              <p class="text-xs text-gray-500 mt-1">Max: {{ tournament.points_per_match }}</p>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Team B Score</label>
-              <input type="number" name="team_b_score" min="0" required 
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Team B Points</label>
+              <input type="number" name="team_b_score" min="0" max="{{ tournament.points_per_match + 5 }}" required 
                      class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent text-center text-xl font-bold"
                      placeholder="0">
+              <p class="text-xs text-gray-500 mt-1">Max: {{ tournament.points_per_match }}</p>
             </div>
           </div>
           
           <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all">
-            Record Score
+            Record Points
           </button>
         </form>
         {% endif %}

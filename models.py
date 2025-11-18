@@ -340,6 +340,12 @@ class AmericanoTournament(db.Model):
     total_rounds = db.Column(db.Integer, default=0)
     participating_free_agents = db.Column(db.Text, nullable=True)
     
+    # Points-based format fields
+    scoring_format = db.Column(db.String(20), default="points")  # Always "points"
+    points_per_match = db.Column(db.Integer, default=24)  # 16, 24, or 32
+    time_limit_minutes = db.Column(db.Integer, default=20)  # 10 or 20
+    serves_before_rotation = db.Column(db.Integer, default=2)  # 2 or 4
+    
     created_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
 
@@ -357,11 +363,12 @@ class AmericanoMatch(db.Model):
     player3_id = db.Column(db.Integer, nullable=False)
     player4_id = db.Column(db.Integer, nullable=False)
     
-    score_team_a = db.Column(db.String(20))
-    score_team_b = db.Column(db.String(20))
-    winner_team = db.Column(db.String(1))
+    # Points-based scoring (Team A = Player1+Player2, Team B = Player3+Player4)
+    score_team_a = db.Column(db.Integer, default=0)  # Total points scored by Team A
+    score_team_b = db.Column(db.Integer, default=0)  # Total points scored by Team B
     status = db.Column(db.String(20), default="pending")
     
+    # Individual points based on team score
     points_player1 = db.Column(db.Integer, default=0)
     points_player2 = db.Column(db.Integer, default=0)
     points_player3 = db.Column(db.Integer, default=0)
