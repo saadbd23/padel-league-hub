@@ -138,10 +138,38 @@ def update_player_stats_from_match(match, team_a, team_b):
         if player2_b:
             players_b.append(player2_b)
 
-    # Only update stats if we have player participation data
-    # (Legacy matches without player IDs won't update individual stats)
-    if not players_a and not players_b:
-        return
+    # If no match-specific player IDs, fall back to team roster (for backward compatibility)
+    if not players_a:
+        player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
+        if player1_a:
+            players_a.append(player1_a)
+            # Link to match for future reference
+            if not match.team_a_player1_id:
+                match.team_a_player1_id = player1_a.id
+        
+        if team_a.player2_phone != team_a.player1_phone:
+            player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
+            if player2_a:
+                players_a.append(player2_a)
+                # Link to match for future reference
+                if not match.team_a_player2_id:
+                    match.team_a_player2_id = player2_a.id
+    
+    if not players_b:
+        player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
+        if player1_b:
+            players_b.append(player1_b)
+            # Link to match for future reference
+            if not match.team_b_player1_id:
+                match.team_b_player1_id = player1_b.id
+        
+        if team_b.player2_phone != team_b.player1_phone:
+            player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
+            if player2_b:
+                players_b.append(player2_b)
+                # Link to match for future reference
+                if not match.team_b_player2_id:
+                    match.team_b_player2_id = player2_b.id
 
     # Update player stats for Team A
     for player in players_a:
