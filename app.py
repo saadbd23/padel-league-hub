@@ -4161,9 +4161,15 @@ def admin_panel():
         payment_received=False
     ).order_by(LadderTeam.created_at.desc()).all()
 
-    # Get today's date for Today's Matches section
-    from datetime import datetime
-    today_date = datetime.now().date()
+    # Get today's date and matches for Today's Matches section
+    from datetime import datetime, date
+    today_date = date.today()
+    
+    # Filter today's matches
+    todays_matches = []
+    for match in matches:
+        if match.match_datetime and match.match_datetime.date() == today_date:
+            todays_matches.append(match)
     
     return render_template(
         "admin.html",
@@ -4171,6 +4177,7 @@ def admin_panel():
         free_agents=free_agents,
         free_agent_status=free_agent_status,
         matches=matches,
+        todays_matches=todays_matches,
         reschedules=reschedules,
         substitutes=substitutes,
         reschedules_history=reschedules_history,

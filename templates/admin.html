@@ -49,25 +49,17 @@
   <!-- Today's Matches Calendar -->
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
     <div class="flex items-center justify-between mb-4 sm:mb-6 cursor-pointer collapsible-header" onclick="toggleSection('todaymatches')">
-      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">📅 Today's Matches</h3>
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-900">📅 Today's Matches - {{ today_date.strftime('%A, %B %d, %Y') if today_date else 'Today' }}</h3>
       <svg class="w-6 h-6 text-gray-600 transition-transform duration-300 collapse-icon" id="todaymatches-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
     </div>
     <div id="todaymatches-content" class="collapsible-content">
-      {% set todays_matches = [] %}
-      {% if matches and today_date %}
-        {% for m in matches %}
-          {% if m.match_datetime and m.match_datetime.date() == today_date %}
-            {% set _ = todays_matches.append(m) %}
-          {% endif %}
-        {% endfor %}
-      {% endif %}
 
-      {% if todays_matches|length > 0 %}
+      {% if todays_matches and todays_matches|length > 0 %}
         <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
           <div class="text-sm font-semibold text-blue-900">
-            {{ todays_matches|length }} match{{ 'es' if todays_matches|length != 1 else '' }} scheduled for {{ today_date.strftime('%A, %B %d, %Y') if today_date else 'today' }}
+            {{ todays_matches|length }} match{{ 'es' if todays_matches|length != 1 else '' }} scheduled for today
           </div>
         </div>
 
