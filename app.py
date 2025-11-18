@@ -111,30 +111,37 @@ def update_team_stats_from_match(match):
 
 
 def update_player_stats_from_match(match, team_a, team_b):
-    """Update individual player statistics based on match result"""
-    # Get unique players from both teams (avoid duplicates)
+    """Update individual player statistics based on match result - only for players who actually played"""
+    # Get players who ACTUALLY participated in this match (using match-specific player IDs)
     players_a = []
     players_b = []
 
-    # Get Team A players (avoid duplicates)
-    player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
-    if player1_a:
-        players_a.append(player1_a)
+    # Get Team A players who played in THIS match
+    if match.team_a_player1_id:
+        player1_a = Player.query.get(match.team_a_player1_id)
+        if player1_a:
+            players_a.append(player1_a)
 
-    if team_a.player2_phone != team_a.player1_phone:
-        player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
+    if match.team_a_player2_id and match.team_a_player2_id != match.team_a_player1_id:
+        player2_a = Player.query.get(match.team_a_player2_id)
         if player2_a:
             players_a.append(player2_a)
 
-    # Get Team B players (avoid duplicates)
-    player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
-    if player1_b:
-        players_b.append(player1_b)
+    # Get Team B players who played in THIS match
+    if match.team_b_player1_id:
+        player1_b = Player.query.get(match.team_b_player1_id)
+        if player1_b:
+            players_b.append(player1_b)
 
-    if team_b.player2_phone != team_b.player1_phone:
-        player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
+    if match.team_b_player2_id and match.team_b_player2_id != match.team_b_player1_id:
+        player2_b = Player.query.get(match.team_b_player2_id)
         if player2_b:
             players_b.append(player2_b)
+
+    # Only update stats if we have player participation data
+    # (Legacy matches without player IDs won't update individual stats)
+    if not players_a and not players_b:
+        return
 
     # Update player stats for Team A
     for player in players_a:
@@ -3541,6 +3548,21 @@ def submit_score(token):
                     match.winner_id = match.team_b_id
                 else:
                     match.winner_id = None  # Draw
+
+                # Populate player IDs for this match (who actually played)
+                player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
+                player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
+                player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
+                player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
+
+                if player1_a:
+                    match.team_a_player1_id = player1_a.id
+                if player2_a:
+                    match.team_a_player2_id = player2_a.id
+                if player1_b:
+                    match.team_b_player1_id = player1_b.id
+                if player2_b:
+                    match.team_b_player2_id = player2_b.id
 
                 # Update all stats (team + player) using centralized function
                 from utils import verify_match_and_calculate_stats
