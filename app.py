@@ -4165,11 +4165,13 @@ def admin_panel():
     from datetime import datetime, date
     today_date = date.today()
     
-    # Filter today's matches
+    # Filter today's matches - only show matches that have been booked (confirmed or pending)
     todays_matches = []
     for match in matches:
         if match.match_datetime and match.match_datetime.date() == today_date:
-            todays_matches.append(match)
+            # Only include matches that have booking_details (meaning teams have submitted a booking)
+            if match.booking_details:
+                todays_matches.append(match)
     
     # Free Agents tab data
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
