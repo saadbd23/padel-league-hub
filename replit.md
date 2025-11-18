@@ -13,6 +13,17 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**November 18, 2025** - Free Agents Admin Panel Integration
+- **Admin Panel Three-Tab Structure**: League, Ladder, and Free Agents tabs
+  - Free Agents tab consolidates all free agent and Americano tournament management
+  - Registered Free Agents section: Table/card view with name, gender, skill level, email, phone, registration date
+  - Statistics dashboard: Total free agents count with Men/Women breakdown
+  - Americano Tournaments section: Tournament cards showing date, gender, location, status, participants, matches
+  - Tournament action buttons: View Details, Enter Scores, Leaderboard, Create New Tournament
+  - Mobile responsive with collapsible sections matching admin panel design
+- Fixed Americano tournaments page routing errors (admin_dashboard → admin_panel)
+- All free agents now visible in unified admin interface
+
 **November 17, 2025** - Major UI/UX Redesign: Ladder-First Experience
 - **Homepage Redesign**: Dual-card hero layout emphasizing Ladder as primary tournament system
   - Ladder Challenge card: Large, prominent with "Open for Registration" green badge and yellow border
