@@ -1,8 +1,9 @@
+
 import os
 os.environ['DATABASE_URL'] = os.environ.get('DATABASE_URL', 'sqlite:///instance/league.db')
 
 from app import app, db
-from models import Team, Match, Player
+from models import Team, Match
 
 def reset_and_recalculate_team_stats(team_id):
     """Reset team stats and recalculate from all verified matches"""
@@ -12,7 +13,7 @@ def reset_and_recalculate_team_stats(team_id):
             print(f"Team {team_id} not found")
             return
 
-        print(f"\n=== Resetting stats for {team.team_name} (ID: {team_id}) ===")
+        print(f"\n=== Resetting TEAM LEADERBOARD stats for {team.team_name} (ID: {team_id}) ===")
         print(f"BEFORE RESET:")
         print(f"  Points: {team.points}")
         print(f"  Wins: {team.wins}, Losses: {team.losses}, Draws: {team.draws}")
@@ -41,6 +42,10 @@ def reset_and_recalculate_team_stats(team_id):
         ).all()
 
         print(f"\nFound {len(matches)} verified completed matches")
+
+        # Mark all matches as NOT calculated to force recalculation
+        for match in matches:
+            match.stats_calculated = False
 
         # Recalculate from each match
         for match in matches:
@@ -77,6 +82,9 @@ def reset_and_recalculate_team_stats(team_id):
 
             print(f"  Match {match.id} (Round {match.round}): vs {opponent_name} - {result}")
             print(f"    Score: {match.sets_a}-{match.sets_b} (sets), {match.games_a}-{match.games_b} (games)")
+            
+            # Mark this match as calculated
+            match.stats_calculated = True
 
         # Commit changes
         db.session.commit()
@@ -87,7 +95,7 @@ def reset_and_recalculate_team_stats(team_id):
         print(f"  Matches Played: {team.wins + team.losses + team.draws}")
         print(f"  Sets: {team.sets_for}-{team.sets_against} (diff: {team.sets_for - team.sets_against:+d})")
         print(f"  Games: {team.games_for}-{team.games_against} (diff: {team.games_for - team.games_against:+d})")
-        print(f"\n✅ Stats reset and recalculated successfully!")
+        print(f"\n✅ Team leaderboard stats reset and recalculated successfully!")
 
 if __name__ == "__main__":
     # Reset Strategic Chaap (team_id = 6)
