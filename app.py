@@ -105,14 +105,17 @@ def update_team_stats_from_match(match):
 
     # Update player statistics for both teams
     update_player_stats_from_match(match, team_a, team_b)
-
-    # Mark stats as calculated
-    match.stats_calculated = True
+    
+    # Note: stats_calculated flag is now set inside update_player_stats_from_match()
 
 
 def update_player_stats_from_match(match, team_a, team_b):
     """Update individual player statistics based on match result - for ALL players (winners AND losers)"""
     from datetime import datetime
+    
+    # CRITICAL: Prevent duplicate stat updates
+    if match.stats_calculated:
+        return
     
     # Get or create players for Team A (ALWAYS from team roster)
     players_a = []
@@ -229,6 +232,9 @@ def update_player_stats_from_match(match, team_a, team_b):
         else:
             player.draws += 1
             player.points += 1
+    
+    # CRITICAL: Mark stats as calculated to prevent duplicate updates
+    match.stats_calculated = True
 
 
 def digits_only(s: str) -> str:
