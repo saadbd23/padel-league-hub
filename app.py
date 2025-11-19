@@ -111,111 +111,90 @@ def update_team_stats_from_match(match):
 
 
 def update_player_stats_from_match(match, team_a, team_b):
-    """Update individual player statistics based on match result - only for players who actually played"""
-    # Get players who ACTUALLY participated in this match (using match-specific player IDs)
+    """Update individual player statistics based on match result - for ALL players (winners AND losers)"""
+    from datetime import datetime
+    
+    # Get or create players for Team A (ALWAYS from team roster)
     players_a = []
-    players_b = []
-
-    # Get Team A players who played in THIS match
-    if match.team_a_player1_id:
-        player1_a = Player.query.get(match.team_a_player1_id)
-        if player1_a:
-            players_a.append(player1_a)
-
-    if match.team_a_player2_id and match.team_a_player2_id != match.team_a_player1_id:
-        player2_a = Player.query.get(match.team_a_player2_id)
-        if player2_a:
-            players_a.append(player2_a)
-
-    # Get Team B players who played in THIS match
-    if match.team_b_player1_id:
-        player1_b = Player.query.get(match.team_b_player1_id)
-        if player1_b:
-            players_b.append(player1_b)
-
-    if match.team_b_player2_id and match.team_b_player2_id != match.team_b_player1_id:
-        player2_b = Player.query.get(match.team_b_player2_id)
-        if player2_b:
-            players_b.append(player2_b)
-
-    # If no match-specific player IDs, fall back to team roster (for backward compatibility)
-    if not players_a:
-        player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
-        if not player1_a:
+    
+    player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
+    if not player1_a:
+        # Create player if doesn't exist
+        player1_a = Player(
+            name=team_a.player1_name,
+            phone=team_a.player1_phone,
+            email=team_a.player1_email,
+            current_team_id=team_a.id,
+            created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+        db.session.add(player1_a)
+        db.session.flush()
+    
+    players_a.append(player1_a)
+    # Link to match for future reference
+    if not match.team_a_player1_id:
+        match.team_a_player1_id = player1_a.id
+    
+    if team_a.player2_phone != team_a.player1_phone:
+        player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
+        if not player2_a:
             # Create player if doesn't exist
-            from datetime import datetime
-            player1_a = Player(
-                name=team_a.player1_name,
-                phone=team_a.player1_phone,
-                email=team_a.player1_email,
+            player2_a = Player(
+                name=team_a.player2_name,
+                phone=team_a.player2_phone,
+                email=team_a.player2_email,
                 current_team_id=team_a.id,
                 created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             )
-            db.session.add(player1_a)
+            db.session.add(player2_a)
             db.session.flush()
         
-        players_a.append(player1_a)
+        players_a.append(player2_a)
         # Link to match for future reference
-        match.team_a_player1_id = player1_a.id
-        
-        if team_a.player2_phone != team_a.player1_phone:
-            player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
-            if not player2_a:
-                # Create player if doesn't exist
-                from datetime import datetime
-                player2_a = Player(
-                    name=team_a.player2_name,
-                    phone=team_a.player2_phone,
-                    email=team_a.player2_email,
-                    current_team_id=team_a.id,
-                    created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                )
-                db.session.add(player2_a)
-                db.session.flush()
-            
-            players_a.append(player2_a)
-            # Link to match for future reference
+        if not match.team_a_player2_id:
             match.team_a_player2_id = player2_a.id
     
-    if not players_b:
-        player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
-        if not player1_b:
+    # Get or create players for Team B (ALWAYS from team roster)
+    players_b = []
+    
+    player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
+    if not player1_b:
+        # Create player if doesn't exist
+        player1_b = Player(
+            name=team_b.player1_name,
+            phone=team_b.player1_phone,
+            email=team_b.player1_email,
+            current_team_id=team_b.id,
+            created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+        db.session.add(player1_b)
+        db.session.flush()
+    
+    players_b.append(player1_b)
+    # Link to match for future reference
+    if not match.team_b_player1_id:
+        match.team_b_player1_id = player1_b.id
+    
+    if team_b.player2_phone != team_b.player1_phone:
+        player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
+        if not player2_b:
             # Create player if doesn't exist
-            from datetime import datetime
-            player1_b = Player(
-                name=team_b.player1_name,
-                phone=team_b.player1_phone,
-                email=team_b.player1_email,
+            player2_b = Player(
+                name=team_b.player2_name,
+                phone=team_b.player2_phone,
+                email=team_b.player2_email,
                 current_team_id=team_b.id,
                 created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             )
-            db.session.add(player1_b)
+            db.session.add(player2_b)
             db.session.flush()
         
-        players_b.append(player1_b)
+        players_b.append(player2_b)
         # Link to match for future reference
-        match.team_b_player1_id = player1_b.id
-        
-        if team_b.player2_phone != team_b.player1_phone:
-            player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
-            if not player2_b:
-                # Create player if doesn't exist
-                from datetime import datetime
-                player2_b = Player(
-                    name=team_b.player2_name,
-                    phone=team_b.player2_phone,
-                    email=team_b.player2_email,
-                    current_team_id=team_b.id,
-                    created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                )
-                db.session.add(player2_b)
-                db.session.flush()
-            
-            players_b.append(player2_b)
-            # Link to match for future reference
+        if not match.team_b_player2_id:
             match.team_b_player2_id = player2_b.id
 
-    # Update player stats for Team A
+    # Update player stats for Team A (BOTH winners and losers get stats)
     for player in players_a:
         player.matches_played += 1
         player.sets_for += match.sets_a
@@ -228,11 +207,12 @@ def update_player_stats_from_match(match, team_a, team_b):
             player.points += 3
         elif match.winner_id == team_b.id:
             player.losses += 1
+            # Losers get 0 points (already default)
         else:
             player.draws += 1
             player.points += 1
 
-    # Update player stats for Team B
+    # Update player stats for Team B (BOTH winners and losers get stats)
     for player in players_b:
         player.matches_played += 1
         player.sets_for += match.sets_b
@@ -245,6 +225,7 @@ def update_player_stats_from_match(match, team_a, team_b):
             player.points += 3
         elif match.winner_id == team_a.id:
             player.losses += 1
+            # Losers get 0 points (already default)
         else:
             player.draws += 1
             player.points += 1
