@@ -1,169 +1,94 @@
-"""
-Reset and recalculate ALL player statistics from scratch
-This ensures player stats are accurate based on their actual match participation
-FIXED: Now properly includes BOTH winners AND losers in player leaderboard
-"""
+import os
+os.environ['DATABASE_URL'] = os.environ.get('DATABASE_URL', 'sqlite:///instance/league.db')
+
 from app import app, db
-from models import Player, Match, Team
-from datetime import datetime
+from models import Team, Match, Player
 
-def reset_and_recalculate_player_stats():
+def reset_and_recalculate_team_stats(team_id):
+    """Reset team stats and recalculate from all verified matches"""
     with app.app_context():
-        print("🔄 Resetting ALL player statistics...")
+        team = Team.query.get(team_id)
+        if not team:
+            print(f"Team {team_id} not found")
+            return
 
-        # Reset all player stats to 0
-        players = Player.query.all()
-        for player in players:
-            player.matches_played = 0
-            player.wins = 0
-            player.losses = 0
-            player.draws = 0
-            player.points = 0
-            player.sets_for = 0
-            player.sets_against = 0
-            player.games_for = 0
-            player.games_against = 0
+        print(f"\n=== Resetting stats for {team.team_name} (ID: {team_id}) ===")
+        print(f"BEFORE RESET:")
+        print(f"  Points: {team.points}")
+        print(f"  Wins: {team.wins}, Losses: {team.losses}, Draws: {team.draws}")
+        print(f"  Matches Played: {team.wins + team.losses + team.draws}")
+        print(f"  Sets: {team.sets_for}-{team.sets_against}")
+        print(f"  Games: {team.games_for}-{team.games_against}")
 
-        db.session.commit()
-        print(f"✓ Reset {len(players)} player records")
+        # Reset all team stats to zero
+        team.wins = 0
+        team.losses = 0
+        team.draws = 0
+        team.points = 0
+        team.sets_for = 0
+        team.sets_against = 0
+        team.games_for = 0
+        team.games_against = 0
 
-        # Recalculate from all completed matches
-        completed_matches = Match.query.filter_by(status="completed", verified=True).all()
-        print(f"\n📊 Recalculating from {len(completed_matches)} completed matches...")
-
-        for match in completed_matches:
-            team_a = Team.query.get(match.team_a_id)
-            team_b = Team.query.get(match.team_b_id)
-
-            if not team_a or not team_b:
-                print(f"  ⚠️ Skipping Match {match.id}: Missing team data")
-                continue
-
-            print(f"\n  Match {match.id} (Round {match.round}): {team_a.team_name} vs {team_b.team_name}")
-            print(f"    Score: {match.score_a} | Winner: {team_a.team_name if match.winner_id == team_a.id else team_b.team_name if match.winner_id == team_b.id else 'Draw'}")
-
-            # Get or create Team A players
-            players_a = []
-            player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
-            if not player1_a:
-                player1_a = Player(
-                    name=team_a.player1_name,
-                    phone=team_a.player1_phone,
-                    email=team_a.player1_email,
-                    current_team_id=team_a.id,
-                    created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                )
-                db.session.add(player1_a)
-                db.session.flush()
-                print(f"    ➕ Created player: {player1_a.name}")
-            players_a.append(player1_a)
-
-            if team_a.player2_phone != team_a.player1_phone:
-                player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
-                if not player2_a:
-                    player2_a = Player(
-                        name=team_a.player2_name,
-                        phone=team_a.player2_phone,
-                        email=team_a.player2_email,
-                        current_team_id=team_a.id,
-                        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    )
-                    db.session.add(player2_a)
-                    db.session.flush()
-                    print(f"    ➕ Created player: {player2_a.name}")
-                players_a.append(player2_a)
-
-            # Get or create Team B players
-            players_b = []
-            player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
-            if not player1_b:
-                player1_b = Player(
-                    name=team_b.player1_name,
-                    phone=team_b.player1_phone,
-                    email=team_b.player1_email,
-                    current_team_id=team_b.id,
-                    created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                )
-                db.session.add(player1_b)
-                db.session.flush()
-                print(f"    ➕ Created player: {player1_b.name}")
-            players_b.append(player1_b)
-
-            if team_b.player2_phone != team_b.player1_phone:
-                player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
-                if not player2_b:
-                    player2_b = Player(
-                        name=team_b.player2_name,
-                        phone=team_b.player2_phone,
-                        email=team_b.player2_email,
-                        current_team_id=team_b.id,
-                        created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    )
-                    db.session.add(player2_b)
-                    db.session.flush()
-                    print(f"    ➕ Created player: {player2_b.name}")
-                players_b.append(player2_b)
-
-            # Update stats for Team A players (winners OR losers)
-            for player in players_a:
-                player.matches_played += 1
-                player.sets_for += match.sets_a
-                player.sets_against += match.sets_b
-                player.games_for += match.games_a
-                player.games_against += match.games_b
-
-                if match.winner_id == team_a.id:
-                    player.wins += 1
-                    player.points += 3
-                    result = "WIN"
-                elif match.winner_id == team_b.id:
-                    player.losses += 1
-                    result = "LOSS"
-                else:
-                    player.draws += 1
-                    player.points += 1
-                    result = "DRAW"
-
-                print(f"     ✓ {player.name} ({team_a.team_name}): {result} | {player.matches_played} matches, {player.points} pts")
-
-            # Update stats for Team B players (winners OR losers)
-            for player in players_b:
-                player.matches_played += 1
-                player.sets_for += match.sets_b
-                player.sets_against += match.sets_a
-                player.games_for += match.games_b
-                player.games_against += match.games_a
-
-                if match.winner_id == team_b.id:
-                    player.wins += 1
-                    player.points += 3
-                    result = "WIN"
-                elif match.winner_id == team_a.id:
-                    player.losses += 1
-                    result = "LOSS"
-                else:
-                    player.draws += 1
-                    player.points += 1
-                    result = "DRAW"
-
-                print(f"     ✓ {player.name} ({team_b.team_name}): {result} | {player.matches_played} matches, {player.points} pts")
-
-        db.session.commit()
-        print("\n✅ Player stats recalculation complete!")
-
-        # Show summary
-        print("\n📊 Final Player Stats Summary:")
-        all_players = Player.query.filter(Player.matches_played > 0).order_by(
-            Player.points.desc(),
-            Player.wins.desc(),
-            Player.matches_played.desc()
+        # Get all verified matches where this team participated
+        matches = Match.query.filter(
+            db.or_(
+                Match.team_a_id == team_id,
+                Match.team_b_id == team_id
+            ),
+            Match.verified == True,
+            Match.status == 'completed'
         ).all()
 
-        print(f"\nTotal players with match stats: {len(all_players)}")
-        for idx, player in enumerate(all_players, 1):
-            team = Team.query.get(player.current_team_id) if player.current_team_id else None
-            team_name = team.team_name if team else "No team"
-            print(f"{idx}. {player.name} ({team_name}): {player.matches_played} matches, {player.points} pts, {player.wins}W-{player.draws}D-{player.losses}L")
+        print(f"\nFound {len(matches)} verified completed matches")
+
+        # Recalculate from each match
+        for match in matches:
+            is_team_a = (match.team_a_id == team_id)
+
+            # Add sets and games
+            if is_team_a:
+                team.sets_for += match.sets_a
+                team.sets_against += match.sets_b
+                team.games_for += match.games_a
+                team.games_against += match.games_b
+            else:
+                team.sets_for += match.sets_b
+                team.sets_against += match.sets_a
+                team.games_for += match.games_b
+                team.games_against += match.games_a
+
+            # Add wins/losses/draws and points
+            if match.winner_id == team_id:
+                team.wins += 1
+                team.points += 3
+                result = "WIN"
+            elif match.winner_id is None:
+                team.draws += 1
+                team.points += 1
+                result = "DRAW"
+            else:
+                team.losses += 1
+                result = "LOSS"
+
+            opponent_id = match.team_b_id if is_team_a else match.team_a_id
+            opponent = Team.query.get(opponent_id)
+            opponent_name = opponent.team_name if opponent else f"Team {opponent_id}"
+
+            print(f"  Match {match.id} (Round {match.round}): vs {opponent_name} - {result}")
+            print(f"    Score: {match.sets_a}-{match.sets_b} (sets), {match.games_a}-{match.games_b} (games)")
+
+        # Commit changes
+        db.session.commit()
+
+        print(f"\nAFTER RECALCULATION:")
+        print(f"  Points: {team.points}")
+        print(f"  Wins: {team.wins}, Losses: {team.losses}, Draws: {team.draws}")
+        print(f"  Matches Played: {team.wins + team.losses + team.draws}")
+        print(f"  Sets: {team.sets_for}-{team.sets_against} (diff: {team.sets_for - team.sets_against:+d})")
+        print(f"  Games: {team.games_for}-{team.games_against} (diff: {team.games_for - team.games_against:+d})")
+        print(f"\n✅ Stats reset and recalculated successfully!")
 
 if __name__ == "__main__":
-    reset_and_recalculate_player_stats()
+    # Reset Strategic Chaap (team_id = 6)
+    reset_and_recalculate_team_stats(6)
