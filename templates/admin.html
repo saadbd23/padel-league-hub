@@ -97,8 +97,14 @@
                   </td>
                   <td class="px-4 py-3">
                     <div class="text-sm font-semibold text-gray-900">{{ team_a.team_name if team_a else 'Unknown' }}</div>
-                    <div class="text-xs text-gray-600">vs</div>
+                    {% if team_a %}
+                    <div class="text-xs text-gray-500">{{ team_a.player1_name }} & {{ team_a.player2_name }}</div>
+                    {% endif %}
+                    <div class="text-xs text-gray-600 my-1">vs</div>
                     <div class="text-sm font-semibold text-gray-900">{{ team_b.team_name if team_b else 'BYE' }}</div>
+                    {% if team_b %}
+                    <div class="text-xs text-gray-500">{{ team_b.player1_name }} & {{ team_b.player2_name }}</div>
+                    {% endif %}
                   </td>
                   <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
@@ -168,8 +174,14 @@
 
               <div class="mb-3">
                 <div class="text-base font-bold text-gray-900">{{ team_a.team_name if team_a else 'Unknown' }}</div>
+                {% if team_a %}
+                <div class="text-xs text-gray-500">{{ team_a.player1_name }} & {{ team_a.player2_name }}</div>
+                {% endif %}
                 <div class="text-xs text-gray-500 my-1">vs</div>
                 <div class="text-base font-bold text-gray-900">{{ team_b.team_name if team_b else 'BYE' }}</div>
+                {% if team_b %}
+                <div class="text-xs text-gray-500">{{ team_b.player1_name }} & {{ team_b.player2_name }}</div>
+                {% endif %}
               </div>
 
               <div class="flex flex-wrap gap-2">
