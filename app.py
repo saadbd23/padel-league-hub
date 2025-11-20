@@ -1097,13 +1097,16 @@ def ladder_register_team():
 💳 PAYMENT REQUIRED - IMPORTANT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500.
+To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500 PER TEAM (NOT per player).
 
 Payment Method: bKash
 Payment Number: 01313399918
-Amount: BDT 500
+Amount: BDT 500 (TOTAL FOR THE ENTIRE TEAM - split between both players if you wish)
 
-⚠️ IMPORTANT: When making the payment, you MUST put your team name in the reference/note field:
+⚠️ IMPORTANT: 
+1. This is BDT 500 for the WHOLE TEAM (both players together)
+2. You can split the cost between players or one player can pay the full amount
+3. When making the payment, you MUST put your team name in the reference/note field:
 
 Reference: {team_name}
 
@@ -1157,13 +1160,16 @@ Good luck climbing the ladder! 🚀
 💳 PAYMENT REQUIRED - IMPORTANT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500.
+To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500 PER TEAM (NOT per player).
 
 Payment Method: bKash
 Payment Number: 01313399918
-Amount: BDT 500
+Amount: BDT 500 (TOTAL FOR THE ENTIRE TEAM - split between both players if you wish)
 
-⚠️ IMPORTANT: When making the payment, you MUST put your team name in the reference/note field:
+⚠️ IMPORTANT: 
+1. This is BDT 500 for the WHOLE TEAM (both players together)
+2. You can coordinate with {p1_name} to split the cost or one of you can pay the full amount
+3. When making the payment, you MUST put your team name in the reference/note field:
 
 Reference: {team_name}
 
