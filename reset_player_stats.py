@@ -98,5 +98,5 @@ def reset_and_recalculate_team_stats(team_id):
         print(f"\n✅ Team leaderboard stats reset and recalculated successfully!")
 
 if __name__ == "__main__":
-    # Reset Strategic Chaap (team_id = 6)
-    reset_and_recalculate_team_stats(6)
+    # Reset Apex Legends (team_id = 7)
+    reset_and_recalculate_team_stats(7)
