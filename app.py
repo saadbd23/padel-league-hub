@@ -1572,6 +1572,14 @@ def ladder_mixed():
 
     settings = LadderSettings.query.first()
 
+    # Check if user is logged in as a team
+    logged_in_team = None
+    if 'ladder_team_id' in session:
+        logged_in_team = LadderTeam.query.get(session['ladder_team_id'])
+        # Verify the team is in the mixed ladder
+        if logged_in_team and logged_in_team.gender != 'mixed':
+            logged_in_team = None
+
     return render_template("ladder/ladder_rankings.html",
                          teams=teams,
                          ladder_type=ladder_type,
@@ -1580,7 +1588,8 @@ def ladder_mixed():
                          top_performers=top_performers,
                          team_map=team_map,
                          settings=settings,
-                         is_public=True)
+                         is_public=True,
+                         logged_in_team=logged_in_team)
 
 def apply_rank_penalty(team, penalty_amount, reason):
     """
@@ -4267,6 +4276,11 @@ def admin_panel():
         holiday_mode_active=True
     ).count()
 
+    mixed_on_holiday_count = LadderTeam.query.filter_by(
+        ladder_type='mixed',
+        holiday_mode_active=True
+    ).count()
+
     # Pending payments
     pending_payments_men = LadderTeam.query.filter_by(
         gender='men',
@@ -4275,6 +4289,11 @@ def admin_panel():
 
     pending_payments_women = LadderTeam.query.filter_by(
         gender='women',
+        payment_received=False
+    ).order_by(LadderTeam.created_at.desc()).all()
+
+    pending_payments_mixed = LadderTeam.query.filter_by(
+        gender='mixed',
         payment_received=False
     ).order_by(LadderTeam.created_at.desc()).all()
 
@@ -4347,8 +4366,10 @@ def admin_panel():
         disputed_matches_count=disputed_matches_count,
         men_on_holiday_count=men_on_holiday_count,
         women_on_holiday_count=women_on_holiday_count,
+        mixed_on_holiday_count=mixed_on_holiday_count,
         pending_payments_men=pending_payments_men,
         pending_payments_women=pending_payments_women,
+        pending_payments_mixed=pending_payments_mixed,
         today_date=today_date,
         ladder_free_agents=ladder_free_agents,
         tournament_data=tournament_data,
