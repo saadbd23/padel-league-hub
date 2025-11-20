@@ -1507,6 +1507,53 @@ def ladder_women():
                          settings=settings,
                          is_public=True)
 
+@app.route("/ladder/mixed/")
+def ladder_mixed():
+    """Public Mixed Ladder Rankings Page - View Only"""
+    ladder_type = 'mixed'
+
+    # Query by gender='mixed' and only show paid teams
+    teams = LadderTeam.query.filter_by(
+        gender='mixed',
+        payment_received=True
+    ).order_by(LadderTeam.current_rank.asc()).all()
+
+    active_challenges = LadderChallenge.query.filter(
+        LadderChallenge.ladder_type == ladder_type,
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).all()
+
+    locked_team_ids = set()
+    for challenge in active_challenges:
+        locked_team_ids.add(challenge.challenger_team_id)
+        locked_team_ids.add(challenge.challenged_team_id)
+
+    recent_matches = LadderMatch.query.filter(
+        LadderMatch.ladder_type == ladder_type,
+        LadderMatch.verified == True
+    ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
+
+    top_performers = []
+    if teams:
+        teams_with_matches = [t for t in teams if t.matches_played > 0]
+        if teams_with_matches:
+            sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
+            top_performers = sorted_by_wins[:3]
+
+    team_map = {t.id: t for t in teams}
+
+    settings = LadderSettings.query.first()
+
+    return render_template("ladder/ladder_rankings.html",
+                         teams=teams,
+                         ladder_type=ladder_type,
+                         locked_team_ids=locked_team_ids,
+                         recent_matches=recent_matches,
+                         top_performers=top_performers,
+                         team_map=team_map,
+                         settings=settings,
+                         is_public=True)
+
 def apply_rank_penalty(team, penalty_amount, reason):
     """
     Apply rank penalty to a team and adjust other teams accordingly.
