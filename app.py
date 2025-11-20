@@ -113,14 +113,14 @@ def update_team_stats_from_match(match):
 def update_player_stats_from_match(match, team_a, team_b):
     """Update individual player statistics based on match result - for ALL players (winners AND losers)"""
     from datetime import datetime
-    
+
     # CRITICAL: Prevent duplicate stat updates
     if match.stats_calculated:
         return
-    
+
     # Get or create players for Team A (ALWAYS from team roster)
     players_a = []
-    
+
     player1_a = Player.query.filter_by(phone=team_a.player1_phone).first()
     if not player1_a:
         # Create player if doesn't exist
@@ -133,12 +133,12 @@ def update_player_stats_from_match(match, team_a, team_b):
         )
         db.session.add(player1_a)
         db.session.flush()
-    
+
     players_a.append(player1_a)
     # Link to match for future reference
     if not match.team_a_player1_id:
         match.team_a_player1_id = player1_a.id
-    
+
     if team_a.player2_phone != team_a.player1_phone:
         player2_a = Player.query.filter_by(phone=team_a.player2_phone).first()
         if not player2_a:
@@ -152,15 +152,15 @@ def update_player_stats_from_match(match, team_a, team_b):
             )
             db.session.add(player2_a)
             db.session.flush()
-        
+
         players_a.append(player2_a)
         # Link to match for future reference
         if not match.team_a_player2_id:
             match.team_a_player2_id = player2_a.id
-    
+
     # Get or create players for Team B (ALWAYS from team roster)
     players_b = []
-    
+
     player1_b = Player.query.filter_by(phone=team_b.player1_phone).first()
     if not player1_b:
         # Create player if doesn't exist
@@ -173,12 +173,12 @@ def update_player_stats_from_match(match, team_a, team_b):
         )
         db.session.add(player1_b)
         db.session.flush()
-    
+
     players_b.append(player1_b)
     # Link to match for future reference
     if not match.team_b_player1_id:
         match.team_b_player1_id = player1_b.id
-    
+
     if team_b.player2_phone != team_b.player1_phone:
         player2_b = Player.query.filter_by(phone=team_b.player2_phone).first()
         if not player2_b:
@@ -192,7 +192,7 @@ def update_player_stats_from_match(match, team_a, team_b):
             )
             db.session.add(player2_b)
             db.session.flush()
-        
+
         players_b.append(player2_b)
         # Link to match for future reference
         if not match.team_b_player2_id:
@@ -822,47 +822,47 @@ def ladder_register_team():
         p2_phone = request.form["player2_phone"]
         p2_email = request.form.get("player2_email", "").strip()
         gender = request.form.get("gender", "").strip()
-        
+
         # Get contact preferences
         contact_email = request.form.get("contact_email") == "on"
         contact_whatsapp = request.form.get("contact_whatsapp") == "on"
-        
+
         # Validate required fields
         if not p1_email or not p2_email:
             flash("Email is required for both players.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if not gender or gender not in ["men", "women"]:
             flash("Please select a gender (Men or Women).", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Validate at least one contact preference
         if not contact_email and not contact_whatsapp:
             flash("Please select at least one contact preference (Email or WhatsApp).", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Check if Player 1 and Player 2 have the same email or phone number
         if p1_email.lower() == p2_email.lower():
             flash("Player 1 and Player 2 cannot have the same email address.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if normalize_phone_number(p1_phone) == normalize_phone_number(p2_phone):
             flash("Player 1 and Player 2 cannot have the same WhatsApp number.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Normalize phone numbers
         p1_phone_normalized = normalize_phone_number(p1_phone)
         p2_phone_normalized = normalize_phone_number(p2_phone)
-        
+
         # Check team name uniqueness against BOTH Team and LadderTeam tables
         canonical = normalize_team_name(team_name)
         existing_league_team = Team.query.filter_by(team_name_canonical=canonical).first()
         existing_ladder_team = LadderTeam.query.filter_by(team_name_canonical=canonical).first()
-        
+
         if existing_league_team or existing_ladder_team:
             flash("A team with a similar name already exists. Please choose a unique name.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Check Player 1 email in both Team and LadderTeam
         existing_team_p1_email = Team.query.filter(
             db.or_(
@@ -876,15 +876,15 @@ def ladder_register_team():
                 LadderTeam.player2_email == p1_email
             )
         ).first()
-        
+
         if existing_team_p1_email:
             flash(f"Player 1's email ({p1_email}) is already registered in league team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if existing_ladder_p1_email:
             flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Check Player 1 phone in both Team and LadderTeam
         existing_team_p1_phone = Team.query.filter(
             db.or_(
@@ -898,15 +898,15 @@ def ladder_register_team():
                 LadderTeam.player2_phone == p1_phone_normalized
             )
         ).first()
-        
+
         if existing_team_p1_phone:
             flash(f"Player 1's WhatsApp number is already registered in league team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if existing_ladder_p1_phone:
             flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Check Player 2 email in both Team and LadderTeam
         existing_team_p2_email = Team.query.filter(
             db.or_(
@@ -920,15 +920,15 @@ def ladder_register_team():
                 LadderTeam.player2_email == p2_email
             )
         ).first()
-        
+
         if existing_team_p2_email:
             flash(f"Player 2's email ({p2_email}) is already registered in league team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if existing_ladder_p2_email:
             flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Check Player 2 phone in both Team and LadderTeam
         existing_team_p2_phone = Team.query.filter(
             db.or_(
@@ -942,26 +942,26 @@ def ladder_register_team():
                 LadderTeam.player2_phone == p2_phone_normalized
             )
         ).first()
-        
+
         if existing_team_p2_phone:
             flash(f"Player 2's WhatsApp number is already registered in league team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         if existing_ladder_p2_phone:
             flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one team.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
-        
+
         # Generate unique access token
         access_token = secrets.token_urlsafe(32)
-        
+
         # Find max rank in the appropriate gender ladder and add team at bottom
         from datetime import datetime
         max_rank_team = LadderTeam.query.filter_by(
             gender=gender
         ).order_by(LadderTeam.current_rank.desc()).first()
-        
+
         current_rank = max_rank_team.current_rank + 1 if max_rank_team else 1
-        
+
         # Create new ladder team
         new_team = LadderTeam(
             team_name=team_name,
@@ -983,11 +983,11 @@ def ladder_register_team():
         )
         db.session.add(new_team)
         db.session.commit()
-        
+
         # Generate access link
         base_url = "https://goeclectic.xyz"
         access_link = f"{base_url}/ladder/my-team/{access_token}"
-        
+
         # Send confirmation email to Player 1
         if p1_email:
             from utils import send_email_notification
@@ -996,7 +996,7 @@ def ladder_register_team():
                 whatsapp_link = "https://chat.whatsapp.com/Fw54Nxdk6jS9GTMOTnC0UD"
             else:
                 whatsapp_link = "https://chat.whatsapp.com/GswFleVQhxF4gziShBhstd"
-            
+
             email_body = f"""Hi {p1_name},
 
 ✅ Your team "{team_name}" has been successfully registered for the Ladder Tournament!
@@ -1054,7 +1054,7 @@ Good luck climbing the ladder! 🚀
 - BD Padel League
 """
             send_email_notification(p1_email, f"Ladder Team Registered - {team_name}", email_body)
-        
+
         # Send confirmation email to Player 2
         if p2_email:
             from utils import send_email_notification
@@ -1114,7 +1114,7 @@ Good luck climbing the ladder! 🚀
 - BD Padel League
 """
             send_email_notification(p2_email, f"Ladder Team Registered - {team_name}", email_body)
-        
+
         # Send admin notification
         admin_email = os.environ.get("ADMIN_EMAIL")
         if admin_email:
@@ -1143,13 +1143,13 @@ Contact Preferences:
 Access Link: {access_link}
 """
             send_email_notification(admin_email, f"New Ladder Team: {team_name}", admin_body)
-        
+
         return render_template("ladder/registration_success_team.html", 
                              team_name=team_name, 
                              access_link=access_link,
                              rank=current_rank,
                              gender=gender)
-    
+
     return render_template("ladder/register_team.html")
 
 @app.route("/ladder/register-freeagent", methods=["GET", "POST"])
@@ -1163,28 +1163,28 @@ def ladder_register_freeagent():
         skill_level = request.form.get("skill_level", "").strip()
         playstyle = request.form.get("playstyle", "").strip()
         availability = request.form.get("availability", "").strip()
-        
+
         # Get contact preferences
         contact_email = request.form.get("contact_email") == "on"
         contact_whatsapp = request.form.get("contact_whatsapp") == "on"
-        
+
         # Validate required fields
         if not email:
             flash("Email is required for free agent registration.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         if not gender or gender not in ["men", "women"]:
             flash("Please select a gender (Men or Women).", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Validate at least one contact preference
         if not contact_email and not contact_whatsapp:
             flash("Please select at least one contact preference (Email or WhatsApp).", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Normalize phone number
         phone_normalized = normalize_phone_number(phone)
-        
+
         # Check if email is already registered in Team
         existing_team_email = Team.query.filter(
             db.or_(
@@ -1192,11 +1192,11 @@ def ladder_register_freeagent():
                 Team.player2_email == email
             )
         ).first()
-        
+
         if existing_team_email:
             flash(f"This email ({email}) is already registered in league team '{existing_team_email.team_name}'. Please use a different email.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check if email is already registered in LadderTeam
         existing_ladder_email = LadderTeam.query.filter(
             db.or_(
@@ -1204,11 +1204,11 @@ def ladder_register_freeagent():
                 LadderTeam.player2_email == email
             )
         ).first()
-        
+
         if existing_ladder_email:
             flash(f"This email ({email}) is already registered in ladder team '{existing_ladder_email.team_name}'. Please use a different email.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check if phone is already registered in Team
         existing_team_phone = Team.query.filter(
             db.or_(
@@ -1216,11 +1216,11 @@ def ladder_register_freeagent():
                 Team.player2_phone == phone_normalized
             )
         ).first()
-        
+
         if existing_team_phone:
             flash(f"This WhatsApp number is already registered in league team '{existing_team_phone.team_name}'. Please use a different number.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check if phone is already registered in LadderTeam
         existing_ladder_phone = LadderTeam.query.filter(
             db.or_(
@@ -1228,14 +1228,14 @@ def ladder_register_freeagent():
                 LadderTeam.player2_phone == phone_normalized
             )
         ).first()
-        
+
         if existing_ladder_phone:
             flash(f"This WhatsApp number is already registered in ladder team '{existing_ladder_phone.team_name}'. Please use a different number.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check if email is already registered in ANY capacity (league team, ladder team, or free agents)
         # This ensures NO player can be in both league AND ladder
-        
+
         # Check league teams
         existing_league_team_email = Team.query.filter(
             db.or_(
@@ -1246,7 +1246,7 @@ def ladder_register_freeagent():
         if existing_league_team_email:
             flash(f"This email is already registered in league team '{existing_league_team_email.team_name}'. A player cannot be in both league and ladder.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         existing_league_team_phone = Team.query.filter(
             db.or_(
                 Team.player1_phone == phone_normalized,
@@ -1256,7 +1256,7 @@ def ladder_register_freeagent():
         if existing_league_team_phone:
             flash(f"This WhatsApp number is already registered in league team '{existing_league_team_phone.team_name}'. A player cannot be in both league and ladder.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check ladder teams
         existing_ladder_team_email = LadderTeam.query.filter(
             db.or_(
@@ -1267,7 +1267,7 @@ def ladder_register_freeagent():
         if existing_ladder_team_email:
             flash(f"This email is already registered in ladder team '{existing_ladder_team_email.team_name}'. Please use a different email.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         existing_ladder_team_phone = LadderTeam.query.filter(
             db.or_(
                 LadderTeam.player1_phone == phone_normalized,
@@ -1277,32 +1277,32 @@ def ladder_register_freeagent():
         if existing_ladder_team_phone:
             flash(f"This WhatsApp number is already registered in ladder team '{existing_ladder_team_phone.team_name}'. Please use a different number.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check league free agents
         existing_league_fa_email = FreeAgent.query.filter_by(email=email).first()
         if existing_league_fa_email:
             flash(f"This email is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         existing_league_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
         if existing_league_fa_phone:
             flash(f"This WhatsApp number is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Check ladder free agents (duplicate within ladder free agents)
         existing_ladder_fa_email = LadderFreeAgent.query.filter_by(email=email).first()
         if existing_ladder_fa_email:
             flash(f"This email is already registered as a ladder free agent. Please use a different email.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         existing_ladder_fa_phone = LadderFreeAgent.query.filter_by(phone=phone_normalized).first()
         if existing_ladder_fa_phone:
             flash(f"This WhatsApp number is already registered as a ladder free agent. Please use a different number.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
-        
+
         # Generate unique access token
         access_token = secrets.token_urlsafe(32)
-        
+
         # Create new ladder free agent
         from datetime import datetime
         new_fa = LadderFreeAgent(
@@ -1320,11 +1320,11 @@ def ladder_register_freeagent():
         )
         db.session.add(new_fa)
         db.session.commit()
-        
+
         # Generate access link
         base_url = "https://goeclectic.xyz"
         access_link = f"{base_url}/ladder/my-team/{access_token}"
-        
+
         # Send confirmation email
         if email:
             from utils import send_email_notification
@@ -1333,7 +1333,7 @@ def ladder_register_freeagent():
                 whatsapp_link = "https://chat.whatsapp.com/BMqHxbPhKg67tmXIyuZwNJ"
             else:
                 whatsapp_link = "https://chat.whatsapp.com/JdjNaMf3QhnD7yw1saq9lk"
-            
+
             email_body = f"""Hi {name},
 
 ✅ Welcome to the Ladder Tournament! Your free agent registration has been confirmed.
@@ -1383,7 +1383,7 @@ Thank you for joining! 🚀
 - BD Padel League
 """
             send_email_notification(email, f"Ladder Free Agent Registration Confirmed", email_body)
-        
+
         # Send admin notification
         admin_email = os.environ.get("ADMIN_EMAIL")
         if admin_email:
@@ -1405,51 +1405,51 @@ Contact Preferences:
 Access Link: {access_link}
 """
             send_email_notification(admin_email, f"New Ladder Free Agent: {name}", admin_body)
-        
+
         return render_template("ladder/registration_success_freeagent.html", 
                              name=name, 
                              access_link=access_link,
                              gender=gender)
-    
+
     return render_template("ladder/register_freeagent.html")
 
 @app.route("/ladder/men/")
 def ladder_men():
     """Public Men's Ladder Rankings Page - View Only"""
     ladder_type = 'men'
-    
+
     # Query by gender='men' and only show paid teams
     teams = LadderTeam.query.filter_by(
         gender='men',
         payment_received=True
     ).order_by(LadderTeam.current_rank.asc()).all()
-    
+
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).all()
-    
+
     locked_team_ids = set()
     for challenge in active_challenges:
         locked_team_ids.add(challenge.challenger_team_id)
         locked_team_ids.add(challenge.challenged_team_id)
-    
+
     recent_matches = LadderMatch.query.filter(
         LadderMatch.ladder_type == ladder_type,
         LadderMatch.verified == True
     ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
-    
+
     top_performers = []
     if teams:
         teams_with_matches = [t for t in teams if t.matches_played > 0]
         if teams_with_matches:
             sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
             top_performers = sorted_by_wins[:3]
-    
+
     team_map = {t.id: t for t in teams}
-    
+
     settings = LadderSettings.query.first()
-    
+
     return render_template("ladder/ladder_rankings.html",
                          teams=teams,
                          ladder_type=ladder_type,
@@ -1464,39 +1464,39 @@ def ladder_men():
 def ladder_women():
     """Public Women's Ladder Rankings Page - View Only"""
     ladder_type = 'women'
-    
+
     # Query by gender='women' and only show paid teams
     teams = LadderTeam.query.filter_by(
         gender='women',
         payment_received=True
     ).order_by(LadderTeam.current_rank.asc()).all()
-    
+
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).all()
-    
+
     locked_team_ids = set()
     for challenge in active_challenges:
         locked_team_ids.add(challenge.challenger_team_id)
         locked_team_ids.add(challenge.challenged_team_id)
-    
+
     recent_matches = LadderMatch.query.filter(
         LadderMatch.ladder_type == ladder_type,
         LadderMatch.verified == True
     ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
-    
+
     top_performers = []
     if teams:
         teams_with_matches = [t for t in teams if t.matches_played > 0]
         if teams_with_matches:
             sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
             top_performers = sorted_by_wins[:3]
-    
+
     team_map = {t.id: t for t in teams}
-    
+
     settings = LadderSettings.query.first()
-    
+
     return render_template("ladder/ladder_rankings.html",
                          teams=teams,
                          ladder_type=ladder_type,
@@ -1510,7 +1510,7 @@ def ladder_women():
 def apply_rank_penalty(team, penalty_amount, reason):
     """
     Apply rank penalty to a team and adjust other teams accordingly.
-    
+
     Args:
         team: LadderTeam object to penalize
         penalty_amount: Number of ranks to move down (positive number)
@@ -1518,33 +1518,33 @@ def apply_rank_penalty(team, penalty_amount, reason):
     """
     from datetime import datetime
     from utils import send_email_notification
-    
+
     if penalty_amount <= 0:
         return
-    
+
     old_rank = team.current_rank
     new_rank = old_rank + penalty_amount
-    
+
     teams_in_ladder = LadderTeam.query.filter_by(ladder_type=team.ladder_type).all()
     max_rank = len(teams_in_ladder)
-    
+
     if new_rank > max_rank:
         new_rank = max_rank
-    
+
     teams_to_adjust = LadderTeam.query.filter(
         LadderTeam.ladder_type == team.ladder_type,
         LadderTeam.current_rank > old_rank,
         LadderTeam.current_rank <= new_rank,
         LadderTeam.id != team.id
     ).all()
-    
+
     for t in teams_to_adjust:
         t.current_rank -= 1
-    
+
     team.current_rank = new_rank
-    
+
     db.session.commit()
-    
+
     penalty_message = f"""
 Penalty Applied to {team.team_name}
 
@@ -1559,7 +1559,7 @@ This penalty was automatically applied by the ladder system. If you believe this
 Regards,
 BD Padel Ladder Team
 """
-    
+
     if team.contact_preference_email:
         if team.player1_email:
             send_email_notification(team.player1_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
@@ -1570,33 +1570,33 @@ BD Padel Ladder Team
 def calculate_holiday_status(team, settings):
     """
     Calculate holiday mode status for a team.
-    
+
     Args:
         team: LadderTeam object
         settings: LadderSettings object
-    
+
     Returns:
         Dictionary with holiday status info or None if not on holiday
     """
     from datetime import datetime, timedelta
-    
+
     if not team.holiday_mode_active or not team.holiday_mode_start:
         return None
-    
+
     now = datetime.now()
     grace_period_days = settings.holiday_mode_grace_weeks * 7
     grace_period_end = team.holiday_mode_start + timedelta(days=grace_period_days)
-    
+
     days_in_holiday = (now - team.holiday_mode_start).days
     grace_period_days_remaining = (grace_period_end - now).days
-    
+
     weeks_beyond_grace = 0
     penalty_ranks = 0
     if grace_period_days_remaining < 0:
         days_beyond_grace = abs(grace_period_days_remaining)
         weeks_beyond_grace = (days_beyond_grace // 7) + (1 if days_beyond_grace % 7 > 0 else 0)
         penalty_ranks = weeks_beyond_grace * settings.holiday_mode_weekly_penalty_ranks
-    
+
     return {
         'start_date': team.holiday_mode_start,
         'days_in_holiday': days_in_holiday,
@@ -1610,26 +1610,26 @@ def calculate_holiday_status(team, settings):
 def update_ladder_team_stats_from_match(match):
     """Update ladder team statistics after a verified match"""
     from datetime import datetime
-    
+
     if match.stats_calculated:
         return
-    
+
     team_a = LadderTeam.query.get(match.team_a_id)
     team_b = LadderTeam.query.get(match.team_b_id)
-    
+
     if not team_a or not team_b:
         return
-    
+
     team_a.sets_for += match.sets_a
     team_a.sets_against += match.sets_b
     team_a.games_for += match.games_a
     team_a.games_against += match.games_b
-    
+
     team_b.sets_for += match.sets_b
     team_b.sets_against += match.sets_a
     team_b.games_for += match.games_b
     team_b.games_against += match.games_a
-    
+
     if match.winner_id == team_a.id:
         team_a.wins += 1
         team_b.losses += 1
@@ -1639,10 +1639,10 @@ def update_ladder_team_stats_from_match(match):
     else:
         team_a.draws += 1
         team_b.draws += 1
-    
+
     team_a.last_match_date = datetime.now()
     team_b.last_match_date = datetime.now()
-    
+
     match.stats_calculated = True
     db.session.commit()
 
@@ -1651,23 +1651,23 @@ def swap_ladder_ranks(winner_team, loser_team, match):
     """
     Swap ladder ranks after a match result.
     Winner takes loser's rank, and all teams shift accordingly.
-    
+
     Args:
         winner_team: LadderTeam object of the winning team
         loser_team: LadderTeam object of the losing team
         match: LadderMatch object
-        
+
     Returns:
         dict with rank change information for logging and notifications
     """
     import logging
-    
+
     winner_rank = winner_team.current_rank
     loser_rank = loser_team.current_rank
     ladder_type = winner_team.ladder_type
-    
+
     logging.info(f"[RANK SWAP] Match ID {match.id}: {winner_team.team_name} (#{winner_rank}) vs {loser_team.team_name} (#{loser_rank})")
-    
+
     if winner_rank == loser_rank:
         logging.warning(f"[RANK SWAP] Equal ranks detected (both #{winner_rank}) - no rank change")
         return {
@@ -1677,21 +1677,21 @@ def swap_ladder_ranks(winner_team, loser_team, match):
             'loser_new_rank': loser_rank,
             'teams_affected': []
         }
-    
+
     all_teams = LadderTeam.query.filter_by(ladder_type=ladder_type).order_by(LadderTeam.current_rank).all()
-    
+
     rank_changes = {
-        'winner_old_rank': winner_rank,
-        'loser_old_rank': loser_rank,
+        'winner': {'old': winner_rank, 'new': 0},
+        'loser': {'old': loser_rank, 'new': 0},
         'teams_affected': []
     }
-    
+
     if winner_rank > loser_rank:
         logging.info(f"[RANK SWAP] Winner challenged UP: #{winner_rank} → #{loser_rank}")
-        
+
         new_winner_rank = loser_rank
         new_loser_rank = loser_rank + 1
-        
+
         for team in all_teams:
             if team.id == winner_team.id:
                 team.current_rank = new_winner_rank
@@ -1708,16 +1708,16 @@ def swap_ladder_ranks(winner_team, loser_team, match):
                     'old_rank': old_rank,
                     'new_rank': team.current_rank
                 })
-        
-        rank_changes['winner_new_rank'] = new_winner_rank
-        rank_changes['loser_new_rank'] = new_loser_rank
-        
+
+        rank_changes['winner']['new'] = new_winner_rank
+        rank_changes['loser']['new'] = new_loser_rank
+
     elif winner_rank < loser_rank:
         logging.warning(f"[RANK SWAP] Winner challenged DOWN (unusual): #{winner_rank} beating #{loser_rank}")
-        
+
         new_winner_rank = winner_rank
         new_loser_rank = loser_rank + 1
-        
+
         for team in all_teams:
             if team.id == winner_team.id:
                 team.current_rank = new_winner_rank
@@ -1734,21 +1734,21 @@ def swap_ladder_ranks(winner_team, loser_team, match):
                     'old_rank': old_rank,
                     'new_rank': team.current_rank
                 })
-        
-        rank_changes['winner_new_rank'] = new_winner_rank
-        rank_changes['loser_new_rank'] = new_loser_rank
-    
+
+        rank_changes['winner']['new'] = new_winner_rank
+        rank_changes['loser']['new'] = new_loser_rank
+
     db.session.commit()
     logging.info(f"[RANK SWAP] Rank swap completed successfully")
-    
+
     ranks_after = {}
     for team in all_teams:
         ranks_after[team.current_rank] = team.team_name
-    
+
     for rank in sorted(ranks_after.keys()):
         if rank <= max(winner_rank, loser_rank) + 2:
             logging.info(f"[RANK SWAP]   Rank #{rank}: {ranks_after[rank]}")
-    
+
     return rank_changes
 
 
@@ -1759,13 +1759,13 @@ def verify_match_scores(match):
     """
     from datetime import datetime
     from utils import send_email_notification
-    
+
     team_a = LadderTeam.query.get(match.team_a_id)
     team_b = LadderTeam.query.get(match.team_b_id)
-    
+
     if not match.team_a_submitted or not match.team_b_submitted:
         return False
-    
+
     set1_match = (match.team_a_score_set1 == match.team_b_score_set1)
     set2_match = (match.team_a_score_set2 == match.team_b_score_set2)
     set3_match = True
@@ -1773,27 +1773,27 @@ def verify_match_scores(match):
         set3_match = (match.team_a_score_set3 == match.team_b_score_set3)
     elif (match.team_a_score_set3 is None) != (match.team_b_score_set3 is None):
         set3_match = False
-    
+
     scores_match = set1_match and set2_match and set3_match
-    
+
     if scores_match:
         match.status = 'completed'
         match.completed_at = datetime.now()
         match.verified = True
         match.disputed = False
-        
+
         team_a_sets_won = 0
         team_b_sets_won = 0
         team_a_games_total = 0
         team_b_games_total = 0
-        
+
         sets = [
             (match.team_a_score_set1, match.team_b_score_set1),
             (match.team_a_score_set2, match.team_b_score_set2),
         ]
         if match.team_a_score_set3 is not None:
             sets.append((match.team_a_score_set3, match.team_b_score_set3))
-        
+
         for team_a_games, team_b_games in sets:
             team_a_games_total += team_a_games
             team_b_games_total += team_b_games
@@ -1801,82 +1801,82 @@ def verify_match_scores(match):
                 team_a_sets_won += 1
             elif team_b_games > team_a_games:
                 team_b_sets_won += 1
-        
+
         match.sets_a = team_a_sets_won
         match.sets_b = team_b_sets_won
         match.games_a = team_a_games_total
         match.games_b = team_b_games_total
-        
+
         if team_a_sets_won > team_b_sets_won:
             match.winner_id = team_a.id
         elif team_b_sets_won > team_a_sets_won:
             match.winner_id = team_b.id
         else:
             match.winner_id = None
-        
+
         match.score_a = f"{match.team_a_score_set1}-{match.team_b_score_set1}"
         if match.team_a_score_set2 is not None:
             match.score_a += f", {match.team_a_score_set2}-{match.team_b_score_set2}"
         if match.team_a_score_set3 is not None:
             match.score_a += f", {match.team_a_score_set3}-{match.team_b_score_set3}"
-        
+
         match.score_b = f"{match.team_b_score_set1}-{match.team_a_score_set1}"
         if match.team_b_score_set2 is not None:
             match.score_b += f", {match.team_b_score_set2}-{match.team_a_score_set2}"
         if match.team_b_score_set3 is not None:
             match.score_b += f", {match.team_b_score_set3}-{match.team_a_score_set3}"
-        
+
         update_ladder_team_stats_from_match(match)
-        
+
         rank_changes = None
         if match.winner_id:
             winner_team = team_a if match.winner_id == team_a.id else team_b
             loser_team = team_b if match.winner_id == team_a.id else team_a
-            
+
             rank_changes = swap_ladder_ranks(winner_team, loser_team, match)
-            
-            match.winner_old_rank = rank_changes['winner_old_rank']
-            match.winner_new_rank = rank_changes['winner_new_rank']
-            match.loser_old_rank = rank_changes['loser_old_rank']
-            match.loser_new_rank = rank_changes['loser_new_rank']
-        
+
+            match.winner_old_rank = rank_changes['winner']['old']
+            match.winner_new_rank = rank_changes['winner']['new']
+            match.loser_old_rank = rank_changes['loser']['old']
+            match.loser_new_rank = rank_changes['loser']['new']
+
         db.session.commit()
-        
+
         winner_name = team_a.team_name if match.winner_id == team_a.id else (team_b.team_name if match.winner_id == team_b.id else "Draw")
-        
+
         rank_info_a = ""
         rank_info_b = ""
-        
+
         if rank_changes:
             if match.winner_id == team_a.id:
-                old_rank = rank_changes['winner_old_rank']
-                new_rank = rank_changes['winner_new_rank']
-                opponent_old = rank_changes['loser_old_rank']
-                opponent_new = rank_changes['loser_new_rank']
-                
+                old_rank = rank_changes['winner']['old']
+                new_rank = rank_changes['winner']['new']
+                opponent_old = rank_changes['loser']['old']
+                opponent_new = rank_changes['loser']['new']
+
                 if new_rank < old_rank:
                     rank_info_a = f"\n🎯 RANK UPDATE: You moved UP from #{old_rank} to #{new_rank}! ⬆️\n   {team_b.team_name} dropped from #{opponent_old} to #{opponent_new}\n"
                 elif new_rank > old_rank:
                     rank_info_a = f"\n📊 RANK UPDATE: Your rank changed from #{old_rank} to #{new_rank}\n"
                 else:
                     rank_info_a = f"\n📊 RANK UPDATE: You remain at rank #{old_rank}\n"
-                
+
                 rank_info_b = f"\n📉 RANK UPDATE: You dropped from #{opponent_old} to #{opponent_new} ⬇️\n   {team_a.team_name} moved from #{old_rank} to #{new_rank}\n"
             else:
-                old_rank = rank_changes['loser_old_rank']
-                new_rank = rank_changes['loser_new_rank']
-                opponent_old = rank_changes['winner_old_rank']
-                opponent_new = rank_changes['winner_new_rank']
-                
+                old_rank = rank_changes['loser']['old']
+                new_rank = rank_changes['loser']['new']
+                opponent_old = rank_changes['winner']['old']
+                opponent_new = rank_changes['winner']['new']
+
                 rank_info_a = f"\n📉 RANK UPDATE: You dropped from #{old_rank} to #{new_rank} ⬇️\n   {team_b.team_name} moved from #{opponent_old} to #{opponent_new}\n"
-                
+
                 if opponent_new < opponent_old:
                     rank_info_b = f"\n🎯 RANK UPDATE: You moved UP from #{opponent_old} to #{opponent_new}! ⬆️\n   {team_a.team_name} dropped from #{old_rank} to #{new_rank}\n"
                 elif opponent_new > opponent_old:
                     rank_info_b = f"\n📊 RANK UPDATE: Your rank changed from #{opponent_old} to #{opponent_new}\n"
                 else:
                     rank_info_b = f"\n📊 RANK UPDATE: You remain at rank #{opponent_old}\n"
-        
+
         team_a_message = f"""
 Match Scores Verified!
 
@@ -1892,7 +1892,7 @@ Manage your team: {request.url_root}ladder/my-team/{team_a.access_token}
 Good game!
 BD Padel Ladder Team
 """
-        
+
         team_b_message = f"""
 Match Scores Verified!
 
@@ -1908,26 +1908,26 @@ Manage your team: {request.url_root}ladder/my-team/{team_b.access_token}
 Good game!
 BD Padel Ladder Team
 """
-        
+
         if team_a.contact_preference_email:
             if team_a.player1_email:
                 send_email_notification(team_a.player1_email, f"Match Verified - {team_a.team_name}", team_a_message)
             if team_a.player2_email and team_a.player2_email != team_a.player1_email:
                 send_email_notification(team_a.player2_email, f"Match Verified - {team_a.team_name}", team_a_message)
-        
+
         if team_b.contact_preference_email:
             if team_b.player1_email:
                 send_email_notification(team_b.player1_email, f"Match Verified - {team_b.team_name}", team_b_message)
             if team_b.player2_email and team_b.player2_email != team_b.player1_email:
                 send_email_notification(team_b.player2_email, f"Match Verified - {team_b.team_name}", team_b_message)
-        
+
         return True
     else:
         match.status = 'disputed'
         match.disputed = True
         match.verified = False
         db.session.commit()
-        
+
         dispute_message_a = f"""
 Score Dispute Detected
 
@@ -1949,7 +1949,7 @@ Manage your team: {request.url_root}ladder/my-team/{team_a.access_token}
 
 BD Padel Ladder Team
 """
-        
+
         dispute_message_b = f"""
 Score Dispute Detected
 
@@ -1971,19 +1971,19 @@ Manage your team: {request.url_root}ladder/my-team/{team_b.access_token}
 
 BD Padel Ladder Team
 """
-        
+
         if team_a.contact_preference_email:
             if team_a.player1_email:
                 send_email_notification(team_a.player1_email, f"Score Dispute - {team_a.team_name}", dispute_message_a)
             if team_a.player2_email and team_a.player2_email != team_a.player1_email:
                 send_email_notification(team_a.player2_email, f"Score Dispute - {team_a.team_name}", dispute_message_a)
-        
+
         if team_b.contact_preference_email:
             if team_b.player1_email:
                 send_email_notification(team_b.player1_email, f"Score Dispute - {team_b.team_name}", dispute_message_b)
             if team_b.player2_email and team_b.player2_email != team_b.player1_email:
                 send_email_notification(team_b.player2_email, f"Score Dispute - {team_b.team_name}", dispute_message_b)
-        
+
         return False
 
 
@@ -1991,13 +1991,10 @@ BD Padel Ladder Team
 def ladder_my_team(token):
     """Team-specific dashboard for ladder teams to manage matches, challenges, and holiday mode"""
     from datetime import datetime, timedelta
-    
+
     # Verify access token and get team
-    team = LadderTeam.query.filter_by(access_token=token).first()
-    if not team:
-        flash("Invalid access link. Please check your registration email.", "error")
-        return redirect(url_for('index'))
-    
+    team = LadderTeam.query.filter_by(access_token=token).first_or_404()
+
     # Get ladder settings for grace period calculations
     settings = LadderSettings.query.first()
     if not settings:
@@ -2016,23 +2013,23 @@ def ladder_my_team(token):
         )
         db.session.add(settings)
         db.session.commit()
-    
+
     # Handle POST requests (placeholders for later implementation)
     if request.method == "POST":
         action = request.form.get("action")
-        
+
         if action == "toggle_holiday":
             from utils import send_email_notification
             from datetime import datetime, timedelta
-            
+
             now = datetime.now()
-            
+
             if team.holiday_mode_active:
                 team.holiday_mode_active = False
                 team.holiday_mode_end = now
-                
+
                 db.session.commit()
-                
+
                 deactivation_message = f"""
 Holiday Mode Deactivated
 
@@ -2045,13 +2042,13 @@ Team Dashboard: {request.url_root}ladder/my-team/{team.access_token}
 Regards,
 BD Padel Ladder Team
 """
-                
+
                 if team.contact_preference_email:
                     if team.player1_email:
                         send_email_notification(team.player1_email, f"Holiday Mode Deactivated - {team.team_name}", deactivation_message)
                     if team.player2_email and team.player2_email != team.player1_email:
                         send_email_notification(team.player2_email, f"Holiday Mode Deactivated - {team.team_name}", deactivation_message)
-                
+
                 flash("Holiday mode deactivated! Welcome back to the ladder.", "success")
                 return redirect(url_for('ladder_my_team', token=token))
             else:
@@ -2059,12 +2056,12 @@ BD Padel Ladder Team
                     LadderChallenge.challenger_team_id == team.id,
                     LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
                 ).count()
-                
+
                 active_challenges_received = LadderChallenge.query.filter(
                     LadderChallenge.challenged_team_id == team.id,
                     LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
                 ).count()
-                
+
                 pending_matches = LadderMatch.query.filter(
                     db.or_(
                         LadderMatch.team_a_id == team.id,
@@ -2073,18 +2070,18 @@ BD Padel Ladder Team
                     LadderMatch.verified == False,
                     LadderMatch.status.in_(['pending', 'pending_opponent_score'])
                 ).count()
-                
+
                 if active_challenges_sent > 0 or active_challenges_received > 0 or pending_matches > 0:
                     flash("Cannot activate holiday mode while you have active challenges or pending matches. Please complete or cancel them first.", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-                
+
                 team.holiday_mode_active = True
                 team.holiday_mode_start = now
-                
+
                 db.session.commit()
-                
+
                 grace_period_days = settings.holiday_mode_grace_weeks * 7
-                
+
                 activation_message = f"""
 Holiday Mode Activated
 
@@ -2106,80 +2103,80 @@ Enjoy your break!
 Regards,
 BD Padel Ladder Team
 """
-                
+
                 if team.contact_preference_email:
                     if team.player1_email:
                         send_email_notification(team.player1_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
                     if team.player2_email and team.player2_email != team.player1_email:
                         send_email_notification(team.player2_email, f"Holiday Mode Activated - {team.team_name}", activation_message)
-                
+
                 flash(f"Holiday mode activated! You have {grace_period_days} days of grace period before any penalties apply.", "success")
                 return redirect(url_for('ladder_my_team', token=token))
-        
+
         elif action == "submit_score":
             from utils import send_email_notification
-            
+
             match_id = request.form.get("match_id")
             if not match_id:
                 flash("Match ID is required", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             match = LadderMatch.query.get(match_id)
             if not match:
                 flash("Match not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if match.team_a_id != team.id and match.team_b_id != team.id:
                 flash("You are not authorized to submit scores for this match", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge = LadderChallenge.query.get(match.challenge_id)
             now = datetime.now()
-            
+
             if challenge and challenge.completion_deadline:
                 if now > challenge.completion_deadline:
                     team_a = LadderTeam.query.get(match.team_a_id)
                     team_b = LadderTeam.query.get(match.team_b_id)
-                    
+
                     if not match.team_a_submitted and not match.team_b_submitted:
                         apply_rank_penalty(team_a, 1, f"Failed to complete match against {team_b.team_name} before deadline")
                         apply_rank_penalty(team_b, 1, f"Failed to complete match against {team_a.team_name} before deadline")
                         flash(f"Match deadline has passed. Both teams have been penalized 1 rank.", "warning")
-            
+
             try:
                 set1_team = int(request.form.get("set1_team_score", 0))
                 set1_opp = int(request.form.get("set1_opponent_score", 0))
                 set2_team = int(request.form.get("set2_team_score", 0))
                 set2_opp = int(request.form.get("set2_opponent_score", 0))
-                
+
                 set3_team_str = request.form.get("set3_team_score", "").strip()
                 set3_opp_str = request.form.get("set3_opponent_score", "").strip()
-                
+
                 set3_team = int(set3_team_str) if set3_team_str else None
                 set3_opp = int(set3_opp_str) if set3_opp_str else None
-                
+
                 if set1_team < 0 or set1_opp < 0 or set2_team < 0 or set2_opp < 0:
                     flash("Scores cannot be negative", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-                
+
                 if (set3_team is not None and set3_team < 0) or (set3_opp is not None and set3_opp < 0):
                     flash("Scores cannot be negative", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-                
+
                 if set1_team > 7 or set1_opp > 7 or set2_team > 7 or set2_opp > 7:
                     flash("Invalid score: Games in a set cannot exceed 7 in padel", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-                
+
                 if (set3_team is not None and set3_team > 7) or (set3_opp is not None and set3_opp > 7):
                     flash("Invalid score: Games in a set cannot exceed 7 in padel", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-                
+
             except (ValueError, TypeError):
                 flash("Invalid score format. Please enter valid numbers.", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             is_team_a = (match.team_a_id == team.id)
-            
+
             if is_team_a:
                 match.team_a_score_set1 = set1_team
                 match.team_b_score_set1 = set1_opp
@@ -2198,14 +2195,14 @@ BD Padel Ladder Team
                 match.team_a_score_set3 = set3_opp
                 match.team_b_submitted = True
                 match.score_submitted_by_b = True
-            
+
             db.session.commit()
-            
+
             opponent_team = LadderTeam.query.get(match.team_b_id if is_team_a else match.team_a_id)
-            
+
             if match.team_a_submitted and match.team_b_submitted:
                 verification_result = verify_match_scores(match)
-                
+
                 if verification_result:
                     flash("Scores verified! Match result has been recorded.", "success")
                 else:
@@ -2213,7 +2210,7 @@ BD Padel Ladder Team
             else:
                 match.status = 'pending_opponent_score'
                 db.session.commit()
-                
+
                 submission_message = f"""
 Score Submitted
 
@@ -2227,34 +2224,34 @@ Manage your team: {request.url_root}ladder/my-team/{opponent_team.access_token}
 
 BD Padel Ladder Team
 """
-                
+
                 if opponent_team.contact_preference_email:
                     if opponent_team.player1_email:
                         send_email_notification(opponent_team.player1_email, f"Score Submission Waiting - {opponent_team.team_name}", submission_message)
                     if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
                         send_email_notification(opponent_team.player2_email, f"Score Submission Waiting - {opponent_team.team_name}", submission_message)
-                
+
                 flash("Your score has been submitted. Waiting for opponent to submit their score.", "success")
-            
+
             return redirect(url_for('ladder_my_team', token=token))
-        
+
         elif action == "accept_challenge":
             challenge_id = request.form.get("challenge_id")
             if not challenge_id:
                 flash("Challenge ID is required", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge = LadderChallenge.query.get(challenge_id)
             if not challenge:
                 flash("Challenge not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if challenge.challenged_team_id != team.id:
                 flash("You are not authorized to accept this challenge", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             now = datetime.now()
-            
+
             if now > challenge.acceptance_deadline:
                 apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
                                  f"Failed to accept challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
@@ -2262,11 +2259,11 @@ BD Padel Ladder Team
                 db.session.commit()
                 flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s).", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge.status = 'accepted'
             challenge.accepted_at = now
             challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
-            
+
             match = LadderMatch(
                 team_a_id=challenge.challenger_team_id,
                 team_b_id=challenge.challenged_team_id,
@@ -2276,11 +2273,12 @@ BD Padel Ladder Team
             )
             db.session.add(match)
             db.session.commit()
-            
+
             challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
             challenged_team = team
-            
-            challenger_message = f"""
+
+            challenger_message = f"""Hello {challenger_team.team_name},
+
 Challenge Accepted!
 
 Great news! {challenged_team.team_name} has accepted your challenge!
@@ -2303,8 +2301,9 @@ Good luck!
 Regards,
 BD Padel Ladder Team
 """
-            
-            challenged_message = f"""
+
+            challenged_message = f"""Hello {challenged_team.team_name},
+
 Challenge Accepted!
 
 You have successfully accepted the challenge from {challenger_team.team_name}!
@@ -2327,9 +2326,9 @@ Good luck!
 Regards,
 BD Padel Ladder Team
 """
-            
+
             from utils import send_email_notification
-            
+
             if challenger_team.contact_preference_email:
                 if challenger_team.player1_email:
                     send_email_notification(challenger_team.player1_email, 
@@ -2339,7 +2338,7 @@ BD Padel Ladder Team
                     send_email_notification(challenger_team.player2_email, 
                                           f"Challenge Accepted - {challenger_team.team_name}", 
                                           challenger_message)
-            
+
             if challenged_team.contact_preference_email:
                 if challenged_team.player1_email:
                     send_email_notification(challenged_team.player1_email, 
@@ -2349,27 +2348,27 @@ BD Padel Ladder Team
                     send_email_notification(challenged_team.player2_email, 
                                           f"Challenge Accepted - {challenged_team.team_name}", 
                                           challenged_message)
-            
+
             flash(f"Challenge accepted! You have until {challenge.completion_deadline.strftime('%B %d, %Y')} to complete the match.", "success")
             return redirect(url_for('ladder_my_team', token=token))
-        
+
         elif action == "reject_challenge":
             challenge_id = request.form.get("challenge_id")
             if not challenge_id:
                 flash("Challenge ID is required", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge = LadderChallenge.query.get(challenge_id)
             if not challenge:
                 flash("Challenge not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if challenge.challenged_team_id != team.id:
                 flash("You are not authorized to reject this challenge", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             now = datetime.now()
-            
+
             if now > challenge.acceptance_deadline:
                 apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
                                  f"Failed to respond to challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
@@ -2377,15 +2376,14 @@ BD Padel Ladder Team
                 db.session.commit()
                 flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s) for late rejection.", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge.status = 'rejected'
             db.session.commit()
-            
+
             challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
             challenged_team = team
-            
-            challenger_message = f"""
-Challenge Rejected
+
+            challenger_message = f"""Challenge Rejected
 
 {challenged_team.team_name} has declined your challenge.
 
@@ -2401,9 +2399,8 @@ You can challenge other teams by visiting the ladder rankings page.
 Regards,
 BD Padel Ladder Team
 """
-            
-            challenged_message = f"""
-Challenge Rejected
+
+            challenged_message = f"""Challenge Rejected
 
 You have successfully rejected the challenge from {challenger_team.team_name}.
 
@@ -2417,9 +2414,9 @@ Both teams are now unlocked and available to send or receive new challenges.
 Regards,
 BD Padel Ladder Team
 """
-            
+
             from utils import send_email_notification
-            
+
             if challenger_team.contact_preference_email:
                 if challenger_team.player1_email:
                     send_email_notification(challenger_team.player1_email, 
@@ -2429,7 +2426,7 @@ BD Padel Ladder Team
                     send_email_notification(challenger_team.player2_email, 
                                           f"Challenge Rejected - {challenger_team.team_name}", 
                                           challenger_message)
-            
+
             if challenged_team.contact_preference_email:
                 if challenged_team.player1_email:
                     send_email_notification(challenged_team.player1_email, 
@@ -2439,62 +2436,62 @@ BD Padel Ladder Team
                     send_email_notification(challenged_team.player2_email, 
                                           f"Challenge Rejected - {challenged_team.team_name}", 
                                           challenged_message)
-            
+
             flash("Challenge rejected successfully. Both teams are now unlocked.", "success")
             return redirect(url_for('ladder_my_team', token=token))
-        
+
         elif action == "report_no_show":
             from utils import send_email_notification
-            
+
             match_id = request.form.get("match_id")
             if not match_id:
                 flash("Match ID is required", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             match = LadderMatch.query.get(match_id)
             if not match:
                 flash("Match not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if match.team_a_id != team.id and match.team_b_id != team.id:
                 flash("You are not authorized to report no-show for this match", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if match.verified or match.status in ['completed', 'completed_no_show']:
                 flash("Cannot report no-show for a completed match", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if match.team_a_submitted and match.team_b_submitted:
                 flash("Cannot report no-show when both teams have submitted scores", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             if match.reported_no_show_team_id:
                 flash("A no-show report has already been filed for this match", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             challenge = LadderChallenge.query.get(match.challenge_id)
             now = datetime.now()
-            
+
             if challenge and challenge.completion_deadline:
                 if now <= challenge.completion_deadline:
                     deadline_str = challenge.completion_deadline.strftime('%B %d, %Y at %I:%M %p')
                     flash(f"Cannot report no-show before match completion deadline ({deadline_str})", "error")
                     return redirect(url_for('ladder_my_team', token=token))
-            
+
             opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
             opponent_team = LadderTeam.query.get(opponent_id)
-            
+
             if not opponent_team:
                 flash("Opponent team not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
-            
+
             match.reported_no_show_team_id = opponent_id
             match.reported_by_team_id = team.id
             match.no_show_report_date = now
             match.status = 'no_show_reported'
-            
+
             db.session.commit()
-            
+
             reporter_message = f"""
 No-Show Report Submitted
 
@@ -2517,7 +2514,7 @@ Team Dashboard: {request.url_root}ladder/my-team/{team.access_token}
 Regards,
 BD Padel Ladder Team
 """
-            
+
             reported_team_message = f"""
 No-Show Report - Immediate Action Required
 
@@ -2545,7 +2542,7 @@ IMPORTANT: Respond within 24 hours to dispute this report.
 Regards,
 BD Padel Ladder Team
 """
-            
+
             admin_email = os.environ.get("ADMIN_EMAIL")
             admin_message = f"""
 No-Show Report Requires Review
@@ -2583,7 +2580,7 @@ Admin Panel: {request.url_root}admin
 Regards,
 BD Padel Ladder System
 """
-            
+
             if team.contact_preference_email:
                 if team.player1_email:
                     send_email_notification(team.player1_email, 
@@ -2593,7 +2590,7 @@ BD Padel Ladder System
                     send_email_notification(team.player2_email, 
                                           f"No-Show Report Submitted - {team.team_name}", 
                                           reporter_message)
-            
+
             if opponent_team.contact_preference_email:
                 if opponent_team.player1_email:
                     send_email_notification(opponent_team.player1_email, 
@@ -2603,26 +2600,26 @@ BD Padel Ladder System
                     send_email_notification(opponent_team.player2_email, 
                                           f"URGENT: No-Show Report Filed Against {opponent_team.team_name}", 
                                           reported_team_message)
-            
+
             if admin_email:
                 send_email_notification(admin_email, 
                                       f"No-Show Report Review Required - Match #{match.id}", 
                                       admin_message)
-            
+
             flash(f"No-show report submitted for {opponent_team.team_name}. An administrator will review your report shortly.", "success")
             return redirect(url_for('ladder_my_team', token=token))
-    
+
     # Query active challenges (sent and received)
     challenges_sent = LadderChallenge.query.filter(
         LadderChallenge.challenger_team_id == team.id,
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).order_by(LadderChallenge.created_at.desc()).all()
-    
+
     challenges_received = LadderChallenge.query.filter(
         LadderChallenge.challenged_team_id == team.id,
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).order_by(LadderChallenge.created_at.desc()).all()
-    
+
     # Get opponent team info for challenges
     challenge_details_sent = []
     for challenge in challenges_sent:
@@ -2633,7 +2630,7 @@ BD Padel Ladder System
                 'opponent': opponent,
                 'is_challenger': True
             })
-    
+
     challenge_details_received = []
     now = datetime.now()
     for challenge in challenges_received:
@@ -2642,7 +2639,7 @@ BD Padel Ladder System
             hours_until_deadline = (challenge.acceptance_deadline - now).total_seconds() / 3600
             is_deadline_approaching = hours_until_deadline < 24 and hours_until_deadline > 0
             is_past_deadline = hours_until_deadline <= 0
-            
+
             challenge_details_received.append({
                 'challenge': challenge,
                 'opponent': opponent,
@@ -2651,7 +2648,7 @@ BD Padel Ladder System
                 'is_deadline_approaching': is_deadline_approaching,
                 'is_past_deadline': is_past_deadline
             })
-    
+
     # Query ladder matches for this team
     matches = LadderMatch.query.filter(
         db.or_(
@@ -2659,22 +2656,22 @@ BD Padel Ladder System
             LadderMatch.team_b_id == team.id
         )
     ).order_by(LadderMatch.created_at.desc()).all()
-    
+
     # Separate pending and completed matches
     pending_matches = []
     completed_matches = []
-    
+
     for match in matches:
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         opponent = LadderTeam.query.get(opponent_id)
         challenge = LadderChallenge.query.get(match.challenge_id)
-        
+
         is_team_a = match.team_a_id == team.id
-        
+
         is_past_deadline = False
         if challenge and challenge.completion_deadline:
             is_past_deadline = now > challenge.completion_deadline
-        
+
         match_detail = {
             'match': match,
             'opponent': opponent,
@@ -2686,19 +2683,22 @@ BD Padel Ladder System
             'opponent_submitted': match.score_submitted_by_b if is_team_a else match.score_submitted_by_a,
             'is_past_deadline': is_past_deadline,
         }
-        
+
         if match.verified:
             completed_matches.append(match_detail)
         else:
+            # Check if no-show report is pending admin review
+            if match.status == 'no_show_reported':
+                match_detail['no_show_pending_review'] = True
             pending_matches.append(match_detail)
-    
+
     # Calculate holiday mode grace period info using helper function
     holiday_info = calculate_holiday_status(team, settings)
-    
+
     # Check if team is locked (in active challenge)
     is_locked = any(c['challenge'].status in ['pending_acceptance', 'accepted'] 
                     for c in challenge_details_sent + challenge_details_received)
-    
+
     # Determine team status
     if is_locked:
         team_status = 'locked'
@@ -2712,14 +2712,14 @@ BD Padel Ladder System
         team_status = 'available'
         status_color = 'green'
         status_message = 'Available'
-    
+
     # Get teams that can be challenged (3 ranks above)
     challengeable_teams = []
     if not is_locked and not team.holiday_mode_active:
         max_rank_diff = settings.max_challenge_rank_difference if settings else 3
         min_challengeable_rank = max(1, team.current_rank - max_rank_diff)
         max_challengeable_rank = team.current_rank - 1
-        
+
         if max_challengeable_rank >= min_challengeable_rank:
             potential_teams = LadderTeam.query.filter(
                 LadderTeam.ladder_type == team.ladder_type,
@@ -2728,7 +2728,7 @@ BD Padel Ladder System
                 LadderTeam.current_rank <= max_challengeable_rank,
                 LadderTeam.id != team.id
             ).order_by(LadderTeam.current_rank.asc()).all()
-            
+
             # Filter out locked and holiday teams
             for potential_team in potential_teams:
                 is_team_locked = any(
@@ -2736,10 +2736,10 @@ BD Padel Ladder System
                     c['challenge'].challenged_team_id == potential_team.id 
                     for c in challenge_details_sent + challenge_details_received
                 )
-                
+
                 if not is_team_locked and not potential_team.holiday_mode_active:
                     challengeable_teams.append(potential_team)
-    
+
     return render_template("ladder/my_team.html",
                          team=team,
                          challenges_sent=challenge_details_sent,
@@ -2759,27 +2759,27 @@ def ladder_login():
     """Team login for ladder system - allows teams to challenge others"""
     if request.method == "POST":
         access_token = request.form.get("access_token", "").strip()
-        
+
         if not access_token:
             flash("Please enter your access token", "error")
             return redirect(url_for('ladder_login'))
-        
+
         team = LadderTeam.query.filter_by(access_token=access_token).first()
-        
+
         if not team:
             flash("Invalid access token. Please check your registration email for the correct token.", "error")
             return redirect(url_for('ladder_login'))
-        
+
         session['ladder_team_id'] = team.id
         session['ladder_team_token'] = access_token
         flash(f"Welcome back, {team.team_name}!", "success")
-        
+
         # Redirect based on the team's actual gender/ladder_type
         if team.gender == 'men' or team.ladder_type == 'men':
             return redirect(url_for('ladder_men'))
         else:
             return redirect(url_for('ladder_women'))
-    
+
     return render_template("ladder/login.html")
 
 @app.route("/ladder/logout")
@@ -2790,7 +2790,7 @@ def ladder_logout():
         team = LadderTeam.query.get(team_id)
         if team:
             flash(f"Goodbye, {team.team_name}!", "info")
-    
+
     session.pop('ladder_team_id', None)
     session.pop('ladder_team_token', None)
     return redirect(url_for('index'))
@@ -2800,25 +2800,25 @@ def ladder_challenge_create():
     """Create a new ladder challenge from one team to another"""
     from datetime import datetime, timedelta
     from utils import send_email_notification
-    
+
     if 'ladder_team_id' not in session:
         flash("Please log in to challenge other teams", "error")
         return redirect(url_for('ladder_login'))
-    
+
     challenger_id = session.get('ladder_team_id')
     challenged_id = request.form.get('challenged_team_id', type=int)
-    
+
     if not challenged_id:
         flash("Invalid challenge request", "error")
         return redirect(url_for('index'))
-    
+
     challenger = LadderTeam.query.get(challenger_id)
     challenged = LadderTeam.query.get(challenged_id)
-    
+
     if not challenger or not challenged:
         flash("One or both teams not found", "error")
         return redirect(url_for('index'))
-    
+
     settings = LadderSettings.query.first()
     if not settings:
         settings = LadderSettings(
@@ -2828,24 +2828,24 @@ def ladder_challenge_create():
         )
         db.session.add(settings)
         db.session.commit()
-    
+
     # Prevent cross-gender challenges
     if challenger.ladder_type != challenged.ladder_type:
         flash("You can only challenge teams in your own ladder", "error")
         return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
-    
+
     if challenger.gender != challenged.gender:
         flash(f"You cannot challenge teams from a different gender category. You are in the {challenger.gender.title()}'s division.", "error")
         return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
-    
+
     if challenger.holiday_mode_active:
         flash("You cannot challenge while in holiday mode", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     if challenged.holiday_mode_active:
         flash("You cannot challenge a team that is in holiday mode", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     active_challenge_challenger = LadderChallenge.query.filter(
         db.or_(
             LadderChallenge.challenger_team_id == challenger_id,
@@ -2853,11 +2853,11 @@ def ladder_challenge_create():
         ),
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).first()
-    
+
     if active_challenge_challenger:
         flash("You already have an active challenge. Complete it before creating a new one.", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     active_challenge_challenged = LadderChallenge.query.filter(
         db.or_(
             LadderChallenge.challenger_team_id == challenged_id,
@@ -2865,22 +2865,22 @@ def ladder_challenge_create():
         ),
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).first()
-    
+
     if active_challenge_challenged:
         flash(f"{challenged.team_name} is already in an active challenge", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     rank_diff = challenger.current_rank - challenged.current_rank
     if rank_diff <= 0:
         flash("You can only challenge teams ranked above you", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     if rank_diff > settings.max_challenge_rank_difference:
         flash(f"You can only challenge teams within {settings.max_challenge_rank_difference} ranks above you", "error")
         return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
-    
+
     acceptance_deadline = datetime.utcnow() + timedelta(hours=settings.challenge_acceptance_hours)
-    
+
     new_challenge = LadderChallenge(
         challenger_team_id=challenger_id,
         challenged_team_id=challenged_id,
@@ -2889,10 +2889,10 @@ def ladder_challenge_create():
         acceptance_deadline=acceptance_deadline,
         created_at=datetime.utcnow()
     )
-    
+
     db.session.add(new_challenge)
     db.session.commit()
-    
+
     challenger_email_body = f"""Hello {challenger.team_name},
 
 Your challenge to {challenged.team_name} has been sent successfully!
@@ -2906,7 +2906,7 @@ You'll receive an email notification once they accept. Good luck!
 ---
 Padel Ladder League
 """
-    
+
     challenged_email_body = f"""Hello {challenged.team_name},
 
 You have been challenged by {challenger.team_name} (Rank #{challenger.current_rank})!
@@ -2923,21 +2923,21 @@ Good luck!
 ---
 Padel Ladder League
 """
-    
+
     if challenger.contact_preference_email and challenger.player1_email:
         send_email_notification(
             challenger.player1_email,
             f"Challenge Sent to {challenged.team_name}",
             challenger_email_body
         )
-    
+
     if challenged.contact_preference_email and challenged.player1_email:
         send_email_notification(
             challenged.player1_email,
             f"⚠️ Challenge from {challenger.team_name} - Action Required!",
             challenged_email_body
         )
-    
+
     flash(f"Challenge sent to {challenged.team_name}! They have {settings.challenge_acceptance_hours // 24} days to accept.", "success")
     return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
 
@@ -3154,7 +3154,7 @@ def submit_booking(token):
             # Parse existing booking
             try:
                 existing_datetime_str = match.booking_details.split("Court assigned on arrival")[0].strip()
-                
+
                 # If booking was already confirmed and someone is proposing a new time
                 if match.booking_confirmed:
                     # Reset confirmation and store new proposal
@@ -3187,45 +3187,6 @@ Please log in to confirm or propose a different time:
                         "success": True,
                         "message": f"Booking change submitted! Waiting for {opponent.team_name} to confirm the new time.",
                         "confirmed": False,
-                        "booking_details": match.booking_details
-                    }
-                
-                # Check if opponent is confirming existing proposal
-                if datetime_str in existing_datetime_str:
-                    # Both teams agree! Confirm booking
-                    match.match_datetime = match_datetime
-                    match.match_date = match_datetime.strftime("%A, %B %d at %I:%M %p")
-                    match.court = "Court assigned on arrival"
-                    match.booking_confirmed = True
-                    match.booking_details = f"{match.match_date}\nCourt assigned on arrival\n✓ Confirmed by both teams"
-                    db.session.commit()
-
-                    # Send confirmation emails
-                    confirmation_body = f"""Hi!
-
-Your match booking has been confirmed by both teams:
-
-Match: {team.team_name} vs {opponent.team_name}
-Date & Time: {match.match_date}
-Court: Assigned on arrival
-
-See you on the court! 🎾
-
-- BD Padel League
-"""
-                    if team.player1_email:
-                        send_email_notification(team.player1_email, "Match Booking Confirmed", confirmation_body)
-                    if team.player2_email:
-                        send_email_notification(team.player2_email, "Match Booking Confirmed", confirmation_body)
-                    if opponent.player1_email:
-                        send_email_notification(opponent.player1_email, "Match Booking Confirmed", confirmation_body)
-                    if opponent.player2_email:
-                        send_email_notification(opponent.player2_email, "Match Booking Confirmed", confirmation_body)
-
-                    return {
-                        "success": True,
-                        "message": "Booking confirmed by both teams!",
-                        "confirmed": True,
                         "booking_details": match.booking_details
                     }
             except:
@@ -3324,7 +3285,7 @@ def confirm_booking(token):
 Your match booking has been confirmed by both teams:
 
 Match: {team.team_name} vs {opponent.team_name}
-Date & Time: {datetime_str}
+Date & Time: {match.match_date}
 Court: Assigned on arrival
 
 See you on the court! 🎾
@@ -3724,7 +3685,7 @@ def submit_reschedule(token):
         if team.reschedules_used >= 2:
             return {
                 "success": False,
-                "message": "Your team has already used all 2 reschedules. Contact admin for special approval."
+                "message": "Your team has already used all 2 reschedules. No more subs allowed in league stage."
             }, 400
 
         # Check if we've reached the round reschedule limit
@@ -3911,10 +3872,10 @@ def submit_substitute(token):
 
         # Create substitute request
         from datetime import datetime
-        
+
         # Get the replaced player's name
         replaced_player_name = team.player1_name if replaces_player == "1" else team.player2_name
-        
+
         s = Substitute(
             team_id=team.id,
             match_id=match_id,
@@ -4032,7 +3993,7 @@ def team_profile(team_id: int):
 def league_stats():
     """League statistics page with various rankings and streaks"""
     from datetime import datetime, timedelta
-    
+
     teams = Team.query.all()
 
     # Calculate streaks for each team
@@ -4081,17 +4042,17 @@ def league_stats():
     ladder_men_teams = LadderTeam.query.filter_by(ladder_type='men').count()
     ladder_women_teams = LadderTeam.query.filter_by(ladder_type='women').count()
     ladder_total_teams = ladder_men_teams + ladder_women_teams
-    
+
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).count()
-    
+
     first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     ladder_matches_this_month = LadderMatch.query.filter(
         LadderMatch.verified == True,
         LadderMatch.completed_at >= first_day_of_month
     ).count()
-    
+
     all_ladder_teams = LadderTeam.query.all()
     ladder_teams_with_matches = [t for t in all_ladder_teams if t.matches_played > 0]
     ladder_top_performers = []
@@ -4208,34 +4169,34 @@ def admin_panel():
     # Ladder-specific data
     men_teams_count = LadderTeam.query.filter_by(gender='men').count()
     women_teams_count = LadderTeam.query.filter_by(gender='women').count()
-    
+
     active_challenges_count = LadderChallenge.query.filter(
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).count()
-    
+
     pending_matches_count = LadderMatch.query.filter(
         LadderMatch.status.in_(['pending_scores', 'pending_opponent_score'])
     ).count()
-    
+
     no_show_reports_count = LadderMatch.query.filter_by(status='no_show_reported').count()
     disputed_matches_count = LadderMatch.query.filter_by(disputed=True).count()
-    
+
     men_on_holiday_count = LadderTeam.query.filter_by(
         ladder_type='men',
         holiday_mode_active=True
     ).count()
-    
+
     women_on_holiday_count = LadderTeam.query.filter_by(
         ladder_type='women',
         holiday_mode_active=True
     ).count()
-    
+
     # Pending payments
     pending_payments_men = LadderTeam.query.filter_by(
         gender='men',
         payment_received=False
     ).order_by(LadderTeam.created_at.desc()).all()
-    
+
     pending_payments_women = LadderTeam.query.filter_by(
         gender='women',
         payment_received=False
@@ -4244,7 +4205,7 @@ def admin_panel():
     # Get today's date and matches for Today's Matches section
     from datetime import datetime, date
     today_date = date.today()
-    
+
     # Filter today's matches - only show matches that have been booked (confirmed or pending)
     todays_matches = []
     for match in matches:
@@ -4252,10 +4213,10 @@ def admin_panel():
             # Only include matches that have booking_details (meaning teams have submitted a booking)
             if match.booking_details:
                 todays_matches.append(match)
-    
+
     # Free Agents tab data
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
-    
+
     # Americano tournaments data (similar to admin_americano_tournaments route)
     tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
     tournament_data = []
@@ -4267,20 +4228,20 @@ def admin_panel():
                 participating_ids = json.loads(tournament.participating_free_agents)
             except:
                 pass
-        
+
         participants_count = len(participating_ids)
-        
+
         matches_americano = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
         matches_count = len(matches_americano)
         completed_matches = len([m for m in matches_americano if m.status == 'completed'])
-        
+
         tournament_data.append({
             'tournament': tournament,
             'participants_count': participants_count,
             'matches_count': matches_count,
             'completed_matches': completed_matches
         })
-    
+
     return render_template(
         "admin.html",
         teams=teams,
@@ -4322,25 +4283,25 @@ def admin_panel():
 def admin_ladder_toggle_payment():
     """Toggle payment status for a ladder team"""
     team_id = request.form.get("team_id", type=int)
-    
+
     if not team_id:
         flash("Team ID is required", "error")
         return redirect(url_for('admin_panel'))
-    
+
     team = LadderTeam.query.get(team_id)
     if not team:
         flash("Team not found", "error")
         return redirect(url_for('admin_panel'))
-    
+
     # Toggle payment status
     team.payment_received = not team.payment_received
     db.session.commit()
-    
+
     if team.payment_received:
         flash(f"✓ Payment confirmed for {team.team_name}. Team is now visible in rankings.", "success")
     else:
         flash(f"Payment status removed for {team.team_name}. Team hidden from rankings.", "success")
-    
+
     return redirect(url_for('admin_ladder_rankings', ladder_type=team.ladder_type))
 
 
@@ -4350,23 +4311,23 @@ def admin_ladder_rankings(ladder_type):
     if ladder_type not in ['men', 'women']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
-    
+
     teams = LadderTeam.query.filter_by(gender=ladder_type).order_by(LadderTeam.current_rank).all()
-    
+
     total_teams = len(teams)
     division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
-    
+
     teams_with_status = []
     for team in teams:
         status = 'available'
         status_color = 'green'
         status_text = 'Available'
-        
+
         if team.holiday_mode_active:
             status = 'holiday'
             status_color = 'blue'
             status_text = 'Holiday'
-        
+
         teams_with_status.append({
             'team': team,
             'status': status,
@@ -4375,7 +4336,7 @@ def admin_ladder_rankings(ladder_type):
             'sets_diff': team.sets_for - team.sets_against,
             'games_diff': team.games_for - team.games_against,
         })
-    
+
     return render_template(
         "admin_ladder_rankings.html",
         teams=teams_with_status,
@@ -4390,35 +4351,35 @@ def admin_ladder_rankings(ladder_type):
 def admin_ladder_challenges(ladder_type):
     """Admin page to manage all ladder challenges for a division"""
     from datetime import datetime
-    
+
     if ladder_type not in ['men', 'women']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
-    
+
     division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
-    
+
     all_challenges = LadderChallenge.query.filter_by(ladder_type=ladder_type).order_by(
         LadderChallenge.created_at.desc()
     ).all()
-    
+
     now = datetime.now()
-    
+
     pending_acceptance = []
     accepted = []
     expired = []
     rejected = []
-    
+
     for challenge in all_challenges:
         challenger = LadderTeam.query.get(challenge.challenger_team_id)
         challenged = LadderTeam.query.get(challenge.challenged_team_id)
-        
+
         challenge_data = {
             'challenge': challenge,
             'challenger': challenger,
             'challenged': challenged,
             'is_overdue': challenge.acceptance_deadline and now > challenge.acceptance_deadline
         }
-        
+
         if challenge.status == 'pending_acceptance':
             pending_acceptance.append(challenge_data)
         elif challenge.status == 'accepted':
@@ -4427,7 +4388,7 @@ def admin_ladder_challenges(ladder_type):
             expired.append(challenge_data)
         elif challenge.status == 'rejected':
             rejected.append(challenge_data)
-    
+
     return render_template(
         "admin_ladder_challenges.html",
         ladder_type=ladder_type,
@@ -4444,33 +4405,33 @@ def admin_ladder_challenges(ladder_type):
 def admin_ladder_matches(ladder_type):
     """Admin page to manage all ladder matches for a division"""
     from datetime import datetime
-    
+
     if ladder_type not in ['men', 'women']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
-    
+
     division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
-    
+
     all_matches = LadderMatch.query.filter_by(ladder_type=ladder_type).order_by(
         LadderMatch.created_at.desc()
     ).all()
-    
+
     pending_scores = []
     pending_verification = []
     disputed = []
     no_shows = []
     completed = []
-    
+
     for match in all_matches:
         team_a = LadderTeam.query.get(match.team_a_id)
         team_b = LadderTeam.query.get(match.team_b_id)
-        
+
         match_data = {
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
         }
-        
+
         if match.disputed:
             disputed.append(match_data)
         elif match.reported_no_show_team_id and not match.no_show_verified:
@@ -4482,7 +4443,7 @@ def admin_ladder_matches(ladder_type):
             pending_verification.append(match_data)
         elif match.status == 'pending':
             pending_scores.append(match_data)
-    
+
     return render_template(
         "admin_ladder_matches.html",
         ladder_type=ladder_type,
@@ -4501,11 +4462,11 @@ def admin_ladder_dispute_resolve(match_id):
     """Admin page to resolve disputed ladder match scores"""
     from datetime import datetime
     from utils import swap_ladder_ranks, update_ladder_team_stats, send_email_notification
-    
+
     match = LadderMatch.query.get_or_404(match_id)
     team_a = LadderTeam.query.get(match.team_a_id)
     team_b = LadderTeam.query.get(match.team_b_id)
-    
+
     if request.method == "POST":
         try:
             set1_a = request.form.get("set1_a", type=int)
@@ -4516,44 +4477,44 @@ def admin_ladder_dispute_resolve(match_id):
             set3_b = request.form.get("set3_b", type=int, default=0)
             winner_choice = request.form.get("winner")
             admin_notes = request.form.get("admin_notes", "")
-            
+
             if not all([set1_a is not None, set1_b is not None, set2_a is not None, set2_b is not None, winner_choice]):
                 flash("Please fill in all required fields", "error")
                 return redirect(url_for('admin_ladder_dispute_resolve', match_id=match_id))
-            
+
             sets_a = 0
             sets_b = 0
             games_a = set1_a + set2_a + (set3_a or 0)
             games_b = set1_b + set2_b + (set3_b or 0)
-            
+
             if set1_a > set1_b:
                 sets_a += 1
             else:
                 sets_b += 1
-            
+
             if set2_a > set2_b:
                 sets_a += 1
             else:
                 sets_b += 1
-            
+
             if set3_a and set3_b:
                 if set3_a > set3_b:
                     sets_a += 1
                 else:
                     sets_b += 1
-            
+
             match.team_a_score_set1 = set1_a
             match.team_a_score_set2 = set2_a
             match.team_a_score_set3 = set3_a
             match.team_b_score_set1 = set1_b
             match.team_b_score_set2 = set2_b
             match.team_b_score_set3 = set3_b
-            
+
             match.sets_a = sets_a
             match.sets_b = sets_b
             match.games_a = games_a
             match.games_b = games_b
-            
+
             if winner_choice == "team_a":
                 match.winner_id = team_a.id
                 winner_team = team_a
@@ -4566,23 +4527,23 @@ def admin_ladder_dispute_resolve(match_id):
                 match.winner_id = None
                 winner_team = None
                 loser_team = None
-            
+
             match.status = 'completed'
             match.disputed = False
             match.verified = True
             match.completed_at = datetime.now()
-            
+
             if winner_team and loser_team:
                 update_ladder_team_stats(match, winner_team, loser_team)
                 rank_changes = swap_ladder_ranks(winner_team, loser_team, match.ladder_type)
-                
+
                 match.winner_old_rank = rank_changes['winner']['old']
                 match.winner_new_rank = rank_changes['winner']['new']
                 match.loser_old_rank = rank_changes['loser']['old']
                 match.loser_new_rank = rank_changes['loser']['new']
-            
+
             db.session.commit()
-            
+
             email_body_a = f"""Hi {team_a.player1_name},
 
 MATCH DISPUTE RESOLVED
@@ -4599,7 +4560,7 @@ Your new rank: #{team_a.current_rank}
 
 - BD Padel League
 """
-            
+
             email_body_b = f"""Hi {team_b.player1_name},
 
 MATCH DISPUTE RESOLVED
@@ -4616,7 +4577,7 @@ Your new rank: #{team_b.current_rank}
 
 - BD Padel League
 """
-            
+
             if team_a.player1_email:
                 send_email_notification(team_a.player1_email, "Match Dispute Resolved", email_body_a)
             if team_a.player2_email:
@@ -4625,15 +4586,15 @@ Your new rank: #{team_b.current_rank}
                 send_email_notification(team_b.player1_email, "Match Dispute Resolved", email_body_b)
             if team_b.player2_email:
                 send_email_notification(team_b.player2_email, "Match Dispute Resolved", email_body_b)
-            
+
             flash("Match dispute resolved successfully!", "success")
             return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error resolving dispute: {str(e)}", "error")
             return redirect(url_for('admin_ladder_dispute_resolve', match_id=match_id))
-    
+
     return render_template(
         "admin_ladder_dispute_resolve.html",
         match=match,
@@ -4648,32 +4609,29 @@ def admin_ladder_no_show_process(match_id):
     """Process admin decision on no-show report"""
     from datetime import datetime
     from utils import swap_ladder_ranks, apply_rank_penalty, update_ladder_team_stats, send_email_notification
-    
+
     match = LadderMatch.query.get_or_404(match_id)
     team_a = LadderTeam.query.get(match.team_a_id)
     team_b = LadderTeam.query.get(match.team_b_id)
-    
+
     action = request.form.get("action")
     admin_notes = request.form.get("admin_notes", "")
-    
+
     if match.status == 'completed':
         flash("Cannot process no-show - match already completed", "error")
         return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
-    
+
     try:
         if action == "approve":
             no_show_team_id = match.reported_no_show_team_id
             reporting_team_id = match.reported_by_team_id
-            
-            if no_show_team_id == team_a.id:
-                no_show_team = team_a
-                winner_team = team_b
-            else:
+
+            if no_show_team_id == team_a.id    else:
                 no_show_team = team_b
                 winner_team = team_a
-            
+
             penalty_result = apply_rank_penalty(no_show_team, 1, f"No-show for match vs {winner_team.team_name}", match.ladder_type)
-            
+
             match.winner_id = winner_team.id
             match.sets_a = 2 if winner_team.id == team_a.id else 0
             match.sets_b = 2 if winner_team.id == team_b.id else 0
@@ -4683,11 +4641,11 @@ def admin_ladder_no_show_process(match_id):
             match.no_show_verified = True
             match.verified = True
             match.completed_at = datetime.now()
-            
+
             update_ladder_team_stats(match, winner_team, no_show_team)
-            
+
             db.session.commit()
-            
+
             email_winner = f"""Hi {winner_team.player1_name},
 
 NO-SHOW APPROVED - YOU WIN
@@ -4703,7 +4661,7 @@ Your new rank: #{winner_team.current_rank}
 
 - BD Padel League
 """
-            
+
             email_no_show = f"""Hi {no_show_team.player1_name},
 
 NO-SHOW PENALTY APPLIED
@@ -4720,7 +4678,7 @@ Please ensure you attend all scheduled matches in the future.
 
 - BD Padel League
 """
-            
+
             if winner_team.player1_email:
                 send_email_notification(winner_team.player1_email, "No-Show Approved - You Win", email_winner)
             if winner_team.player2_email:
@@ -4729,18 +4687,18 @@ Please ensure you attend all scheduled matches in the future.
                 send_email_notification(no_show_team.player1_email, "No-Show Penalty Applied", email_no_show)
             if no_show_team.player2_email:
                 send_email_notification(no_show_team.player2_email, "No-Show Penalty Applied", email_no_show)
-            
+
             flash("No-show approved and penalties applied", "success")
-            
+
         elif action == "reject":
             match.status = 'pending'
             match.reported_no_show_team_id = None
             match.reported_by_team_id = None
             match.no_show_report_date = None
             match.no_show_notes = None
-            
+
             db.session.commit()
-            
+
             email_body = f"""Hi,
 
 NO-SHOW REPORT REJECTED
@@ -4756,7 +4714,7 @@ Please coordinate with your opponent to complete the match.
 
 - BD Padel League
 """
-            
+
             if team_a.player1_email:
                 send_email_notification(team_a.player1_email, "No-Show Report Rejected", email_body)
             if team_a.player2_email:
@@ -4765,11 +4723,11 @@ Please coordinate with your opponent to complete the match.
                 send_email_notification(team_b.player1_email, "No-Show Report Rejected", email_body)
             if team_b.player2_email:
                 send_email_notification(team_b.player2_email, "No-Show Report Rejected", email_body)
-            
+
             flash("No-show report rejected - match reset to pending", "success")
-        
+
         return redirect(url_for('admin_ladder_matches', ladder_type=match.ladder_type))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error processing no-show: {str(e)}", "error")
@@ -4782,10 +4740,10 @@ def admin_ladder_edit_team(team_id):
     """Edit ladder team details"""
     from datetime import datetime
     from utils import normalize_phone_number, normalize_team_name, send_email_notification
-    
+
     team = LadderTeam.query.get_or_404(team_id)
     ladder_type = team.ladder_type
-    
+
     if request.method == "POST":
         try:
             team_name = request.form.get("team_name", "").strip()
@@ -4797,24 +4755,24 @@ def admin_ladder_edit_team(team_id):
             player2_phone = request.form.get("player2_phone", "").strip()
             contact_preference_email = request.form.get("contact_preference_email") == "on"
             contact_preference_whatsapp = request.form.get("contact_preference_whatsapp") == "on"
-            
+
             if not all([team_name, player1_name, player1_phone, player2_name, player2_phone]):
                 flash("All required fields must be filled", "error")
                 return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
-            
+
             canonical_name = normalize_team_name(team_name)
             existing_team = LadderTeam.query.filter(
                 LadderTeam.team_name_canonical == canonical_name,
                 LadderTeam.id != team_id,
                 LadderTeam.ladder_type == ladder_type
             ).first()
-            
+
             if existing_team:
                 flash(f"Team name '{team_name}' is already taken in this division", "error")
                 return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
-            
+
             old_team_name = team.team_name
-            
+
             team.team_name = team_name
             team.team_name_canonical = canonical_name
             team.player1_name = player1_name
@@ -4826,9 +4784,9 @@ def admin_ladder_edit_team(team_id):
             team.contact_preference_email = contact_preference_email
             team.contact_preference_whatsapp = contact_preference_whatsapp
             team.updated_at = datetime.now()
-            
+
             db.session.commit()
-            
+
             email_body = f"""Hi {team.player1_name},
 
 TEAM DETAILS UPDATED
@@ -4847,21 +4805,21 @@ If you have any questions about these changes, please contact the admin.
 
 - BD Padel League
 """
-            
+
             if team.contact_preference_email:
                 if team.player1_email:
                     send_email_notification(team.player1_email, "Team Details Updated", email_body)
                 if team.player2_email and team.player2_email != team.player1_email:
                     send_email_notification(team.player2_email, "Team Details Updated", email_body)
-            
+
             flash(f"Team '{team.team_name}' updated successfully!", "success")
             return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error updating team: {str(e)}", "error")
             return redirect(url_for('admin_ladder_edit_team', team_id=team_id))
-    
+
     return render_template("admin_edit_team.html", team=team, is_ladder=True)
 
 
@@ -4870,12 +4828,12 @@ If you have any questions about these changes, please contact the admin.
 def admin_ladder_delete_team(team_id):
     """Delete ladder team and adjust rankings"""
     from utils import send_email_notification
-    
+
     team = LadderTeam.query.get_or_404(team_id)
     ladder_type = team.ladder_type
     team_rank = team.current_rank
     team_name = team.team_name
-    
+
     active_challenges = LadderChallenge.query.filter(
         db.or_(
             LadderChallenge.challenger_team_id == team_id,
@@ -4883,11 +4841,11 @@ def admin_ladder_delete_team(team_id):
         ),
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).count()
-    
+
     if active_challenges > 0:
         flash(f"Cannot delete team - they have {active_challenges} active challenge(s). Please resolve or cancel these first.", "error")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-    
+
     pending_matches = LadderMatch.query.filter(
         db.or_(
             LadderMatch.team_a_id == team_id,
@@ -4895,27 +4853,27 @@ def admin_ladder_delete_team(team_id):
         ),
         LadderMatch.status == 'pending'
     ).count()
-    
+
     if pending_matches > 0:
         flash(f"Cannot delete team - they have {pending_matches} pending match(es). Please resolve these first.", "error")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-    
+
     try:
         teams_to_move_up = LadderTeam.query.filter(
             LadderTeam.gender == ladder_type,
             LadderTeam.current_rank > team_rank
         ).all()
-        
+
         for t in teams_to_move_up:
             t.current_rank -= 1
-        
+
         player1_email = team.player1_email
         player2_email = team.player2_email
         contact_email = team.contact_preference_email
-        
+
         db.session.delete(team)
         db.session.commit()
-        
+
         email_body = f"""Hi {team.player1_name},
 
 TEAM REMOVED FROM LADDER
@@ -4929,16 +4887,16 @@ If you believe this was done in error or have questions, please contact the admi
 
 - BD Padel League
 """
-        
+
         if contact_email:
             if player1_email:
                 send_email_notification(player1_email, "Team Removed from Ladder", email_body)
             if player2_email and player2_email != player1_email:
                 send_email_notification(player2_email, "Team Removed from Ladder", email_body)
-        
+
         flash(f"Team '{team_name}' deleted successfully. {len(teams_to_move_up)} team(s) moved up in rankings.", "success")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting team: {str(e)}", "error")
@@ -4950,28 +4908,28 @@ If you believe this was done in error or have questions, please contact the admi
 def admin_ladder_adjust_rank():
     """Manually adjust a team's rank on the ladder"""
     from utils import adjust_ladder_ranks, send_email_notification
-    
+
     team_id = request.form.get("team_id", type=int)
     new_rank = request.form.get("new_rank", type=int)
-    
+
     if not team_id or not new_rank:
         flash("Team ID and new rank are required", "error")
         return redirect(url_for('admin_panel'))
-    
+
     team = LadderTeam.query.get_or_404(team_id)
     ladder_type = team.gender
-    
+
     try:
         result = adjust_ladder_ranks(team, new_rank, ladder_type)
-        
+
         if not result.get('success'):
             flash(result.get('message', 'Failed to adjust rank'), "error")
             return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-        
+
         old_rank = result['old_rank']
         new_rank = result['new_rank']
         affected_teams = result['affected_teams']
-        
+
         email_body = f"""Hi {team.player1_name},
 
 RANK ADJUSTED BY ADMIN
@@ -4987,13 +4945,13 @@ If you have questions about this adjustment, please contact the admin.
 
 - BD Padel League
 """
-        
+
         if team.contact_preference_email:
             if team.player1_email:
                 send_email_notification(team.player1_email, f"Rank Adjusted: #{old_rank} → #{new_rank}", email_body)
             if team.player2_email and team.player2_email != team.player1_email:
                 send_email_notification(team.player2_email, f"Rank Adjusted: #{old_rank} → #{new_rank}", email_body)
-        
+
         for affected in affected_teams:
             affected_team = LadderTeam.query.get(affected['team_id'])
             if affected_team and affected_team.contact_preference_email:
@@ -5015,10 +4973,10 @@ This change was made to accommodate the adjustment of another team.
                     send_email_notification(affected_team.player1_email, "Rank Update", affected_email)
                 if affected_team.player2_email and affected_team.player2_email != affected_team.player1_email:
                     send_email_notification(affected_team.player2_email, "Rank Update", affected_email)
-        
+
         flash(f"Rank adjusted successfully! {team.team_name}: #{old_rank} → #{new_rank}. {len(affected_teams)} other team(s) affected.", "success")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error adjusting rank: {str(e)}", "error")
@@ -5031,22 +4989,22 @@ def admin_ladder_toggle_holiday():
     """Toggle holiday mode for a ladder team"""
     from datetime import datetime
     from utils import send_email_notification
-    
+
     team_id = request.form.get("team_id", type=int)
-    
+
     if not team_id:
         flash("Team ID is required", "error")
         return redirect(url_for('admin_panel'))
-    
+
     team = LadderTeam.query.get_or_404(team_id)
     ladder_type = team.gender
-    
+
     try:
         if team.holiday_mode_active:
             team.holiday_mode_active = False
             team.holiday_mode_end = datetime.now()
             action = "deactivated"
-            
+
             email_body = f"""Hi {team.player1_name},
 
 HOLIDAY MODE DEACTIVATED
@@ -5062,7 +5020,7 @@ You can now be challenged by other teams again.
 
 - BD Padel League
 """
-            
+
         else:
             active_challenges = LadderChallenge.query.filter(
                 db.or_(
@@ -5071,16 +5029,16 @@ You can now be challenged by other teams again.
                 ),
                 LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
             ).count()
-            
+
             if active_challenges > 0:
                 flash(f"Cannot activate holiday mode - team has {active_challenges} active challenge(s)", "error")
                 return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-            
+
             team.holiday_mode_active = True
             team.holiday_mode_start = datetime.now()
             team.holiday_mode_end = None
             action = "activated"
-            
+
             email_body = f"""Hi {team.player1_name},
 
 HOLIDAY MODE ACTIVATED
@@ -5096,18 +5054,18 @@ While on holiday mode, you cannot be challenged by other teams and your rank is 
 
 - BD Padel League
 """
-        
+
         db.session.commit()
-        
+
         if team.contact_preference_email:
             if team.player1_email:
                 send_email_notification(team.player1_email, f"Holiday Mode {action.capitalize()}", email_body)
             if team.player2_email and team.player2_email != team.player1_email:
                 send_email_notification(team.player2_email, f"Holiday Mode {action.capitalize()}", email_body)
-        
+
         flash(f"Holiday mode {action} for '{team.team_name}'", "success")
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error toggling holiday mode: {str(e)}", "error")
@@ -5287,10 +5245,10 @@ def admin_ladder_settings():
 def admin_americano_tournaments():
     """List all Americano tournaments"""
     from datetime import datetime
-    
+
     try:
         tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
-        
+
         tournament_data = []
         for tournament in tournaments:
             participating_ids = []
@@ -5300,26 +5258,26 @@ def admin_americano_tournaments():
                     participating_ids = json.loads(tournament.participating_free_agents)
                 except:
                     pass
-            
+
             participants_count = len(participating_ids)
-            
+
             matches = AmericanoMatch.query.filter_by(tournament_id=tournament.id).all()
             matches_count = len(matches)
             completed_matches = len([m for m in matches if m.status == 'completed'])
-            
+
             tournament_data.append({
                 'tournament': tournament,
                 'participants_count': participants_count,
                 'matches_count': matches_count,
                 'completed_matches': completed_matches
             })
-        
+
         response = make_response(render_template("admin_americano_tournaments.html", tournament_data=tournament_data))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
         return response
-        
+
     except Exception as e:
         app.logger.error(f"Error loading Americano tournaments: {str(e)}")
         flash(f"Error loading tournaments: {str(e)}", "error")
@@ -5332,7 +5290,10 @@ def admin_americano_create():
     """Create a new Americano tournament"""
     from datetime import datetime
     import json
-    
+    import secrets
+    from utils import send_email_notification, normalize_team_name
+    from collections import defaultdict
+
     if request.method == "POST":
         try:
             gender = request.form.get("gender")
@@ -5342,30 +5303,30 @@ def admin_americano_create():
             points_per_match = request.form.get("points_per_match", type=int, default=24)
             time_limit_minutes = request.form.get("time_limit_minutes", type=int, default=20)
             serves_before_rotation = request.form.get("serves_before_rotation", type=int, default=2)
-            
+
             if not gender or not tournament_date_str:
                 flash("Gender and tournament date are required", "error")
                 return redirect(url_for("admin_americano_create"))
-            
+
             if len(participant_ids) < 4:
                 flash("At least 4 participants are required for Americano tournament", "error")
                 return redirect(url_for("admin_americano_create"))
-            
+
             # Validate format settings
             if points_per_match not in [16, 24, 32]:
                 flash("Points per match must be 16, 24, or 32", "error")
                 return redirect(url_for("admin_americano_create"))
-            
+
             if time_limit_minutes not in [10, 20]:
                 flash("Time limit must be 10 or 20 minutes", "error")
                 return redirect(url_for("admin_americano_create"))
-            
+
             if serves_before_rotation not in [2, 4]:
                 flash("Serves rotation must be 2 or 4", "error")
                 return redirect(url_for("admin_americano_create"))
-            
+
             tournament_date = datetime.strptime(tournament_date_str, "%Y-%m-%d")
-            
+
             tournament = AmericanoTournament(
                 tournament_date=tournament_date,
                 gender=gender,
@@ -5378,10 +5339,10 @@ def admin_americano_create():
                 participating_free_agents=json.dumps([int(p) for p in participant_ids]),
                 created_at=datetime.now()
             )
-            
+
             db.session.add(tournament)
             db.session.commit()
-            
+
             from utils import send_email_notification
             for participant_id in participant_ids:
                 free_agent = LadderFreeAgent.query.get(int(participant_id))
@@ -5407,18 +5368,18 @@ Match schedule will be sent soon. Get ready to play!
 - BD Padel League
 """
                     send_email_notification(free_agent.email, subject, body)
-            
+
             flash(f"✅ Tournament created successfully! {len(participant_ids)} invitations sent.", "success")
             return redirect(url_for("admin_americano_detail", tournament_id=tournament.id))
-        
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error creating tournament: {str(e)}", "error")
             return redirect(url_for("admin_americano_create"))
-    
+
     men_agents = LadderFreeAgent.query.filter_by(gender="men").all()
     women_agents = LadderFreeAgent.query.filter_by(gender="women").all()
-    
+
     return render_template("admin_americano_create.html", 
                          men_agents=men_agents, 
                          women_agents=women_agents)
@@ -5429,37 +5390,37 @@ Match schedule will be sent soon. Get ready to play!
 def admin_americano_detail(tournament_id):
     """View tournament details"""
     import json
-    
+
     tournament = AmericanoTournament.query.get_or_404(tournament_id)
-    
+
     participant_ids = []
     if tournament.participating_free_agents:
         try:
             participant_ids = json.loads(tournament.participating_free_agents)
         except:
             pass
-    
+
     participants = []
     for pid in participant_ids:
         agent = LadderFreeAgent.query.get(pid)
         if agent:
             participants.append(agent)
-    
+
     matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).order_by(
         AmericanoMatch.round_number, 
         AmericanoMatch.id
     ).all()
-    
+
     matches_by_round = {}
     for match in matches:
         if match.round_number not in matches_by_round:
             matches_by_round[match.round_number] = []
-        
+
         p1 = LadderFreeAgent.query.get(match.player1_id)
         p2 = LadderFreeAgent.query.get(match.player2_id)
         p3 = LadderFreeAgent.query.get(match.player3_id)
         p4 = LadderFreeAgent.query.get(match.player4_id)
-        
+
         matches_by_round[match.round_number].append({
             'match': match,
             'p1': p1,
@@ -5467,7 +5428,7 @@ def admin_americano_detail(tournament_id):
             'p3': p3,
             'p4': p4
         })
-    
+
     return render_template("admin_americano_detail.html",
                          tournament=tournament,
                          participants=participants,
@@ -5482,34 +5443,34 @@ def admin_americano_generate_matches(tournament_id):
     from datetime import datetime
     import json
     from utils import generate_americano_pairings, send_email_notification
-    
+
     tournament = AmericanoTournament.query.get_or_404(tournament_id)
-    
+
     existing_matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).all()
     if existing_matches:
         flash("⚠️ Matches already generated for this tournament. Delete existing matches first if you want to regenerate.", "error")
         return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
-    
+
     try:
         participant_ids = []
         if tournament.participating_free_agents:
             participant_ids = json.loads(tournament.participating_free_agents)
-        
+
         if len(participant_ids) < 4:
             flash("Need at least 4 participants to generate matches", "error")
             return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
-        
+
         rounds = generate_americano_pairings(participant_ids)
-        
+
         if not rounds:
             flash("Could not generate pairings", "error")
             return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
-        
+
         total_matches_created = 0
         for round_num, round_matches in enumerate(rounds, start=1):
             for court_num, match_tuple in enumerate(round_matches, start=1):
                 p1_id, p2_id, p3_id, p4_id = match_tuple
-                
+
                 match = AmericanoMatch(
                     tournament_id=tournament_id,
                     round_number=round_num,
@@ -5523,38 +5484,39 @@ def admin_americano_generate_matches(tournament_id):
                 )
                 db.session.add(match)
                 total_matches_created += 1
-        
+
         tournament.total_rounds = len(rounds)
         tournament.status = "in_progress"
         db.session.commit()
-        
+
         for participant_id in participant_ids:
             free_agent = LadderFreeAgent.query.get(participant_id)
             if free_agent and free_agent.email:
                 subject = f"🎾 Americano Tournament Schedule - {tournament.gender.title()}'s Division"
                 body = f"""Hi {free_agent.name},
 
-The match schedule for your Americano Tournament is ready!
+You've been invited to participate in an Americano Tournament!
 
 Tournament Details:
 📅 Date: {tournament.tournament_date.strftime('%B %d, %Y')}
 📍 Location: {tournament.location or 'TBD'}
-🎯 Total Rounds: {len(rounds)}
+🏆 Division: {tournament.gender.title()}'s
 
-Format:
-- You'll play {len(rounds)} matches
+What is Americano Format?
+- Multiple rounds of doubles matches
 - Partners rotate each round
-- Have fun and play your best!
+- Everyone plays with everyone
+- Fun, social, and competitive!
 
-The admin will update scores after each match. Good luck!
+Match schedule will be sent soon. Get ready to play!
 
 - BD Padel League
 """
                 send_email_notification(free_agent.email, subject, body)
-        
+
         flash(f"✅ Successfully generated {total_matches_created} matches across {len(rounds)} rounds! Schedule emails sent to all participants.", "success")
         return redirect(url_for("admin_americano_detail", tournament_id=tournament_id))
-    
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error generating matches: {str(e)}", "error")
@@ -5567,81 +5529,81 @@ def admin_americano_scores(tournament_id):
     """Enter scores for Americano matches"""
     from datetime import datetime
     import json
-    
+
     tournament = AmericanoTournament.query.get_or_404(tournament_id)
-    
+
     if request.method == "POST":
         try:
             match_id = request.form.get("match_id", type=int)
             team_a_score = request.form.get("team_a_score", type=int)
             team_b_score = request.form.get("team_b_score", type=int)
-            
+
             if not match_id or team_a_score is None or team_b_score is None:
                 flash("Match ID and scores are required", "error")
                 return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-            
+
             match = AmericanoMatch.query.get(match_id)
             if not match or match.tournament_id != tournament_id:
                 flash("Invalid match", "error")
                 return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-            
+
             # Validate scores
             if team_a_score < 0 or team_b_score < 0:
                 flash("Scores cannot be negative", "error")
                 return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-            
+
             # Maximum validation: points_per_match + 10% buffer
             max_allowed = int(tournament.points_per_match * 1.1)
             if team_a_score > max_allowed or team_b_score > max_allowed:
                 flash(f"Individual scores cannot exceed {max_allowed} (10% buffer over {tournament.points_per_match})", "error")
                 return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-            
+
             # Points-based scoring: each player gets their team's score
             match.score_team_a = team_a_score
             match.score_team_b = team_b_score
-            
+
             # Each player receives points equal to their team's score
             match.points_player1 = team_a_score  # Team A Player 1
             match.points_player2 = team_a_score  # Team A Player 2
             match.points_player3 = team_b_score  # Team B Player 3
             match.points_player4 = team_b_score  # Team B Player 4
-            
+
             match.status = "completed"
             db.session.commit()
-            
+
             flash(f"✅ Points recorded: Team A ({team_a_score}) vs Team B ({team_b_score}). Each player receives their team's points.", "success")
             return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-        
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error recording score: {str(e)}", "error")
             return redirect(url_for("admin_americano_scores", tournament_id=tournament_id))
-    
+
     participant_ids = []
     if tournament.participating_free_agents:
         participant_ids = json.loads(tournament.participating_free_agents)
-    
+
     participants = []
     for pid in participant_ids:
         agent = LadderFreeAgent.query.get(pid)
         if agent:
             participants.append(agent)
-    
+
     matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id).order_by(
         AmericanoMatch.round_number, 
         AmericanoMatch.id
     ).all()
-    
+
     matches_by_round = {}
     for match in matches:
         if match.round_number not in matches_by_round:
             matches_by_round[match.round_number] = []
-        
+
         p1 = LadderFreeAgent.query.get(match.player1_id)
         p2 = LadderFreeAgent.query.get(match.player2_id)
         p3 = LadderFreeAgent.query.get(match.player3_id)
         p4 = LadderFreeAgent.query.get(match.player4_id)
-        
+
         matches_by_round[match.round_number].append({
             'match': match,
             'p1': p1,
@@ -5649,7 +5611,7 @@ def admin_americano_scores(tournament_id):
             'p3': p3,
             'p4': p4
         })
-    
+
     return render_template("admin_americano_scores.html",
                          tournament=tournament,
                          participants=participants,
@@ -5662,13 +5624,13 @@ def admin_americano_leaderboard(tournament_id):
     """View tournament leaderboard"""
     import json
     from collections import defaultdict
-    
+
     tournament = AmericanoTournament.query.get_or_404(tournament_id)
-    
+
     participant_ids = []
     if tournament.participating_free_agents:
         participant_ids = json.loads(tournament.participating_free_agents)
-    
+
     player_stats = defaultdict(lambda: {
         'player': None,
         'matches_played': 0,
@@ -5677,19 +5639,19 @@ def admin_americano_leaderboard(tournament_id):
         'draws': 0,
         'total_points': 0
     })
-    
+
     for pid in participant_ids:
         agent = LadderFreeAgent.query.get(pid)
         if agent:
             player_stats[pid]['player'] = agent
-    
+
     matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id, status='completed').all()
-    
+
     for match in matches:
         for player_id in [match.player1_id, match.player2_id, match.player3_id, match.player4_id]:
             if player_id in player_stats:
                 player_stats[player_id]['matches_played'] += 1
-                
+
                 if player_id == match.player1_id:
                     points = match.points_player1
                 elif player_id == match.player2_id:
@@ -5698,39 +5660,38 @@ def admin_americano_leaderboard(tournament_id):
                     points = match.points_player3
                 else:
                     points = match.points_player4
-                
+
                 player_stats[player_id]['total_points'] += points
-                
                 if points == 3:
                     player_stats[player_id]['wins'] += 1
                 elif points == 1:
                     player_stats[player_id]['draws'] += 1
                 else:
                     player_stats[player_id]['losses'] += 1
-    
+
     leaderboard = sorted(
         player_stats.values(),
         key=lambda x: (x['total_points'], x['wins']),
         reverse=True
     )
-    
+
     total_players = len(leaderboard)
     top_50_percent_count = max(1, total_players // 2)
-    
+
     for idx, entry in enumerate(leaderboard, start=1):
         entry['rank'] = idx
         entry['is_eligible'] = (idx <= top_50_percent_count)
-    
+
     all_matches_completed = AmericanoMatch.query.filter_by(
         tournament_id=tournament_id, 
         status='pending'
     ).count() == 0
-    
+
     if all_matches_completed and tournament.status != 'completed':
         tournament.status = 'completed'
         tournament.completed_at = datetime.now()
         db.session.commit()
-    
+
     return render_template("admin_americano_leaderboard.html",
                          tournament=tournament,
                          leaderboard=leaderboard,
@@ -5744,11 +5705,11 @@ def admin_americano_pair_agents(tournament_id):
     from datetime import datetime
     import json
     import secrets
-    from utils import send_email_notification, normalize_team_name
+    from utils import send_email_notification
     from collections import defaultdict
-    
+
     tournament = AmericanoTournament.query.get_or_404(tournament_id)
-    
+
     if request.method == "POST":
         try:
             pairs = []
@@ -5757,34 +5718,34 @@ def admin_americano_pair_agents(tournament_id):
                 player1_id = request.form.get(f"player1_{pair_index}", type=int)
                 player2_id = request.form.get(f"player2_{pair_index}", type=int)
                 team_name = request.form.get(f"team_name_{pair_index}")
-                
+
                 if not player1_id or not player2_id or not team_name:
                     break
-                
+
                 pairs.append({
                     'player1_id': player1_id,
                     'player2_id': player2_id,
                     'team_name': team_name
                 })
                 pair_index += 1
-            
+
             if not pairs:
                 flash("No pairs selected", "error")
                 return redirect(url_for("admin_americano_pair_agents", tournament_id=tournament_id))
-            
+
             max_rank = db.session.query(db.func.max(LadderTeam.current_rank)).filter_by(
                 gender=tournament.gender
             ).scalar() or 0
-            
+
             for pair_data in pairs:
                 player1 = LadderFreeAgent.query.get(pair_data['player1_id'])
                 player2 = LadderFreeAgent.query.get(pair_data['player2_id'])
-                
+
                 if not player1 or not player2:
                     continue
-                
+
                 max_rank += 1
-                
+
                 team = LadderTeam(
                     team_name=pair_data['team_name'],
                     team_name_canonical=normalize_team_name(pair_data['team_name']),
@@ -5801,12 +5762,12 @@ def admin_americano_pair_agents(tournament_id):
                     created_at=datetime.now(),
                     updated_at=datetime.now()
                 )
-                
+
                 db.session.add(team)
-                
+
                 db.session.delete(player1)
                 db.session.delete(player2)
-                
+
                 for player, partner_name in [(player1, player2.name), (player2, player1.name)]:
                     if player.email:
                         subject = f"🎉 Congratulations! You've been paired into the {tournament.gender.title()}'s Ladder"
@@ -5831,40 +5792,40 @@ Welcome to the ladder! Let's see how high you can climb! 🚀
 - BD Padel League
 """
                         send_email_notification(player.email, subject, body)
-            
+
             db.session.commit()
-            
+
             flash(f"✅ Successfully created {len(pairs)} new teams from tournament participants! Congratulations emails sent.", "success")
             return redirect(url_for("admin_americano_leaderboard", tournament_id=tournament_id))
-        
+
         except Exception as e:
             db.session.rollback()
             flash(f"Error creating teams: {str(e)}", "error")
             return redirect(url_for("admin_americano_pair_agents", tournament_id=tournament_id))
-    
+
     participant_ids = []
     if tournament.participating_free_agents:
         participant_ids = json.loads(tournament.participating_free_agents)
-    
+
     player_stats = defaultdict(lambda: {
         'player': None,
         'total_points': 0,
         'matches_played': 0,
         'wins': 0
     })
-    
+
     for pid in participant_ids:
         agent = LadderFreeAgent.query.get(pid)
         if agent:
             player_stats[pid]['player'] = agent
-    
+
     matches = AmericanoMatch.query.filter_by(tournament_id=tournament_id, status='completed').all()
-    
+
     for match in matches:
         for player_id in [match.player1_id, match.player2_id, match.player3_id, match.player4_id]:
             if player_id in player_stats:
                 player_stats[player_id]['matches_played'] += 1
-                
+
                 if player_id == match.player1_id:
                     points = match.points_player1
                 elif player_id == match.player2_id:
@@ -5873,23 +5834,23 @@ Welcome to the ladder! Let's see how high you can climb! 🚀
                     points = match.points_player3
                 else:
                     points = match.points_player4
-                
+
                 player_stats[player_id]['total_points'] += points
                 if points == 3:
                     player_stats[player_id]['wins'] += 1
-    
+
     ranked_players = sorted(
         [(pid, stats) for pid, stats in player_stats.items() if stats['player']],
         key=lambda x: (x[1]['total_points'], x[1]['wins']),
         reverse=True
     )
-    
+
     total_players = len(ranked_players)
     top_50_percent_count = max(1, total_players // 2)
-    
+
     eligible_players = []
     all_players = []
-    
+
     for idx, (pid, stats) in enumerate(ranked_players, start=1):
         entry = {
             'rank': idx,
@@ -5900,7 +5861,7 @@ Welcome to the ladder! Let's see how high you can climb! 🚀
         all_players.append(entry)
         if entry['is_eligible']:
             eligible_players.append(entry)
-    
+
     return render_template("admin_americano_pair_agents.html",
                          tournament=tournament,
                          eligible_players=eligible_players,
@@ -6218,424 +6179,6 @@ def reset_round_status(round_number):
     return redirect(url_for("admin_panel"))
 
 
-@app.route("/admin/pair-agents", methods=["POST"])
-@require_admin_auth
-def pair_agents():
-    agent1_id = request.form.get("agent1_id")
-    agent2_id = request.form.get("agent2_id")
-    team_name = request.form.get("team_name")
-
-    agent1 = FreeAgent.query.get(agent1_id)
-    agent2 = FreeAgent.query.get(agent2_id)
-
-    if agent1 and agent2:
-        # Generate unique access token for this team
-        access_token = secrets.token_urlsafe(32)
-
-        new_team = Team(
-            team_name=team_name,
-            player1_name=agent1.name,
-            player1_phone=agent1.phone,
-            player1_email=agent1.email,
-            player2_name=agent2.name,
-            player2_phone=agent2.phone,
-            player2_email=agent2.email,
-            access_token=access_token,
-            confirmed=True,
-            player2_confirmed=True
-        )
-        agent1.paired = True
-        agent1.partner_id = agent2_id
-        agent2.paired = True
-        agent2.partner_id = agent1_id
-
-        db.session.add(new_team)
-        db.session.commit()
-
-        # Send email notifications to both free agents
-        from utils import send_email_notification
-        base_url = "https://goeclectic.xyz"
-        access_link = f"{base_url}/my-matches/{access_token}"
-
-        # Email to Agent 1
-        if agent1.email:
-            email_body1 = f"""Hi {agent1.name},
-
-🎉 GREAT NEWS! You've been paired with a partner!
-
-Team Details:
-- Team Name: {team_name}
-- Your Partner: {agent2.name}
-- Partner Email: {agent2.email}
-- Partner Phone: {agent2.phone}
-
-🔗 Your Team Access Link:
-{access_link}
-
-Use this link to:
-- View your match schedule
-- See opponent contact information
-- Submit match scores
-- Request reschedules or substitutes
-
-💬 Join Our WhatsApp Community:
-https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
-
-Stay connected with other teams, get updates, and coordinate matches!
-
-Please reach out to your partner to introduce yourself and get ready to compete!
-
-Good luck in the league! 🎾
-
-- BD Padel League
-"""
-            send_email_notification(agent1.email, f"You've Been Paired! - Team {team_name}", email_body1)
-
-        # Email to Agent 2
-        if agent2.email:
-            email_body2 = f"""Hi {agent2.name},
-
-🎉 GREAT NEWS! You've been paired with a partner!
-
-Team Details:
-- Team Name: {team_name}
-- Your Partner: {agent1.name}
-- Partner Email: {agent1.email}
-- Partner Phone: {agent1.phone}
-
-🔗 Your Team Access Link:
-{access_link}
-
-Use this link to:
-- View your match schedule
-- See opponent contact information
-- Submit match scores
-- Request reschedules or substitutes
-
-💬 Join Our WhatsApp Community:
-https://chat.whatsapp.com/FGOQG62XwWfDazc6ZmMagT
-
-Stay connected with other teams, get updates, and coordinate matches!
-
-Please reach out to your partner to introduce yourself and get ready to compete!
-
-Good luck in the league! 🎾
-
-- BD Padel League
-"""
-            send_email_notification(agent2.email, f"You've Been Paired! - Team {team_name}", email_body2)
-
-        flash("Free agents paired successfully! Email notifications sent to both players.", "success")
-    else:
-        flash("Error pairing agents", "error")
-
-    return redirect(url_for("admin_panel"))
-
-@app.route("/admin/generate-round", methods=["POST"])
-@require_admin_auth
-def generate_round():
-    round_number = request.form.get("round_number", type=int)
-    if not round_number:
-        flash("Please provide a round number", "error")
-        return redirect(url_for("admin_panel"))
-
-    # Check if playoffs are approved
-    settings = LeagueSettings.query.first()
-    if settings and settings.playoffs_approved and settings.current_phase == "playoffs":
-        # PLAYOFF GENERATION MODE
-        # Determine which playoff phase to generate
-        quarterfinals = Match.query.filter_by(phase="quarterfinal").all()
-        semifinals = Match.query.filter_by(phase="semifinal").all()
-        third_place = Match.query.filter_by(phase="third_place").first()
-        final = Match.query.filter_by(phase="final").first()
-
-        try:
-            phase_name = ""
-            if not quarterfinals and settings.playoff_teams_count >= 8:
-                # Generate quarterfinals
-                matches = generate_playoff_bracket(round_number, "quarterfinal")
-                phase_name = "Quarterfinals"
-                flash(f"✅ Quarterfinals generated! {len(matches)} matches created.", "success")
-            elif not semifinals and (quarterfinals or settings.playoff_teams_count < 8):
-                # Generate semifinals
-                matches = generate_playoff_bracket(round_number, "semifinal")
-                phase_name = "Semifinals"
-                flash(f"✅ Semifinals generated! {len(matches)} matches created.", "success")
-            elif semifinals and not third_place and not final:
-                # Generate both third place and final (same round)
-                third_place_matches = generate_playoff_bracket(round_number, "third_place")
-                final_matches = generate_playoff_bracket(round_number, "final")
-                matches = third_place_matches + final_matches
-                phase_name = "Finals"
-                flash(f"✅ Finals generated! 3rd Place Match and Championship Final created.", "success")
-            else:
-                flash("All playoff rounds have already been generated!", "warning")
-                return redirect(url_for("admin_panel"))
-
-            # Commit matches before sending emails
-            db.session.commit()
-
-            # Send playoff email notifications
-            from utils import send_email_notification
-            base_url = "https://goeclectic.xyz"
-
-            for match in matches:
-                team_a = Team.query.get(match.team_a_id)
-                team_b = Team.query.get(match.team_b_id)
-
-                if not team_a or not team_b:
-                    continue
-
-                # Determine playoff stage description
-                stage_emoji = "🏆"
-                stage_desc = ""
-                if match.phase == "quarterfinal":
-                    stage_emoji = "⚡"
-                    stage_desc = "QUARTERFINAL - Single Elimination"
-                elif match.phase == "semifinal":
-                    stage_emoji = "🔥"
-                    stage_desc = "SEMIFINAL - One Step From Glory"
-                elif match.phase == "third_place":
-                    stage_emoji = "🥉"
-                    stage_desc = "3RD PLACE MATCH - Battle for Bronze"
-                elif match.phase == "final":
-                    stage_emoji = "👑"
-                    stage_desc = "CHAMPIONSHIP FINAL - Winner Takes All"
-
-                # Team A notification
-                team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
-                team_a_body = f"""Hi {team_a.team_name},
-
-{stage_emoji} PLAYOFF MATCH GENERATED {stage_emoji}
-
-🎯 {stage_desc}
-
-Your Match:
-- Opponent: {team_b.team_name}
-- Format: Best of 3 Sets (Win 2 Sets to Advance)
-- Round: {round_number}
-
-{"🏆 THIS IS IT! The Championship Final! Winner becomes the league champion!" if match.phase == "final" else "⚠️ This is single elimination - you must win to advance to the next round!" if match.phase in ["quarterfinal", "semifinal"] else ""}
-
-📋 Next Steps:
-1. Coordinate with your opponent to book a court
-2. Play your match before the deadline
-3. Submit scores immediately after the match
-
-🔗 Your Match Page: {team_a_link}
-
-Opponent Contact:
-- {team_b.player1_name}: {team_b.player1_email or team_b.player1_phone}
-- {team_b.player2_name}: {team_b.player2_email or team_b.player2_phone}
-
-Good luck! May the best team win! 🏆
-
-- BD Padel League
-"""
-                if team_a.player1_email:
-                    send_email_notification(team_a.player1_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_a_body)
-                if team_a.player2_email:
-                    send_email_notification(team_a.player2_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_a_body)
-
-                # Team B notification
-                team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
-                team_b_body = f"""Hi {team_b.team_name},
-
-{stage_emoji} PLAYOFF MATCH GENERATED {stage_emoji}
-
-🎯 {stage_desc}
-
-Your Match:
-- Opponent: {team_a.team_name}
-- Format: Best of 3 Sets (Win 2 Sets to Advance)
-- Round: {round_number}
-
-{"🏆 THIS IS IT! The Championship Final! Winner becomes the league champion!" if match.phase == "final" else "⚠️ This is single elimination - you must win to advance to the next round!" if match.phase in ["quarterfinal", "semifinal"] else ""}
-
-📋 Next Steps:
-1. Coordinate with your opponent to book a court
-2. Play your match before the deadline
-3. Submit scores immediately after the match
-
-🔗 Your Match Page: {team_b_link}
-
-Opponent Contact:
-- {team_a.player1_name}: {team_a.player1_email or team_a.player1_phone}
-- {team_a.player2_name}: {team_a.player2_email or team_a.player2_phone}
-
-Good luck! May the best team win! 🏆
-
-- BD Padel League
-"""
-                if team_b.player1_email:
-                    send_email_notification(team_b.player1_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_b_body)
-                if team_b.player2_email:
-                    send_email_notification(team_b.player2_email, f"{stage_emoji} PLAYOFF: {stage_desc}", team_b_body)
-
-            return redirect(url_for("admin_panel"))
-
-        except Exception as e:
-            flash(f"Error generating playoff round: {str(e)}", "error")
-            return redirect(url_for("admin_panel"))
-
-    # SWISS ROUND GENERATION MODE
-    # Check for deadline violations and apply walkovers
-    walkovers = check_deadline_violations()
-
-    # Show regular deadline violations (Sunday)
-    if walkovers['regular']:
-        for walkover in walkovers['regular']:
-            flash(f"⚠️ Sunday Deadline Missed: {walkover['team_a']} vs {walkover['team_b']} - Round {walkover['round']} (walkover awarded)", "warning")
-
-    # Show makeup deadline violations (Wednesday)
-    if walkovers['makeup']:
-        for walkover in walkovers['makeup']:
-            flash(f"⚠️ Makeup Match Deadline Missed: {walkover['opponent_team']} wins vs {walkover['requester_team']} (missed Wednesday deadline)", "warning")
-
-    # Check for pending reschedules - WARNING ONLY, not a hard block
-    pending_reschedules = get_pending_reschedules()
-    max_allowed = get_max_reschedules_per_round()
-
-    if len(pending_reschedules) > 0:
-        flash(f"ℹ️ Note: {len(pending_reschedules)} makeup match(es) pending. These teams will play 2 matches this week (1 makeup + 1 new round).", "info")
-        if len(pending_reschedules) > max_allowed:
-            flash(f"⚠️ Warning: Pending makeup matches ({len(pending_reschedules)}) exceed recommended limit ({max_allowed}).", "warning")
-
-    # Generate round with reschedule checking
-    try:
-        matches = generate_round_pairings(round_number)
-
-        # Check for conflicts with pending reschedules
-        conflicts = check_reschedule_conflicts(matches)
-
-        if conflicts:
-            conflict_details = []
-            for conflict in conflicts:
-                conflict_details.append(f"Team {conflict['conflicting_teams'][0]} and {conflict['conflicting_teams'][1]} have pending reschedules")
-
-            flash(f"Round {round_number} generated with {len(matches)} matches, but {len(conflicts)} team(s) have pending makeup matches. They will play 2 matches this week.", "warning")
-        else:
-            flash(f"✅ Round {round_number} generated with {len(matches)} matches! No conflicts with pending reschedules.", "success")
-
-        # Add round date information to matches
-        for match in matches:
-            match.round_dates = get_round_date_range(round_number)
-
-        # Commit matches before sending emails
-        db.session.commit()
-
-        # Send email notifications to all teams about new round pairings
-        from utils import send_email_notification
-        round_dates = get_round_date_range(round_number)
-        base_url = "https://goeclectic.xyz"
-
-        for match in matches:
-            if match.status == "bye":
-                # Notify bye team
-                bye_team = Team.query.get(match.team_a_id)
-                if bye_team:
-                    bye_body = f"""Hi {bye_team.team_name},
-
-Round {round_number} has been generated!
-
-🏖️ You have a BYE this round - no match to play.
-
-Round Dates: {round_dates}
-
-You'll automatically advance to the next round. Enjoy your break!
-
-- BD Padel League
-"""
-                    try:
-                        if bye_team.player1_email:
-                            send_email_notification(bye_team.player1_email, f"Round {round_number} - BYE Week", bye_body)
-                        if bye_team.player2_email:
-                            send_email_notification(bye_team.player2_email, f"Round {round_number} - BYE Week", bye_body)
-                    except Exception as email_error:
-                        print(f"[EMAIL ERROR] Failed to send BYE notification to {bye_team.team_name}: {email_error}")
-            else:
-                # Notify both teams
-                team_a = Team.query.get(match.team_a_id)
-                team_b = Team.query.get(match.team_b_id)
-
-                if team_a and team_b:
-                    # Access link for each team
-                    base_url = "https://goeclectic.xyz"
-
-                    # Team A notification
-                    team_a_link = f"{base_url}/my-matches/{team_a.access_token}"
-
-                    try:
-                        team_a_body = f"""Hi {team_a.team_name},
-
-Round {round_number} has been generated!
-
-🎾 Your Match:
-- Opponent: {team_b.team_name}
-- Round Dates: {round_dates}
-- Deadline: Sunday 23:59
-
-📋 Next Steps:
-1. Coordinate with your opponent to book a court
-2. Play your match before Sunday 23:59
-3. Submit scores immediately after the match
-
-🔗 Your Match Page: {team_a_link}
-
-Opponent Contact:
-- {team_b.player1_name}: {team_b.player1_email or team_b.player1_phone}
-- {team_b.player2_name}: {team_b.player2_email or team_b.player2_phone}
-
-Good luck! 🎾
-
-- BD Padel League
-"""
-                        if team_a.player1_email:
-                            send_email_notification(team_a.player1_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
-                        if team_a.player2_email:
-                            send_email_notification(team_a.player2_email, f"Round {round_number} Pairing - vs {team_b.team_name}", team_a_body)
-                    except Exception as email_error:
-                        print(f"[EMAIL ERROR] Failed to send to Team A ({team_a.team_name}): {email_error}")
-
-                    # Team B notification
-                    try:
-                        team_b_link = f"{base_url}/my-matches/{team_b.access_token}"
-                        team_b_body = f"""Hi {team_b.team_name},
-
-Round {round_number} has been generated!
-
-🎾 Your Match:
-- Opponent: {team_a.team_name}
-- Round Dates: {round_dates}
-- Deadline: Sunday 23:59
-
-📋 Next Steps:
-1. Coordinate with your opponent to book a court
-2. Play your match before Sunday 23:59
-3. Submit scores immediately after the match
-
-🔗 Your Match Page: {team_b_link}
-
-Opponent Contact:
-- {team_a.player1_name}: {team_a.player1_email or team_a.player1_phone}
-- {team_a.player2_name}: {team_a.player2_email or team_a.player2_phone}
-
-Good luck! 🎾
-
-- BD Padel League
-"""
-                        if team_b.player1_email:
-                            send_email_notification(team_b.player1_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
-                        if team_b.player2_email:
-                            send_email_notification(team_b.player2_email, f"Round {round_number} Pairing - vs {team_a.team_name}", team_b_body)
-                    except Exception as email_error:
-                        print(f"[EMAIL ERROR] Failed to send to Team B ({team_b.team_name}): {email_error}")
-
-    except Exception as e:
-        flash(f"Error generating round: {str(e)}", "error")
-
-    return redirect(url_for("admin_panel"))
-
 @app.route("/admin/reschedules")
 @require_admin_auth
 def reschedule_dashboard():
@@ -6665,7 +6208,7 @@ def reschedule_dashboard():
         "reschedule_dashboard.html",
         reschedule_details=reschedule_details,
         max_allowed=max_allowed,
-        total_pending=len(pending_reschedules)
+        total_pending=len(reschedule_details)
     )
 
 @app.route("/admin/approve-reschedule/<int:reschedule_id>", methods=["POST"])
@@ -6707,7 +6250,7 @@ def approve_reschedule(reschedule_id):
             opponent_id = match.team_b_id if match.team_a_id == requester_team.id else match.team_a_id
             opponent = Team.query.get(opponent_id)
 
-            approval_body = f"""Hi!
+            approval_body = f"""Hi {requester_team.team_name},
 
 ✅ Your reschedule request has been APPROVED by admin.
 
@@ -6733,7 +6276,7 @@ Team Reschedules Used: {requester_team.reschedules_used}/2
             if opponent:
                 opponent_approval_body = f"""Hi {opponent.team_name},
 
-The reschedule request for your match has been APPROVED by admin.
+The reschedule request from {requester_team.team_name} has been APPROVED by admin.
 
 Match Details:
 - Round: {match.round}
@@ -7025,100 +6568,94 @@ def update_match(match_id):
         flash("Please enter scores for both teams", "error")
         return redirect(url_for("admin_panel"))
 
-    try:
-        # CRITICAL: If stats were already calculated, reverse them first
-        if match.stats_calculated:
-            team_a = Team.query.get(match.team_a_id)
-            team_b = Team.query.get(match.team_b_id)
-
-            if team_a and team_b:
-                # Reverse previous stats
-                team_a.sets_for -= match.sets_a
-                team_a.sets_against -= match.sets_b
-                team_a.games_for -= match.games_a
-                team_a.games_against -= match.games_b
-
-                team_b.sets_for -= match.sets_b
-                team_b.sets_against -= match.sets_a
-                team_b.games_for -= match.games_b
-                team_b.games_against -= match.games_a
-
-                # Reverse win/loss/draw/points
-                if match.winner_id == team_a.id:
-                    team_a.wins -= 1
-                    team_a.points -= 3
-                    team_b.losses -= 1
-                elif match.winner_id == team_b.id:
-                    team_b.wins -= 1
-                    team_b.points -= 3
-                    team_a.losses -= 1
-                elif match.winner_id is None and match.status == "completed":
-                    team_a.draws -= 1
-                    team_a.points -= 1
-                    team_b.draws -= 1
-                    team_b.points -= 1
-
-        # Calculate new match result
-        sets_a, sets_b, games_a, games_b, winner = calculate_match_result(score_a_str, score_b_str)
-
-        if winner is None:
-            flash("Invalid score format. Use format like '6-4, 6-3' or '6-4, 3-6, 10-8'", "error")
-            return redirect(url_for("admin_panel"))
-
-        # Update match record
-        match.score_a = score_a_str
-        match.score_b = score_b_str
-        match.sets_a = sets_a
-        match.sets_b = sets_b
-        match.games_a = games_a
-        match.games_b = games_b
-        match.match_date = match_date
-        match.court = court
-        match.status = "completed"
-        match.stats_calculated = True
-
-        # Update team stats
+    # CRITICAL: If stats were already calculated, reverse them first
+    if match.stats_calculated:
         team_a = Team.query.get(match.team_a_id)
         team_b = Team.query.get(match.team_b_id)
 
         if team_a and team_b:
-            # Add sets and games
-            team_a.sets_for += sets_a
-            team_a.sets_against += sets_b
-            team_a.games_for += games_a
-            team_a.games_against += games_b
+            # Reverse team stats
+            team_a.sets_for -= match.sets_a
+            team_a.sets_against -= match.sets_b
+            team_a.games_for -= match.games_a
+            team_a.games_against -= match.games_b
 
-            team_b.sets_for += sets_b
-            team_b.sets_against += sets_a
-            team_b.games_for += games_b
-            team_b.games_against += games_a
+            team_b.sets_for -= match.sets_b
+            team_b.sets_against -= match.sets_a
+            team_b.games_for -= match.games_b
+            team_b.games_against -= match.games_a
 
-            # Update wins/losses/draws and points (3 for win, 1 for draw, 0 for loss)
-            if winner == 'a':
-                team_a.wins += 1
-                team_a.points += 3
-                team_b.losses += 1
-                match.winner_id = team_a.id
-            elif winner == 'b':
-                team_b.wins += 1
-                team_b.points += 3
-                team_a.losses += 1
-                match.winner_id = team_b.id
-            elif winner == 'draw':
-                team_a.draws += 1
-                team_a.points += 1
-                team_b.draws += 1
-                team_b.points += 1
-                match.winner_id = None
-        
-        db.session.commit()
-        flash(f"Match scores updated successfully for {match.team_a.team_name} vs {match.team_b.team_name}", "success")
+            # Reverse wins/losses/draws
+            if match.winner_id == team_a.id:
+                team_a.wins -= 1
+                team_a.points -= 3
+                team_b.losses -= 1
+            elif match.winner_id == team_b.id:
+                team_b.wins -= 1
+                team_b.points -= 3
+                team_a.losses -= 1
+            elif match.winner_id is None and match.status == "completed":
+                team_a.draws -= 1
+                team_a.points -= 1
+                team_b.draws -= 1
+                team_b.points -= 1
+
+    # Calculate new match result
+    sets_a, sets_b, games_a, games_b, winner = calculate_match_result(score_a_str, score_b_str)
+
+    if winner is None:
+        flash("Invalid score format. Use format like '6-4, 6-3' or '6-4, 3-6, 10-8'", "error")
         return redirect(url_for("admin_panel"))
-    
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error updating match: {str(e)}", "error")
-        return redirect(url_for("admin_panel"))
+
+    # Update match record
+    match.score_a = score_a_str
+    match.score_b = score_b_str
+    match.sets_a = sets_a
+    match.sets_b = sets_b
+    match.games_a = games_a
+    match.games_b = games_b
+    match.match_date = match_date
+    match.court = court
+    match.status = "completed"
+    match.stats_calculated = True
+
+    # Update team stats
+    team_a = Team.query.get(match.team_a_id)
+    team_b = Team.query.get(match.team_b_id)
+
+    if team_a and team_b:
+        # Add sets and games
+        team_a.sets_for += sets_a
+        team_a.sets_against += sets_b
+        team_a.games_for += games_a
+        team_a.games_against += games_b
+
+        team_b.sets_for += sets_b
+        team_b.sets_against += sets_a
+        team_b.games_for += games_b
+        team_b.games_against += games_a
+
+        # Update wins/losses/draws and points (3 for win, 1 for draw, 0 for loss)
+        if winner == 'a':
+            team_a.wins += 1
+            team_a.points += 3
+            team_b.losses += 1
+            match.winner_id = team_a.id
+        elif winner == 'b':
+            team_b.wins += 1
+            team_b.points += 3
+            team_a.losses += 1
+            match.winner_id = team_b.id
+        elif winner == 'draw':
+            team_a.draws += 1
+            team_a.points += 1
+            team_b.draws += 1
+            team_b.points += 1
+            match.winner_id = None
+
+    db.session.commit()
+    flash(f"Match scores updated successfully for {match.team_a.team_name} vs {match.team_b.team_name}", "success")
+    return redirect(url_for("admin_panel"))
 
 @app.route("/admin/confirm-team/<int:team_id>", methods=["POST"])
 @require_admin_auth
@@ -7282,11 +6819,11 @@ def approve_substitute(substitute_id):
     if match and team:
         # Get replaced player's name
         replaced_player_name = team.player1_name if substitute.replaces_player_number == 1 else team.player2_name
-        
+
         # Get opponent team
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         opponent_team = Team.query.get(opponent_id)
-        
+
         subject = f"Substitute Request APPROVED - Round {match.round}"
 
         # Email to Player 1
@@ -7349,7 +6886,7 @@ You are now officially approved to play as a substitute for this match. Please c
 Thank you for participating!
 Padel League Hub"""
             send_email_notification(substitute.email, subject, sub_body)
-        
+
         # Email to OPPONENT TEAM
         if opponent_team:
             opponent_subject = f"Opponent Using Substitute - Round {match.round}"
@@ -7367,7 +6904,7 @@ The substitute has been approved by the admin. Please proceed with the match as 
 
 Good luck!
 Padel League Hub"""
-            
+
             if opponent_team.player1_email:
                 send_email_notification(opponent_team.player1_email, opponent_subject, opponent_body)
             if opponent_team.player2_email:
@@ -7720,63 +7257,45 @@ def cleanup_duplicate_freeagents():
 
 @app.route("/rounds")
 def rounds():
-    matches = Match.query.order_by(Match.round).all()
+    """Display round schedule with Swiss pairing logs (admin only) and playoff bracket"""
+    # Get all matches ordered by round
+    matches = Match.query.order_by(Match.round, Match.id).all()
+    teams = Team.query.all()
+    substitutes = Substitute.query.all()
+
+    # Group regular matches by round
     rounds_dict = {}
+    playoff_matches_list = []
+
     for match in matches:
-        if match.round not in rounds_dict:
-            rounds_dict[match.round] = []
-        team_a = Team.query.get(match.team_a_id)
-        team_b = Team.query.get(match.team_b_id)
-        rounds_dict[match.round].append({
-            'match': match,
-            'team_a': team_a,
-            'team_b': team_b
-        })
+        if match.round and match.round <= 100:  # Regular rounds (1-100)
+            if match.round not in rounds_dict:
+                rounds_dict[match.round] = []
 
-    # Get playoff bracket data
-    playoff_matches = {}
-    quarterfinals = Match.query.filter_by(phase="quarterfinal").order_by(Match.id).all()
-    semifinals = Match.query.filter_by(phase="semifinal").order_by(Match.id).all()
-    third_place = Match.query.filter_by(phase="third_place").all()
-    final = Match.query.filter_by(phase="final").all()
+            team_a = Team.query.get(match.team_a_id)
+            team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
 
-    if quarterfinals:
-        playoff_matches['quarterfinals'] = []
-        for match in quarterfinals:
-            playoff_matches['quarterfinals'].append({
+            rounds_dict[match.round].append({
                 'match': match,
-                'team_a': Team.query.get(match.team_a_id),
-                'team_b': Team.query.get(match.team_b_id)
+                'team_a': team_a,
+                'team_b': team_b
             })
+        elif match.round and match.round > 100:  # Playoff rounds (101+)
+            playoff_matches_list.append(match)
 
-    if semifinals:
-        playoff_matches['semifinals'] = []
-        for match in semifinals:
-            playoff_matches['semifinals'].append({
-                'match': match,
-                'team_a': Team.query.get(match.team_a_id),
-                'team_b': Team.query.get(match.team_b_id)
-            })
+    # Create playoff bracket data if playoff matches exist
+    playoff_bracket = None
+    if playoff_matches_list:
+        playoff_bracket = get_playoff_bracket_data(playoff_matches_list)
 
-    if third_place:
-        playoff_matches['third_place'] = []
-        for match in third_place:
-            playoff_matches['third_place'].append({
-                'match': match,
-                'team_a': Team.query.get(match.team_a_id),
-                'team_b': Team.query.get(match.team_b_id)
-            })
 
-    if final:
-        playoff_matches['final'] = []
-        for match in final:
-            playoff_matches['final'].append({
-                'match': match,
-                'team_a': Team.query.get(match.team_a_id),
-                'team_b': Team.query.get(match.team_b_id)
-            })
-
-    return render_template("rounds.html", rounds_dict=rounds_dict, playoff_matches=playoff_matches if playoff_matches else None)
+    return render_template(
+        "rounds.html",
+        rounds_dict=rounds_dict,
+        playoff_matches=playoff_bracket,
+        teams=teams,
+        substitutes=substitutes
+    )
 
 @app.route("/rules")
 def rules():

@@ -130,9 +130,22 @@
                   <td class="px-4 py-3 text-center">
                     <div class="flex flex-col gap-1 items-center">
                       {% if has_substitute %}
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                          👤 Substitute
-                        </span>
+                        {% set match_sub = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
+                        {% if match_sub %}
+                          {% set sub_team = teams|selectattr('id', 'equalto', match_sub.team_id)|first %}
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                            👤 {{ match_sub.name }}
+                          </span>
+                          {% if sub_team %}
+                          <span class="text-xs text-purple-600">
+                            replacing {{ sub_team.player1_name if match_sub.replaces_player_number == 1 else sub_team.player2_name }}
+                          </span>
+                          {% endif %}
+                        {% else %}
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                            👤 Substitute
+                          </span>
+                        {% endif %}
                       {% endif %}
                       {% if is_rescheduled %}
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
@@ -195,9 +208,24 @@
                   </span>
                 {% endif %}
                 {% if has_substitute %}
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                    👤 Substitute
-                  </span>
+                  {% set match_sub = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
+                  {% if match_sub %}
+                    {% set sub_team = teams|selectattr('id', 'equalto', match_sub.team_id)|first %}
+                    <div class="flex flex-col">
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                        👤 {{ match_sub.name }}
+                      </span>
+                      {% if sub_team %}
+                      <span class="text-xs text-purple-600 ml-2 mt-1">
+                        replacing {{ sub_team.player1_name if match_sub.replaces_player_number == 1 else sub_team.player2_name }}
+                      </span>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                      👤 Substitute
+                    </span>
+                  {% endif %}
                 {% endif %}
                 {% if is_rescheduled %}
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
@@ -732,6 +760,7 @@
             <th class="px-4 py-2 text-left">Match</th>
             <th class="px-4 py-2 text-left">Team</th>
             <th class="px-4 py-2 text-left">Substitute</th>
+            <th class="px-4 py-2 text-left">Replacing</th>
             <th class="px-4 py-2 text-left">Status</th>
           </tr>
         </thead>
@@ -742,6 +771,15 @@
             <td class="px-4 py-2">#{{ s.match_id }}</td>
             <td class="px-4 py-2">{{ team.team_name if team else 'Unknown' }}</td>
             <td class="px-4 py-2">{{ s.name }} ({{ s.phone }})</td>
+            <td class="px-4 py-2">
+              {% if team and s.replaces_player_number %}
+                <span class="font-semibold text-orange-600">
+                  {{ team.player1_name if s.replaces_player_number == 1 else team.player2_name }}
+                </span>
+              {% else %}
+                <span class="text-gray-500">N/A</span>
+              {% endif %}
+            </td>
             <td class="px-4 py-2">
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {% if s.status=='approved' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
                 {{ s.status|capitalize }}

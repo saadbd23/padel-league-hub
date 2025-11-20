@@ -269,6 +269,13 @@
               <div class="text-sm text-gray-600">
                 {{ team_a.player1_name }} & {{ team_a.player2_name }}
               </div>
+              {% set team_a_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_a.id)|selectattr('status', 'equalto', 'approved')|first %}
+              {% if team_a_sub %}
+              <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
+                <span class="font-semibold">🔄 Substitute:</span> {{ team_a_sub.name }}
+                <br><span class="text-orange-600">replacing {{ team_a.player1_name if team_a_sub.replaces_player_number == 1 else team_a.player2_name }}</span>
+              </div>
+              {% endif %}
               <div class="mt-2">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   {{ team_a.wins }}W - {{ team_a.losses }}L
@@ -313,6 +320,13 @@
               <div class="text-sm text-gray-600">
                 {{ team_b.player1_name }} & {{ team_b.player2_name }}
               </div>
+              {% set team_b_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_b.id)|selectattr('status', 'equalto', 'approved')|first %}
+              {% if team_b_sub %}
+              <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
+                <span class="font-semibold">🔄 Substitute:</span> {{ team_b_sub.name }}
+                <br><span class="text-orange-600">replacing {{ team_b.player1_name if team_b_sub.replaces_player_number == 1 else team_b.player2_name }}</span>
+              </div>
+              {% endif %}
               <div class="mt-2">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   {{ team_b.wins }}W - {{ team_b.losses }}L
