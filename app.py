@@ -4626,7 +4626,9 @@ def admin_ladder_no_show_process(match_id):
             no_show_team_id = match.reported_no_show_team_id
             reporting_team_id = match.reported_by_team_id
 
-            if no_show_team_id == team_a.id    else:
+            if no_show_team_id == team_a.id:
+                    opponent_team_name = team_b.team_name
+                else:
                 no_show_team = team_b
                 winner_team = team_a
 
