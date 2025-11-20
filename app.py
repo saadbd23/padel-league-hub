@@ -887,93 +887,150 @@ def ladder_register_team():
             flash("A team with a similar name already exists. Please choose a unique name.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
 
-        # Check Player 1 email in both Team and LadderTeam
-        existing_team_p1_email = Team.query.filter(
-            db.or_(
-                Team.player1_email == p1_email,
-                Team.player2_email == p1_email
-            )
-        ).first()
-        existing_ladder_p1_email = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_email == p1_email,
-                LadderTeam.player2_email == p1_email
-            )
-        ).first()
+        # For Mixed ladder, only check if player already exists in another MIXED team
+        # Allow registration even if they're in league or men's/women's ladder
+        if gender == 'mixed':
+            # Check Player 1 email only in Mixed ladder teams
+            existing_mixed_p1_email = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_email == p1_email,
+                    LadderTeam.player2_email == p1_email
+                ),
+                LadderTeam.gender == 'mixed'
+            ).first()
 
-        if existing_team_p1_email:
-            flash(f"Player 1's email ({p1_email}) is already registered in league team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            if existing_mixed_p1_email:
+                flash(f"Player 1's email ({p1_email}) is already registered in mixed team '{existing_mixed_p1_email.team_name}'. Each player can only be in one mixed team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        if existing_ladder_p1_email:
-            flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            # Check Player 1 phone only in Mixed ladder teams
+            existing_mixed_p1_phone = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_phone == p1_phone_normalized,
+                    LadderTeam.player2_phone == p1_phone_normalized
+                ),
+                LadderTeam.gender == 'mixed'
+            ).first()
 
-        # Check Player 1 phone in both Team and LadderTeam
-        existing_team_p1_phone = Team.query.filter(
-            db.or_(
-                Team.player1_phone == p1_phone_normalized,
-                Team.player2_phone == p1_phone_normalized
-            )
-        ).first()
-        existing_ladder_p1_phone = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_phone == p1_phone_normalized,
-                LadderTeam.player2_phone == p1_phone_normalized
-            )
-        ).first()
+            if existing_mixed_p1_phone:
+                flash(f"Player 1's WhatsApp number is already registered in mixed team '{existing_mixed_p1_phone.team_name}'. Each player can only be in one mixed team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        if existing_team_p1_phone:
-            flash(f"Player 1's WhatsApp number is already registered in league team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            # Check Player 2 email only in Mixed ladder teams
+            existing_mixed_p2_email = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_email == p2_email,
+                    LadderTeam.player2_email == p2_email
+                ),
+                LadderTeam.gender == 'mixed'
+            ).first()
 
-        if existing_ladder_p1_phone:
-            flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            if existing_mixed_p2_email:
+                flash(f"Player 2's email ({p2_email}) is already registered in mixed team '{existing_mixed_p2_email.team_name}'. Each player can only be in one mixed team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        # Check Player 2 email in both Team and LadderTeam
-        existing_team_p2_email = Team.query.filter(
-            db.or_(
-                Team.player1_email == p2_email,
-                Team.player2_email == p2_email
-            )
-        ).first()
-        existing_ladder_p2_email = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_email == p2_email,
-                LadderTeam.player2_email == p2_email
-            )
-        ).first()
+            # Check Player 2 phone only in Mixed ladder teams
+            existing_mixed_p2_phone = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_phone == p2_phone_normalized,
+                    LadderTeam.player2_phone == p2_phone_normalized
+                ),
+                LadderTeam.gender == 'mixed'
+            ).first()
 
-        if existing_team_p2_email:
-            flash(f"Player 2's email ({p2_email}) is already registered in league team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            if existing_mixed_p2_phone:
+                flash(f"Player 2's WhatsApp number is already registered in mixed team '{existing_mixed_p2_phone.team_name}'. Each player can only be in one mixed team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        if existing_ladder_p2_email:
-            flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+        else:
+            # For Men's and Women's ladder, check across all teams (league and ladder)
+            # Check Player 1 email in both Team and LadderTeam
+            existing_team_p1_email = Team.query.filter(
+                db.or_(
+                    Team.player1_email == p1_email,
+                    Team.player2_email == p1_email
+                )
+            ).first()
+            existing_ladder_p1_email = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_email == p1_email,
+                    LadderTeam.player2_email == p1_email
+                )
+            ).first()
 
-        # Check Player 2 phone in both Team and LadderTeam
-        existing_team_p2_phone = Team.query.filter(
-            db.or_(
-                Team.player1_phone == p2_phone_normalized,
-                Team.player2_phone == p2_phone_normalized
-            )
-        ).first()
-        existing_ladder_p2_phone = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_phone == p2_phone_normalized,
-                LadderTeam.player2_phone == p2_phone_normalized
-            )
-        ).first()
+            if existing_team_p1_email:
+                flash(f"Player 1's email ({p1_email}) is already registered in league team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        if existing_team_p2_phone:
-            flash(f"Player 2's WhatsApp number is already registered in league team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            if existing_ladder_p1_email:
+                flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
-        if existing_ladder_p2_phone:
-            flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one team.", "error")
-            return render_template("ladder/register_team.html", form_data=request.form)
+            # Check Player 1 phone in both Team and LadderTeam
+            existing_team_p1_phone = Team.query.filter(
+                db.or_(
+                    Team.player1_phone == p1_phone_normalized,
+                    Team.player2_phone == p1_phone_normalized
+                )
+            ).first()
+            existing_ladder_p1_phone = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_phone == p1_phone_normalized,
+                    LadderTeam.player2_phone == p1_phone_normalized
+                )
+            ).first()
+
+            if existing_team_p1_phone:
+                flash(f"Player 1's WhatsApp number is already registered in league team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+
+            if existing_ladder_p1_phone:
+                flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+
+            # Check Player 2 email in both Team and LadderTeam
+            existing_team_p2_email = Team.query.filter(
+                db.or_(
+                    Team.player1_email == p2_email,
+                    Team.player2_email == p2_email
+                )
+            ).first()
+            existing_ladder_p2_email = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_email == p2_email,
+                    LadderTeam.player2_email == p2_email
+                )
+            ).first()
+
+            if existing_team_p2_email:
+                flash(f"Player 2's email ({p2_email}) is already registered in league team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+
+            if existing_ladder_p2_email:
+                flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+
+            # Check Player 2 phone in both Team and LadderTeam
+            existing_team_p2_phone = Team.query.filter(
+                db.or_(
+                    Team.player1_phone == p2_phone_normalized,
+                    Team.player2_phone == p2_phone_normalized
+                )
+            ).first()
+            existing_ladder_p2_phone = LadderTeam.query.filter(
+                db.or_(
+                    LadderTeam.player1_phone == p2_phone_normalized,
+                    LadderTeam.player2_phone == p2_phone_normalized
+                )
+            ).first()
+
+            if existing_team_p2_phone:
+                flash(f"Player 2's WhatsApp number is already registered in league team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+
+            if existing_ladder_p2_phone:
+                flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one team.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
         # Generate unique access token
         access_token = secrets.token_urlsafe(32)
