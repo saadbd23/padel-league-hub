@@ -50,12 +50,16 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,  # Verify connections before using
-    "pool_recycle": 300,     # Recycle connections after 5 minutes
-    "pool_size": 3,          # Limit to 3 connections max (conservative for free tier)
-    "max_overflow": 2,       # Allow 2 extra connections in burst
+    "pool_recycle": 280,     # Recycle connections after 4.6 minutes (before 5min timeout)
+    "pool_size": 5,          # Increase pool size
+    "max_overflow": 10,      # Allow more overflow connections
     "pool_timeout": 30,      # Wait up to 30s for a connection from pool
     "connect_args": {
         "connect_timeout": 10,  # 10 second connection timeout
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
     } if database_url.startswith("postgresql://") else {}
 }
 
