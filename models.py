@@ -190,9 +190,13 @@ class LadderTeam(db.Model):
     player2_phone = db.Column(db.String(20))
     player2_email = db.Column(db.String(120))
     
-    gender = db.Column(db.String(10), nullable=False)
-    ladder_type = db.Column(db.String(10), nullable=False)
+    gender = db.Column(db.String(10), nullable=False)  # 'men', 'women', or 'mixed'
+    ladder_type = db.Column(db.String(10), nullable=False)  # 'men', 'women', or 'mixed'
     current_rank = db.Column(db.Integer, nullable=False)
+    
+    # Mixed ladder specific fields
+    player1_gender = db.Column(db.String(10), nullable=True)  # 'male' or 'female' for mixed teams
+    player2_gender = db.Column(db.String(10), nullable=True)  # 'male' or 'female' for mixed teams
     
     contact_preference_email = db.Column(db.Boolean, default=True)
     contact_preference_whatsapp = db.Column(db.Boolean, default=False)
@@ -393,3 +397,4 @@ class LadderSettings(db.Model):
     no_show_penalty_ranks = db.Column(db.Integer, default=1)
     men_registration_open = db.Column(db.Boolean, default=True)
     women_registration_open = db.Column(db.Boolean, default=True)
+    mixed_registration_open = db.Column(db.Boolean, default=True)

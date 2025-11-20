@@ -72,14 +72,17 @@
       </div>
 
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender Category *</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Ladder Category *</label>
         <select
           name="gender"
           required
+          id="ladder-category"
+          onchange="toggleMixedGenderFields()"
           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
-          <option value="">Select gender category</option>
-          <option value="men" {{ 'selected' if form_data and form_data.get('gender') == 'men' else '' }}>Men</option>
-          <option value="women" {{ 'selected' if form_data and form_data.get('gender') == 'women' else '' }}>Women</option>
+          <option value="">Select ladder category</option>
+          <option value="men" {{ 'selected' if form_data and form_data.get('gender') == 'men' else '' }}>Men's Ladder</option>
+          <option value="women" {{ 'selected' if form_data and form_data.get('gender') == 'women' else '' }}>Women's Ladder</option>
+          <option value="mixed" {{ 'selected' if form_data and form_data.get('gender') == 'mixed' else '' }}>Mixed Ladder (1 Man + 1 Woman)</option>
         </select>
       </div>
 
@@ -120,6 +123,16 @@
               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
               placeholder="Your full name">
           </div>
+          <div id="player1-gender-field" style="display:none;">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Player 1 Gender * (for Mixed teams)</label>
+            <select
+              name="player1_gender"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
+              <option value="">Select gender</option>
+              <option value="male" {{ 'selected' if form_data and form_data.get('player1_gender') == 'male' else '' }}>Male</option>
+              <option value="female" {{ 'selected' if form_data and form_data.get('player1_gender') == 'female' else '' }}>Female</option>
+            </select>
+          </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
             <input
@@ -158,6 +171,16 @@
               value="{{ form_data.get('player2_name', '') if form_data else '' }}"
               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none"
               placeholder="Partner's full name">
+          </div>
+          <div id="player2-gender-field" style="display:none;">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Player 2 Gender * (for Mixed teams)</label>
+            <select
+              name="player2_gender"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none">
+              <option value="">Select gender</option>
+              <option value="male" {{ 'selected' if form_data and form_data.get('player2_gender') == 'male' else '' }}>Male</option>
+              <option value="female" {{ 'selected' if form_data and form_data.get('player2_gender') == 'female' else '' }}>Female</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
@@ -218,4 +241,29 @@
     </form>
   </div>
 </div>
+
+<script>
+function toggleMixedGenderFields() {
+  const category = document.getElementById('ladder-category').value;
+  const player1GenderField = document.getElementById('player1-gender-field');
+  const player2GenderField = document.getElementById('player2-gender-field');
+  const player1GenderSelect = document.querySelector('select[name="player1_gender"]');
+  const player2GenderSelect = document.querySelector('select[name="player2_gender"]');
+  
+  if (category === 'mixed') {
+    player1GenderField.style.display = 'block';
+    player2GenderField.style.display = 'block';
+    player1GenderSelect.required = true;
+    player2GenderSelect.required = true;
+  } else {
+    player1GenderField.style.display = 'none';
+    player2GenderField.style.display = 'none';
+    player1GenderSelect.required = false;
+    player2GenderSelect.required = false;
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', toggleMixedGenderFields);
+</script>
 {% endblock %}

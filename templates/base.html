@@ -78,8 +78,11 @@
               <a href="{{ url_for('ladder_men') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-t-lg">
                 👨 Men's Rankings
               </a>
-              <a href="{{ url_for('ladder_women') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-b-lg border-t">
+              <a href="{{ url_for('ladder_women') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 border-t">
                 👩 Women's Rankings
+              </a>
+              <a href="{{ url_for('ladder_mixed') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-b-lg border-t">
+                👫 Mixed Rankings
               </a>
             </div>
           </div>
@@ -159,6 +162,9 @@
           </a>
           <a href="{{ url_for('ladder_women') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all">
             👩 Women's Rankings
+          </a>
+          <a href="{{ url_for('ladder_mixed') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all">
+            👫 Mixed Rankings
           </a>
         </div>
 
