@@ -2,45 +2,14 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-    <h2 class="text-3xl sm:text-4xl font-bold text-white">Leaderboard</h2>
+    <h2 class="text-3xl sm:text-4xl font-bold text-white">League Leaderboard</h2>
     <a href="{{ url_for('player_leaderboard') }}" class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg font-semibold transition">
       Player Leaderboard
     </a>
   </div>
 
-  <!-- Tabs Navigation -->
-  <div class="bg-white/95 backdrop-blur-lg rounded-t-2xl shadow-2xl">
-    <div class="flex flex-wrap border-b border-gray-200">
-      <button onclick="switchTab('ladder-men')" id="tab-ladder-men" class="tab-button flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-200 border-b-2 hover:bg-purple-50 text-gray-700">
-        <span class="hidden sm:inline">👨 Ladder Men</span>
-        <span class="sm:hidden">👨 Men</span>
-      </button>
-      <button onclick="switchTab('ladder-women')" id="tab-ladder-women" class="tab-button flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-200 border-b-2 hover:bg-purple-50 text-gray-700">
-        <span class="hidden sm:inline">👩 Ladder Women</span>
-        <span class="sm:hidden">👩 Women</span>
-      </button>
-      <button onclick="switchTab('league')" id="tab-league" class="tab-button flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-200 border-b-2 hover:bg-purple-50 bg-purple-600 text-white border-purple-600">
-        <span class="hidden sm:inline">🏆 League</span>
-        <span class="sm:hidden">🏆 League</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Tab Contents -->
-  <div id="content-ladder-men" class="tab-content hidden">
-    <div class="bg-white/95 backdrop-blur-lg rounded-b-2xl shadow-2xl overflow-hidden">
-      <iframe src="{{ url_for('ladder_men') }}" class="w-full min-h-screen border-0" style="height: 1200px;"></iframe>
-    </div>
-  </div>
-
-  <div id="content-ladder-women" class="tab-content hidden">
-    <div class="bg-white/95 backdrop-blur-lg rounded-b-2xl shadow-2xl overflow-hidden">
-      <iframe src="{{ url_for('ladder_women') }}" class="w-full min-h-screen border-0" style="height: 1200px;"></iframe>
-    </div>
-  </div>
-
-  <div id="content-league" class="tab-content">
-    <div class="bg-white/95 backdrop-blur-lg rounded-b-2xl shadow-2xl overflow-hidden">
+  <!-- League Leaderboard Content -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden">
       
   <!-- Playoff Qualification Banner -->
   {% if team_seeds and playoff_phase in ['playoff_preview', 'playoffs'] %}
@@ -262,28 +231,5 @@
     </div>
   </div>
 </div>
-
-<script>
-function switchTab(tabName) {
-  const allTabs = document.querySelectorAll('.tab-button');
-  const allContents = document.querySelectorAll('.tab-content');
-  
-  allTabs.forEach(tab => {
-    tab.classList.remove('bg-purple-600', 'text-white', 'border-purple-600');
-    tab.classList.add('text-gray-700', 'border-transparent');
-  });
-  
-  allContents.forEach(content => {
-    content.classList.add('hidden');
-  });
-  
-  const activeTab = document.getElementById('tab-' + tabName);
-  const activeContent = document.getElementById('content-' + tabName);
-  
-  activeTab.classList.add('bg-purple-600', 'text-white', 'border-purple-600');
-  activeTab.classList.remove('text-gray-700', 'border-transparent');
-  activeContent.classList.remove('hidden');
-}
-</script>
 
 {% endblock %}
