@@ -1443,16 +1443,6 @@ As a ladder free agent, you'll be invited to participate in our monthly American
 - Compete for prizes and bragging rights
 - Enjoy a friendly, competitive atmosphere
 
-🔗 Your Access Link:
-{access_link}
-
-🔑 Access Token (for team login page):
-{access_token}
-
-You can either:
-1. Click the access link above to go directly to your profile, OR
-2. Visit the ladder login page and paste your access token
-
 💬 Join Your Free Agents WhatsApp Group:
 {whatsapp_link}
 
@@ -1467,7 +1457,7 @@ You'll receive an email notification before each monthly tournament with:
 
 Contact Preferences: {"Email" if contact_email else ""}{"" if not (contact_email and contact_whatsapp) else " and "}{"WhatsApp" if contact_whatsapp else ""}
 
-If you have any questions or want to update your profile, please contact the admin.
+If you have any questions, please contact the admin.
 
 Thank you for joining! 🚀
 
