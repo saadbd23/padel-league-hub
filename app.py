@@ -832,9 +832,29 @@ def ladder_register_team():
             flash("Email is required for both players.", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
 
-        if not gender or gender not in ["men", "women"]:
-            flash("Please select a gender (Men or Women).", "error")
+        if not gender or gender not in ["men", "women", "mixed"]:
+            flash("Please select a division (Men, Women, or Mixed).", "error")
             return render_template("ladder/register_team.html", form_data=request.form)
+        
+        # For Mixed teams, validate gender selections
+        player1_gender = None
+        player2_gender = None
+        if gender == "mixed":
+            player1_gender = request.form.get("player1_gender", "").strip()
+            player2_gender = request.form.get("player2_gender", "").strip()
+            
+            if not player1_gender or not player2_gender:
+                flash("Please select gender for both players in Mixed teams.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+            
+            if player1_gender not in ["male", "female"] or player2_gender not in ["male", "female"]:
+                flash("Invalid gender selection.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
+            
+            # Validate exactly one male and one female
+            if player1_gender == player2_gender:
+                flash("Mixed teams must have exactly one male and one female player.", "error")
+                return render_template("ladder/register_team.html", form_data=request.form)
 
         # Validate at least one contact preference
         if not contact_email and not contact_whatsapp:
@@ -979,7 +999,9 @@ def ladder_register_team():
             contact_preference_whatsapp=contact_whatsapp,
             access_token=access_token,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
+            player1_gender=player1_gender if gender == "mixed" else None,
+            player2_gender=player2_gender if gender == "mixed" else None
         )
         db.session.add(new_team)
         db.session.commit()
@@ -994,8 +1016,10 @@ def ladder_register_team():
             # Determine WhatsApp group link based on gender
             if gender == 'men':
                 whatsapp_link = "https://chat.whatsapp.com/Fw54Nxdk6jS9GTMOTnC0UD"
-            else:
+            elif gender == 'women':
                 whatsapp_link = "https://chat.whatsapp.com/GswFleVQhxF4gziShBhstd"
+            else:  # mixed
+                whatsapp_link = "https://chat.whatsapp.com/LMHJyJ68MeCEhZaewOA8jx"
 
             email_body = f"""Hi {p1_name},
 
@@ -4216,6 +4240,7 @@ def admin_panel():
     # Ladder-specific data
     men_teams_count = LadderTeam.query.filter_by(gender='men').count()
     women_teams_count = LadderTeam.query.filter_by(gender='women').count()
+    mixed_teams_count = LadderTeam.query.filter_by(gender='mixed').count()
 
     active_challenges_count = LadderChallenge.query.filter(
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
@@ -4311,6 +4336,7 @@ def admin_panel():
         next_round=next_round,
         men_teams_count=men_teams_count,
         women_teams_count=women_teams_count,
+        mixed_teams_count=mixed_teams_count,
         active_challenges_count=active_challenges_count,
         pending_matches_count=pending_matches_count,
         no_show_reports_count=no_show_reports_count,
@@ -4355,14 +4381,19 @@ def admin_ladder_toggle_payment():
 @app.route("/admin/ladder/rankings/<ladder_type>")
 @require_admin_auth
 def admin_ladder_rankings(ladder_type):
-    if ladder_type not in ['men', 'women']:
+    if ladder_type not in ['men', 'women', 'mixed']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
 
     teams = LadderTeam.query.filter_by(gender=ladder_type).order_by(LadderTeam.current_rank).all()
 
     total_teams = len(teams)
-    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    if ladder_type == 'men':
+        division_title = "Men's Division"
+    elif ladder_type == 'women':
+        division_title = "Women's Division"
+    else:
+        division_title = "Mixed Division"
 
     teams_with_status = []
     for team in teams:
