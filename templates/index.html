@@ -69,11 +69,20 @@
                class="block bg-gradient-to-r from-purple-600 to-indigo-700 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               Register Your Team
             </a>
-            <a href="{{ url_for('ladder_register_freeagent') }}" 
-               class="block text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-               style="background-color: #f97316; border: 2px solid #ea580c;">
-              🌟 Register as Free Agent
-            </a>
+            <div class="flex items-center gap-2">
+              <a href="{{ url_for('ladder_register_freeagent') }}" 
+                 class="flex-1 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                 style="background-color: #f97316; border: 2px solid #ea580c;">
+                🌟 Register as Free Agent
+              </a>
+              <button onclick="document.getElementById('freeAgentInfoModal').classList.remove('hidden')" 
+                      class="text-orange-600 hover:text-orange-700 transition-colors flex-shrink-0" 
+                      title="Learn more about Free Agents">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
           </div>
           
           <p class="text-xs sm:text-sm text-gray-600 mt-4 text-center">
@@ -269,9 +278,91 @@
   </div>
 </div>
 
+<!-- Free Agent & Americano Info Modal -->
+<div id="freeAgentInfoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="sticky top-0 bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+      <h3 class="text-2xl font-bold flex items-center gap-2">
+        <span>🌟</span>
+        <span>Free Agents & Americano</span>
+      </h3>
+      <button onclick="document.getElementById('freeAgentInfoModal').classList.add('hidden')" class="text-white hover:text-gray-200 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="p-6 space-y-6">
+      <div class="bg-orange-50 border-l-4 border-orange-600 p-4 rounded-lg">
+        <h4 class="font-bold text-orange-900 mb-2">🤷 Don't Have a Partner?</h4>
+        <p class="text-gray-700 leading-relaxed">
+          If you don't have a partner then register as a free agent. Free agents can find a partner during the Americano.
+        </p>
+      </div>
+
+      <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-lg">
+        <h4 class="font-bold text-blue-900 mb-2">🎾 What is an Americano?</h4>
+        <p class="text-gray-700 leading-relaxed mb-3">
+          An Americano is a fun, social padel format where:
+        </p>
+        <ul class="space-y-2 text-gray-700">
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 font-bold">•</span>
+            <span>You join individually (not as a team)</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 font-bold">•</span>
+            <span>Everyone gets rotated into different pairings</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 font-bold">•</span>
+            <span>You play short, fast games with many partners</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 font-bold">•</span>
+            <span>Points are added individually</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 font-bold">•</span>
+            <span>It's perfect for meeting new partners and improving quickly</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-green-50 border-l-4 border-green-600 p-4 rounded-lg">
+        <h4 class="font-bold text-green-900 mb-2">📅 Monthly Americano Tournaments</h4>
+        <p class="text-gray-700 leading-relaxed">
+          This is why free agents will be invited to a Monthly Americano Tournament so people can find suitable partners naturally.
+        </p>
+      </div>
+
+      <div class="bg-purple-50 border-l-4 border-purple-600 p-4 rounded-lg">
+        <h4 class="font-bold text-purple-900 mb-2">🤝 Find Your Perfect Partner</h4>
+        <p class="text-gray-700 leading-relaxed">
+          Through the Americano format, you'll play with different people, discover compatible playing styles, and naturally form partnerships with players who match your skill level and chemistry.
+        </p>
+      </div>
+
+      <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-6 rounded-xl text-center">
+        <p class="text-lg font-semibold mb-4">Ready to find your partner?</p>
+        <a href="{{ url_for('ladder_register_freeagent') }}" class="inline-block bg-white text-orange-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all shadow-lg">
+          Register as Free Agent
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // Close modal when clicking outside
 document.getElementById('ladderInfoModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.classList.add('hidden');
+  }
+});
+
+document.getElementById('freeAgentInfoModal').addEventListener('click', function(e) {
   if (e.target === this) {
     this.classList.add('hidden');
   }
@@ -281,6 +372,7 @@ document.getElementById('ladderInfoModal').addEventListener('click', function(e)
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     document.getElementById('ladderInfoModal').classList.add('hidden');
+    document.getElementById('freeAgentInfoModal').classList.add('hidden');
   }
 });
 </script>
