@@ -2400,7 +2400,7 @@ BD Padel Ladder Team
 
                 challenge.status = 'accepted'
                 challenge.accepted_at = now
-                challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
+                challenge.completion_deadline = now + timedelta(days=settings.match_completion_days)
 
                 match = LadderMatch(
                     team_a_id=challenge.challenger_team_id,
@@ -2428,7 +2428,7 @@ Match Details:
 - Their Rank: #{challenged_team.current_rank}
 - Match Deadline: {challenge.completion_deadline.strftime('%B %d, %Y')}
 
-You have {settings.challenge_completion_days} days to complete this match and submit scores.
+You have {settings.match_completion_days} days to complete this match and submit scores.
 
 Please coordinate with your opponent to schedule a time to play. You can contact them via:
 - {challenged_team.player1_name}: {challenged_team.player1_phone}
@@ -2453,7 +2453,7 @@ Match Details:
 - Their Rank: #{challenger_team.current_rank}
 - Match Deadline: {challenge.completion_deadline.strftime('%B %d, %Y')}
 
-You have {settings.challenge_completion_days} days to complete this match and submit scores.
+You have {settings.match_completion_days} days to complete this match and submit scores.
 
 Please coordinate with your opponent to schedule a time to play. You can contact them via:
 - {challenger_team.player1_name}: {challenger_team.player1_phone}
