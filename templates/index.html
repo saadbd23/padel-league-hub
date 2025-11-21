@@ -25,7 +25,14 @@
         <div class="p-6 sm:p-8">
           <div class="text-center mb-6">
             <div class="text-6xl sm:text-7xl mb-4">🏆</div>
-            <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Ladder Challenge</h3>
+            <div class="flex items-center justify-center gap-2 mb-2">
+              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">Ladder Challenge</h3>
+              <button onclick="document.getElementById('ladderInfoModal').classList.remove('hidden')" class="text-purple-600 hover:text-purple-700 transition-colors" title="Learn more about Ladder">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
             <p class="text-gray-600 text-sm sm:text-base">Climb the ranks • Challenge teams • Ongoing season</p>
           </div>
           
@@ -200,5 +207,82 @@
     </div>
   </div>
 </div>
+
+<!-- Ladder Info Modal -->
+<div id="ladderInfoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+      <h3 class="text-2xl font-bold flex items-center gap-2">
+        <span>🪜</span>
+        <span>What is a Ladder Challenge?</span>
+      </h3>
+      <button onclick="document.getElementById('ladderInfoModal').classList.add('hidden')" class="text-white hover:text-gray-200 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="p-6 space-y-6">
+      <div class="bg-purple-50 border-l-4 border-purple-600 p-4 rounded-lg">
+        <h4 class="font-bold text-purple-900 mb-2">📊 What is a Ladder?</h4>
+        <p class="text-gray-700 leading-relaxed">
+          A ladder is basically a ranking board where teams are placed in positions like 1, 2, 3, 4 and so on. You can challenge teams that are above you to try and move up.
+        </p>
+      </div>
+
+      <div class="bg-green-50 border-l-4 border-green-600 p-4 rounded-lg">
+        <h4 class="font-bold text-green-900 mb-2">🎯 If You Win</h4>
+        <p class="text-gray-700 leading-relaxed">
+          Your team moves up and the losing team moves down to where you were.
+        </p>
+      </div>
+
+      <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-lg">
+        <h4 class="font-bold text-blue-900 mb-2">😌 If You Lose</h4>
+        <p class="text-gray-700 leading-relaxed">
+          Nothing happens. You stay in your current spot.
+        </p>
+      </div>
+
+      <div class="bg-orange-50 border-l-4 border-orange-600 p-4 rounded-lg">
+        <h4 class="font-bold text-orange-900 mb-2">⏰ Flexible Schedule</h4>
+        <p class="text-gray-700 leading-relaxed">
+          The best part is that you can challenge whenever you're free. There are no fixed match days, which makes the ladder flexible and easy for everyone to join.
+        </p>
+      </div>
+
+      <div class="bg-pink-50 border-l-4 border-pink-600 p-4 rounded-lg">
+        <h4 class="font-bold text-pink-900 mb-2">🤝 Fun & Social</h4>
+        <p class="text-gray-700 leading-relaxed">
+          A ladder is also meant to be fun and social. It's a great way to meet other padel lovers, play with different teams, and get more matches without committing to a full league season.
+        </p>
+      </div>
+
+      <div class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-6 rounded-xl text-center">
+        <p class="text-lg font-semibold mb-4">Ready to start climbing?</p>
+        <a href="{{ url_for('ladder_register_team') }}" class="inline-block bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all shadow-lg">
+          Register Your Team Now
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Close modal when clicking outside
+document.getElementById('ladderInfoModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.classList.add('hidden');
+  }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('ladderInfoModal').classList.add('hidden');
+  }
+});
+</script>
 
 {% endblock %}
