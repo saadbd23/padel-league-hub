@@ -69,24 +69,22 @@
                class="block bg-gradient-to-r from-purple-600 to-indigo-700 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               Register Your Team
             </a>
-            <div class="flex items-center gap-2">
-              <a href="{{ url_for('ladder_register_freeagent') }}" 
-                 class="flex-1 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                 style="background-color: #f97316; border: 2px solid #ea580c;">
-                🌟 Register as Free Agent
-              </a>
-              <button onclick="document.getElementById('freeAgentInfoModal').classList.remove('hidden')" 
-                      class="text-orange-600 hover:text-orange-700 transition-colors flex-shrink-0" 
-                      title="Learn more about Free Agents">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                </svg>
-              </button>
-            </div>
+            <a href="{{ url_for('ladder_register_freeagent') }}" 
+               class="block text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+               style="background-color: #f97316; border: 2px solid #ea580c;">
+              🌟 Register as Free Agent
+            </a>
           </div>
           
           <p class="text-xs sm:text-sm text-gray-600 mt-4 text-center">
             ⭐ No partner? Join as a free agent and we'll pair you via monthly Americano tournaments!
+            <button onclick="document.getElementById('freeAgentInfoModal').classList.remove('hidden')" 
+                    class="inline-flex items-center text-orange-600 hover:text-orange-700 transition-colors ml-1" 
+                    title="Learn more about Free Agents">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+            </button>
           </p>
         </div>
       </div>
@@ -346,7 +344,7 @@
 
       <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-6 rounded-xl text-center">
         <p class="text-lg font-semibold mb-4">Ready to find your partner?</p>
-        <a href="{{ url_for('ladder_register_freeagent') }}" class="inline-block bg-white text-orange-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all shadow-lg">
+        <a href="{{ url_for('ladder_register_freeagent') }}" class="inline-block text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-1" style="background-color: #f97316; border: 2px solid #ea580c;">
           Register as Free Agent
         </a>
       </div>
