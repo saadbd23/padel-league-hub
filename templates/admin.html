@@ -82,7 +82,7 @@
               {% for m in todays_matches|sort(attribute='match_datetime') %}
                 {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
                 {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
-                {% set has_substitute = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+                {% set has_substitute = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
                 {% set is_rescheduled = reschedules_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
                 <tr class="hover:bg-purple-50 transition-colors">
                   <td class="px-4 py-3 whitespace-nowrap">
@@ -130,7 +130,7 @@
                   <td class="px-4 py-3 text-center">
                     <div class="flex flex-col gap-1 items-center">
                       {% if has_substitute %}
-                        {% set match_sub = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
+                        {% set match_sub = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
                         {% if match_sub %}
                           {% set sub_team = teams|selectattr('id', 'equalto', match_sub.team_id)|first %}
                           <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
@@ -165,7 +165,7 @@
           {% for m in todays_matches|sort(attribute='match_datetime') %}
             {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
             {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
-            {% set has_substitute = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
+            {% set has_substitute = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
             {% set is_rescheduled = reschedules_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
             <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
               <div class="flex items-start justify-between mb-3">
@@ -208,7 +208,7 @@
                   </span>
                 {% endif %}
                 {% if has_substitute %}
-                  {% set match_sub = substitutes|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
+                  {% set match_sub = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|first %}
                   {% if match_sub %}
                     {% set sub_team = teams|selectattr('id', 'equalto', match_sub.team_id)|first %}
                     <div class="flex flex-col">
