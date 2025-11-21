@@ -6385,6 +6385,7 @@ def approve_reschedule(reschedule_id):
                 date_str, time_str = proposed_time.split(" at ")
                 match.match_date = date_str
                 match.court = f"Rescheduled to {proposed_time}"
+                match.booking_confirmed = True  # Admin approval counts as booking confirmation
 
             # Update reschedule status
             reschedule.status = "approved"
