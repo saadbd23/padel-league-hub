@@ -117,7 +117,7 @@ class Match(db.Model):
     # Match metadata
     match_date = db.Column(db.String(50))  # Store as string for now
     match_datetime = db.Column(db.DateTime, nullable=True)  # Parsed datetime for reminders
-    court = db.Column(db.String(50))
+    court = db.Column(db.String(150))
     verified = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default="scheduled")  # scheduled, completed, bye, walkover
     stats_calculated = db.Column(db.Boolean, default=False)  # Prevent duplicate updates

@@ -6384,7 +6384,7 @@ def approve_reschedule(reschedule_id):
             if " at " in proposed_time:
                 date_str, time_str = proposed_time.split(" at ")
                 match.match_date = date_str
-                match.court = f"Court assignment pending - Rescheduled to {proposed_time}"
+                match.court = f"Rescheduled to {proposed_time}"
 
             # Update reschedule status
             reschedule.status = "approved"
