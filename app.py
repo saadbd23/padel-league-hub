@@ -2414,7 +2414,7 @@ BD Padel Ladder Team
                 db.session.commit()
                 print(f"[DEBUG] Challenge {challenge_id} accepted. Status updated to: {challenge.status}")
 
-            challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+                challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
             challenged_team = team
 
             challenger_message = f"""Hello {challenger_team.team_name},
