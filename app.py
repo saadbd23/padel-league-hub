@@ -4308,12 +4308,47 @@ def admin_panel():
     women_teams_count = LadderTeam.query.filter_by(gender='women').count()
     mixed_teams_count = LadderTeam.query.filter_by(gender='mixed').count()
 
-    active_challenges_count = LadderChallenge.query.filter(
+    # Calculate division-specific counts
+    men_active_challenges = LadderChallenge.query.join(
+        LadderTeam, LadderChallenge.challenger_team_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'men',
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).count()
+    
+    women_active_challenges = LadderChallenge.query.join(
+        LadderTeam, LadderChallenge.challenger_team_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'women',
+        LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+    ).count()
+    
+    mixed_active_challenges = LadderChallenge.query.join(
+        LadderTeam, LadderChallenge.challenger_team_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'mixed',
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
     ).count()
 
-    pending_matches_count = LadderMatch.query.filter(
-        LadderMatch.status.in_(['pending_scores', 'pending_opponent_score'])
+    men_pending_matches = LadderMatch.query.join(
+        LadderTeam, LadderMatch.team_a_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'men',
+        LadderMatch.status.in_(['pending', 'pending_scores', 'pending_opponent_score'])
+    ).count()
+    
+    women_pending_matches = LadderMatch.query.join(
+        LadderTeam, LadderMatch.team_a_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'women',
+        LadderMatch.status.in_(['pending', 'pending_scores', 'pending_opponent_score'])
+    ).count()
+    
+    mixed_pending_matches = LadderMatch.query.join(
+        LadderTeam, LadderMatch.team_a_id == LadderTeam.id
+    ).filter(
+        LadderTeam.ladder_type == 'mixed',
+        LadderMatch.status.in_(['pending', 'pending_scores', 'pending_opponent_score'])
     ).count()
 
     no_show_reports_count = LadderMatch.query.filter_by(status='no_show_reported').count()
@@ -4413,8 +4448,12 @@ def admin_panel():
         men_teams_count=men_teams_count,
         women_teams_count=women_teams_count,
         mixed_teams_count=mixed_teams_count,
-        active_challenges_count=active_challenges_count,
-        pending_matches_count=pending_matches_count,
+        men_active_challenges=men_active_challenges,
+        women_active_challenges=women_active_challenges,
+        mixed_active_challenges=mixed_active_challenges,
+        men_pending_matches=men_pending_matches,
+        women_pending_matches=women_pending_matches,
+        mixed_pending_matches=mixed_pending_matches,
         no_show_reports_count=no_show_reports_count,
         disputed_matches_count=disputed_matches_count,
         men_on_holiday_count=men_on_holiday_count,
