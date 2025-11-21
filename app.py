@@ -2373,43 +2373,46 @@ BD Padel Ladder Team
             return redirect(url_for('ladder_my_team', token=token))
 
         elif action == "accept_challenge":
-            challenge_id = request.form.get("challenge_id")
-            if not challenge_id:
-                flash("Challenge ID is required", "error")
-                return redirect(url_for('ladder_my_team', token=token))
+            try:
+                challenge_id = request.form.get("challenge_id")
+                if not challenge_id:
+                    flash("Challenge ID is required", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
 
-            challenge = LadderChallenge.query.get(challenge_id)
-            if not challenge:
-                flash("Challenge not found", "error")
-                return redirect(url_for('ladder_my_team', token=token))
+                challenge = LadderChallenge.query.get(challenge_id)
+                if not challenge:
+                    flash("Challenge not found", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
 
-            if challenge.challenged_team_id != team.id:
-                flash("You are not authorized to accept this challenge", "error")
-                return redirect(url_for('ladder_my_team', token=token))
+                if challenge.challenged_team_id != team.id:
+                    flash("You are not authorized to accept this challenge", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
 
-            now = datetime.now()
+                now = datetime.now()
 
-            if now > challenge.acceptance_deadline:
-                apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
-                                 f"Failed to accept challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
-                challenge.status = 'expired'
+                if now > challenge.acceptance_deadline:
+                    apply_rank_penalty(team, settings.acceptance_penalty_ranks, 
+                                     f"Failed to accept challenge from rank #{LadderTeam.query.get(challenge.challenger_team_id).current_rank} before deadline")
+                    challenge.status = 'expired'
+                    db.session.commit()
+                    flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s).", "error")
+                    return redirect(url_for('ladder_my_team', token=token))
+
+                challenge.status = 'accepted'
+                challenge.accepted_at = now
+                challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
+
+                match = LadderMatch(
+                    team_a_id=challenge.challenger_team_id,
+                    team_b_id=challenge.challenged_team_id,
+                    challenge_id=challenge.id,
+                    ladder_type=team.ladder_type,
+                    created_at=now
+                )
+                db.session.add(match)
+                db.session.add(challenge)  # Explicitly add challenge to ensure it's tracked
                 db.session.commit()
-                flash(f"Challenge acceptance deadline has passed. You have been penalized {settings.acceptance_penalty_ranks} rank(s).", "error")
-                return redirect(url_for('ladder_my_team', token=token))
-
-            challenge.status = 'accepted'
-            challenge.accepted_at = now
-            challenge.completion_deadline = now + timedelta(days=settings.challenge_completion_days)
-
-            match = LadderMatch(
-                team_a_id=challenge.challenger_team_id,
-                team_b_id=challenge.challenged_team_id,
-                challenge_id=challenge.id,
-                ladder_type=team.ladder_type,
-                created_at=now
-            )
-            db.session.add(match)
-            db.session.commit()
+                print(f"[DEBUG] Challenge {challenge_id} accepted. Status updated to: {challenge.status}")
 
             challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
             challenged_team = team
