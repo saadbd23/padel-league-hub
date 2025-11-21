@@ -2415,9 +2415,9 @@ BD Padel Ladder Team
                 print(f"[DEBUG] Challenge {challenge_id} accepted. Status updated to: {challenge.status}")
 
                 challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
-            challenged_team = team
+                challenged_team = team
 
-            challenger_message = f"""Hello {challenger_team.team_name},
+                challenger_message = f"""Hello {challenger_team.team_name},
 
 Challenge Accepted!
 
@@ -2442,7 +2442,7 @@ Regards,
 BD Padel Ladder Team
 """
 
-            challenged_message = f"""Hello {challenged_team.team_name},
+                challenged_message = f"""Hello {challenged_team.team_name},
 
 Challenge Accepted!
 
@@ -2467,30 +2467,36 @@ Regards,
 BD Padel Ladder Team
 """
 
-            from utils import send_email_notification
+                from utils import send_email_notification
 
-            if challenger_team.contact_preference_email:
-                if challenger_team.player1_email:
-                    send_email_notification(challenger_team.player1_email, 
-                                          f"Challenge Accepted - {challenger_team.team_name}", 
-                                          challenger_message)
-                if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
-                    send_email_notification(challenger_team.player2_email, 
-                                          f"Challenge Accepted - {challenger_team.team_name}", 
-                                          challenger_message)
+                if challenger_team.contact_preference_email:
+                    if challenger_team.player1_email:
+                        send_email_notification(challenger_team.player1_email, 
+                                              f"Challenge Accepted - {challenger_team.team_name}", 
+                                              challenger_message)
+                    if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+                        send_email_notification(challenger_team.player2_email, 
+                                              f"Challenge Accepted - {challenger_team.team_name}", 
+                                              challenger_message)
 
-            if challenged_team.contact_preference_email:
-                if challenged_team.player1_email:
-                    send_email_notification(challenged_team.player1_email, 
-                                          f"Challenge Accepted - {challenged_team.team_name}", 
-                                          challenged_message)
-                if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
-                    send_email_notification(challenged_team.player2_email, 
-                                          f"Challenge Accepted - {challenged_team.team_name}", 
-                                          challenged_message)
+                if challenged_team.contact_preference_email:
+                    if challenged_team.player1_email:
+                        send_email_notification(challenged_team.player1_email, 
+                                              f"Challenge Accepted - {challenged_team.team_name}", 
+                                              challenged_message)
+                    if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+                        send_email_notification(challenged_team.player2_email, 
+                                              f"Challenge Accepted - {challenged_team.team_name}", 
+                                              challenged_message)
 
-            flash(f"Challenge accepted! You have until {challenge.completion_deadline.strftime('%B %d, %Y')} to complete the match.", "success")
-            return redirect(url_for('ladder_my_team', token=token))
+                flash(f"Challenge accepted! You have until {challenge.completion_deadline.strftime('%B %d, %Y')} to complete the match.", "success")
+                return redirect(url_for('ladder_my_team', token=token))
+            
+            except Exception as e:
+                db.session.rollback()
+                print(f"[ERROR] Failed to accept challenge: {str(e)}")
+                flash(f"Error accepting challenge: {str(e)}", "error")
+                return redirect(url_for('ladder_my_team', token=token))
 
         elif action == "reject_challenge":
             challenge_id = request.form.get("challenge_id")
