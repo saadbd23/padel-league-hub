@@ -3835,21 +3835,12 @@ def submit_reschedule(token):
                 "message": f"Maximum reschedule limit reached for this round ({max_per_round} reschedules). Please wait for admin to process pending requests or contact admin for special approval."
             }, 400
 
-        # Validate reschedule request is before Wednesday cutoff
+        # Validate reschedule request is before Sunday 23:59 cutoff of current round
         from datetime import datetime, timedelta
         today = datetime.now().date()
         current_weekday = today.weekday()  # 0 = Monday, 6 = Sunday
 
-        # Check if today is Thursday, Friday, Saturday, or Sunday
-        if current_weekday >= 3:  # Thursday (3) or later
-            return {
-                "success": False,
-                "message": "Reschedule requests can only be submitted Monday-Wednesday of the current round. It's too late to reschedule this round. Please contact admin for emergency situations."
-            }, 400
-
         # Calculate next Monday (start of following week)
-        current_weekday = today.weekday()  # 0 = Monday, 1 = Tuesday, etc.
-
         if current_weekday == 0:  # If today is Monday, next Monday is 7 days away
             days_until_next_monday = 7
         else:
@@ -3860,22 +3851,22 @@ def submit_reschedule(token):
 
         next_monday = today + timedelta(days=days_until_next_monday)
 
-        # Calculate next Wednesday (CHANGED from Sunday to Wednesday)
-        next_wednesday = next_monday + timedelta(days=2)
+        # Calculate next Sunday (end of current round - deadline is Sunday 23:59)
+        next_sunday = next_monday + timedelta(days=6)
 
         selected_date = datetime.strptime(date, "%Y-%m-%d").date()
-        if selected_date < next_monday or selected_date > next_wednesday:
+        if selected_date < next_monday or selected_date > next_sunday:
             return {
                 "success": False,
-                "message": f"Reschedule date must be Monday-Wednesday of next week only ({next_monday.strftime('%Y-%m-%d')} to {next_wednesday.strftime('%Y-%m-%d')})"
+                "message": f"Reschedule date must be Monday-Sunday of next week only ({next_monday.strftime('%Y-%m-%d')} to {next_sunday.strftime('%Y-%m-%d')})"
             }, 400
 
-        # Additional validation: Selected day must be Mon, Tue, or Wed
-        selected_weekday = selected_date.weekday()  # 0 = Monday, 1 = Tuesday, 2 = Wednesday
-        if selected_weekday not in [0, 1, 2]:
+        # Additional validation: Selected day must be Mon, Tue, Wed, Thu, Fri, Sat, or Sun
+        selected_weekday = selected_date.weekday()  # 0 = Monday through 6 = Sunday
+        if selected_weekday not in [0, 1, 2, 3, 4, 5, 6]:
             return {
                 "success": False,
-                "message": "Match can only be rescheduled to Monday, Tuesday, or Wednesday. Wednesday 23:59 is the absolute deadline."
+                "message": "Match can only be rescheduled to Monday-Sunday of next week. Sunday 23:59 is the absolute deadline."
             }, 400
 
         # Check if this is a valid round for reschedule (1 round limitation)
