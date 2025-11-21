@@ -6383,8 +6383,23 @@ def approve_reschedule(reschedule_id):
             proposed_time = reschedule.proposed_time
             if " at " in proposed_time:
                 date_str, time_str = proposed_time.split(" at ")
-                match.match_date = date_str
-                match.court = f"Rescheduled to {proposed_time}"
+                
+                # Convert date format from "2025-11-25" to "Tuesday, November 25"
+                parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+                formatted_date = parsed_date.strftime("%A, %B %d")
+                
+                # Convert time format from "18:30" to "06:30 PM"
+                time_obj = datetime.strptime(time_str, "%H:%M")
+                formatted_time = time_obj.strftime("%I:%M %p")
+                
+                # Create fully formatted datetime string for booking details
+                booking_datetime_str = f"{formatted_date} at {formatted_time}"
+                
+                # Set all booking-related fields to match normal booking confirmation
+                match.match_date = booking_datetime_str
+                match.match_datetime = parsed_date.replace(hour=time_obj.hour, minute=time_obj.minute)
+                match.court = "Court assigned on arrival"
+                match.booking_details = f"{booking_datetime_str}\nCourt assigned on arrival\n✓ Confirmed by both teams"
                 match.booking_confirmed = True  # Admin approval counts as booking confirmation
 
             # Update reschedule status
