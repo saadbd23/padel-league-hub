@@ -4400,11 +4400,12 @@ def admin_panel():
     # Free Agents tab data with matching contact info check
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
     
-    # Check which free agents have matching email/phone with existing ladder teams
+    # Check which free agents have matching email/phone with existing ladder teams (Men's and Women's only, exclude Mixed)
     ladder_free_agents_with_matches = []
     for agent in ladder_free_agents:
-        # Check if this free agent's phone or email exists in LadderTeam table
+        # Check if this free agent's phone or email exists in LadderTeam table (only Men's and Women's, not Mixed)
         matching_teams = LadderTeam.query.filter(
+            LadderTeam.ladder_type.in_(['men', 'women']),
             db.or_(
                 LadderTeam.player1_phone == agent.phone,
                 LadderTeam.player2_phone == agent.phone,
