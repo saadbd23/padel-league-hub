@@ -4397,8 +4397,27 @@ def admin_panel():
             if match.booking_details:
                 todays_matches.append(match)
 
-    # Free Agents tab data
+    # Free Agents tab data with matching contact info check
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
+    
+    # Check which free agents have matching email/phone with existing ladder teams
+    ladder_free_agents_with_matches = []
+    for agent in ladder_free_agents:
+        # Check if this free agent's phone or email exists in LadderTeam table
+        matching_teams = LadderTeam.query.filter(
+            db.or_(
+                LadderTeam.player1_phone == agent.phone,
+                LadderTeam.player2_phone == agent.phone,
+                LadderTeam.player1_email == agent.email,
+                LadderTeam.player2_email == agent.email
+            )
+        ).all()
+        
+        ladder_free_agents_with_matches.append({
+            'agent': agent,
+            'has_match': len(matching_teams) > 0,
+            'matching_teams': matching_teams
+        })
 
     # Americano tournaments data (similar to admin_americano_tournaments route)
     tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
@@ -4464,6 +4483,7 @@ def admin_panel():
         pending_payments_mixed=pending_payments_mixed,
         today_date=today_date,
         ladder_free_agents=ladder_free_agents,
+        ladder_free_agents_with_matches=ladder_free_agents_with_matches,
         tournament_data=tournament_data,
     )
 
@@ -7349,6 +7369,20 @@ def remove_freeagent(freeagent_id):
         flash(f"Free agent {name} removed from the list.", "success")
 
     db.session.commit()
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/remove-ladder-freeagent/<int:freeagent_id>", methods=["POST"])
+@require_admin_auth
+def remove_ladder_freeagent(freeagent_id):
+    """Remove a ladder free agent from the list"""
+    free_agent = LadderFreeAgent.query.get_or_404(freeagent_id)
+    name = free_agent.name
+    
+    db.session.delete(free_agent)
+    db.session.commit()
+    
+    flash(f"Free agent {name} removed successfully.", "success")
     return redirect(url_for("admin_panel"))
 
 

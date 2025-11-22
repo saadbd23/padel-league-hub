@@ -1195,7 +1195,7 @@
       </div>
 
       <div id="registeredfreeagents-content" class="collapsible-content">
-        {% if ladder_free_agents|length > 0 %}
+        {% if ladder_free_agents_with_matches|length > 0 %}
           <!-- Desktop Table View -->
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full">
@@ -1206,33 +1206,44 @@
                   <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Skill Level</th>
                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Contact</th>
                   <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Registration Date</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Action</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                {% for agent in ladder_free_agents %}
-                <tr class="hover:bg-purple-50 transition-colors">
+                {% for item in ladder_free_agents_with_matches %}
+                <tr class="{% if item.has_match %}bg-yellow-50 border-l-4 border-yellow-500{% else %}hover:bg-purple-50{% endif %} transition-colors">
                   <td class="px-4 py-3">
-                    <div class="text-sm font-bold text-gray-900">{{ agent.name }}</div>
+                    <div class="text-sm font-bold text-gray-900">
+                      {{ item.agent.name }}
+                      {% if item.has_match %}<span class="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded font-semibold">⚠️ Duplicate Contact</span>{% endif %}
+                    </div>
                   </td>
                   <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
-                      {% if agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
-                      {{ '👨 Men' if agent.gender == 'men' else '👩 Women' }}
+                      {% if item.agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                      {{ '👨 Men' if item.agent.gender == 'men' else '👩 Women' }}
                     </span>
                   </td>
                   <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                      {{ agent.skill_level|title if agent.skill_level else 'N/A' }}
+                      {{ item.agent.skill_level|title if item.agent.skill_level else 'N/A' }}
                     </span>
                   </td>
                   <td class="px-4 py-3">
-                    <div class="text-sm text-gray-700">📧 {{ agent.email }}</div>
-                    <div class="text-sm text-gray-700">📱 {{ agent.phone }}</div>
+                    <div class="text-sm text-gray-700">📧 {{ item.agent.email }}</div>
+                    <div class="text-sm text-gray-700">📱 {{ item.agent.phone }}</div>
                   </td>
                   <td class="px-4 py-3 text-center">
                     <div class="text-sm text-gray-600">
-                      {{ agent.created_at.strftime('%b %d, %Y') if agent.created_at else 'N/A' }}
+                      {{ item.agent.created_at.strftime('%b %d, %Y') if item.agent.created_at else 'N/A' }}
                     </div>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <form method="POST" action="{{ url_for('remove_ladder_freeagent', freeagent_id=item.agent.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove {{ item.agent.name }}?');">
+                      <button type="submit" class="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors">
+                        🗑️ Remove
+                      </button>
+                    </form>
                   </td>
                 </tr>
                 {% endfor %}
@@ -1242,26 +1253,34 @@
 
           <!-- Mobile Card View -->
           <div class="md:hidden space-y-4">
-            {% for agent in ladder_free_agents %}
-            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+            {% for item in ladder_free_agents_with_matches %}
+            <div class="{% if item.has_match %}bg-yellow-50 border-4 border-yellow-300{% else %}bg-gray-50 border-2 border-gray-200{% endif %} rounded-lg p-4 shadow-sm">
               <div class="flex items-start justify-between mb-3">
                 <div>
-                  <h4 class="text-base font-bold text-gray-900">{{ agent.name }}</h4>
+                  <h4 class="text-base font-bold text-gray-900">{{ item.agent.name }}</h4>
+                  {% if item.has_match %}<div class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded font-semibold mt-1 inline-block">⚠️ Duplicate Contact</div>{% endif %}
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold mt-1
-                    {% if agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
-                    {{ '👨 Men' if agent.gender == 'men' else '👩 Women' }}
+                    {% if item.agent.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                    {{ '👨 Men' if item.agent.gender == 'men' else '👩 Women' }}
                   </span>
                 </div>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                  {{ agent.skill_level|title if agent.skill_level else 'N/A' }}
+                  {{ item.agent.skill_level|title if item.agent.skill_level else 'N/A' }}
                 </span>
               </div>
               <div class="space-y-1 text-sm">
-                <div class="text-gray-700">📧 {{ agent.email }}</div>
-                <div class="text-gray-700">📱 {{ agent.phone }}</div>
+                <div class="text-gray-700">📧 {{ item.agent.email }}</div>
+                <div class="text-gray-700">📱 {{ item.agent.phone }}</div>
                 <div class="text-gray-600 text-xs mt-2">
-                  Registered: {{ agent.created_at.strftime('%b %d, %Y') if agent.created_at else 'N/A' }}
+                  Registered: {{ item.agent.created_at.strftime('%b %d, %Y') if item.agent.created_at else 'N/A' }}
                 </div>
+              </div>
+              <div class="mt-4">
+                <form method="POST" action="{{ url_for('remove_ladder_freeagent', freeagent_id=item.agent.id) }}" onsubmit="return confirm('Are you sure you want to remove {{ item.agent.name }}?');">
+                  <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                    🗑️ Remove Agent
+                  </button>
+                </form>
               </div>
             </div>
             {% endfor %}

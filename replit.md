@@ -13,6 +13,18 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**November 22, 2025** - Free Agents Remove & Duplicate Contact Detection
+- **Remove Button for Each Free Agent**: Added red "Remove" button (🗑️) in Free Agents section (desktop table + mobile cards)
+  - Desktop: Action column with inline remove button
+  - Mobile: Full-width remove button below agent details
+  - Confirmation dialog prevents accidental deletion
+  - Backend route: `/admin/remove-ladder-freeagent/<agent_id>` (POST)
+- **Duplicate Contact Detection**: Auto-highlights free agents whose email or phone matches existing Ladder teams
+  - Desktop: Yellow background row with yellow left border + "⚠️ Duplicate Contact" badge
+  - Mobile: Yellow border card (4px) with yellow "⚠️ Duplicate Contact" badge
+  - Backend checks both player1 and player2 contact info across all ladder teams
+  - Helps admins identify potential duplicates before pairing
+
 **November 18, 2025** - Free Agents Admin Panel Integration
 - **Admin Panel Three-Tab Structure**: League, Ladder, and Free Agents tabs
   - Free Agents tab consolidates all free agent and Americano tournament management
