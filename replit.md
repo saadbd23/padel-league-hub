@@ -2,6 +2,13 @@
 
 BD Padel League is a web-based platform designed for managing competitive padel tournaments, built using Flask and SQLAlchemy. It supports two main tournament systems: a Swiss-format League with playoff management and a challenge-based Ladder Tournament for both men's and women's divisions. The platform streamlines team/player registration, automates pairings, facilitates match scheduling, enables score submission, maintains leaderboards, and provides secure team access. The business vision is to provide a robust, user-friendly solution for padel clubs and communities to organize and run their leagues efficiently, enhancing player engagement and competition.
 
+# Recent Changes
+
+## November 23, 2025
+- **Penalty Control UI Enhancement**: Added clear ON/OFF visual indicators with green (✅ PENALTIES ON) and red (⛔ PENALTIES OFF) badges for penalty activation toggle in Ladder Settings
+- **Court Booking Rule**: Added first rule in Ladder Tournament Rules section requiring teams to book and pay for courts themselves
+- **Database Schema Update**: Added `penalties_active` boolean column to `ladder_settings` table (defaults to False for safe ladder launch)
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
