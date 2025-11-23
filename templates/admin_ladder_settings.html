@@ -262,18 +262,48 @@
           </h4>
 
           <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="font-semibold text-gray-700">Activate Penalties</label>
+            <div class="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-amber-200">
+              <div class="flex-1">
+                <label class="font-semibold text-gray-700">Penalty System Status</label>
                 <p class="text-sm text-gray-600">Enable/disable all ladder penalties (great for ladder launch or special periods like Ramadan)</p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="penalties_active" class="sr-only peer" {% if settings.penalties_active %}checked{% endif %}>
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-              </label>
+              <div class="flex items-center gap-3 ml-4">
+                <!-- Status Badge -->
+                <div id="penalty-status-badge" class="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-white transition-all duration-300 {% if settings.penalties_active %}bg-green-500{% else %}bg-red-500{% endif %}">
+                  <span id="penalty-status-icon" class="text-xl">{% if settings.penalties_active %}✅{% else %}⛔{% endif %}</span>
+                  <span id="penalty-status-text" class="text-sm">{% if settings.penalties_active %}PENALTIES ON{% else %}PENALTIES OFF{% endif %}</span>
+                </div>
+                <!-- Toggle Switch -->
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="penalties_active" id="penalties_active_checkbox" class="sr-only peer" {% if settings.penalties_active %}checked{% endif %} onchange="updatePenaltyStatus()">
+                  <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer transition-all peer-checked:bg-green-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                </label>
+              </div>
             </div>
+            
+            <script>
+              function updatePenaltyStatus() {
+                const checkbox = document.getElementById('penalties_active_checkbox');
+                const badge = document.getElementById('penalty-status-badge');
+                const statusText = document.getElementById('penalty-status-text');
+                const statusIcon = document.getElementById('penalty-status-icon');
+                
+                if (checkbox.checked) {
+                  badge.classList.remove('bg-red-500');
+                  badge.classList.add('bg-green-500');
+                  statusText.textContent = 'PENALTIES ON';
+                  statusIcon.textContent = '✅';
+                } else {
+                  badge.classList.remove('bg-green-500');
+                  badge.classList.add('bg-red-500');
+                  statusText.textContent = 'PENALTIES OFF';
+                  statusIcon.textContent = '⛔';
+                }
+              }
+            </script>
+
             <div class="p-3 bg-amber-100 border-l-4 border-amber-600 rounded text-sm text-amber-900">
-              <strong>📌 Note:</strong> When disabled, no penalties will be applied for missed deadlines, no-shows, holiday mode, or inactivity. All penalty settings above remain configured but inactive.
+              <strong>📌 Note:</strong> When disabled (⛔), no penalties will be applied for missed deadlines, no-shows, holiday mode, or inactivity. All penalty settings above remain configured but inactive.
             </div>
           </div>
         </div>
