@@ -2875,7 +2875,7 @@ BD Padel Ladder System
                 LadderTeam.id != team.id
             ).order_by(LadderTeam.current_rank.asc()).all()
 
-            # Filter out locked and holiday teams
+            # Show all teams but mark locked/holiday ones as disabled
             for potential_team in potential_teams:
                 # Check if potential team is already in an active challenge (with ANY opponent)
                 is_team_locked = LadderChallenge.query.filter(
@@ -2886,8 +2886,11 @@ BD Padel Ladder System
                     LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
                 ).first() is not None
 
-                if not is_team_locked and not potential_team.holiday_mode_active:
-                    challengeable_teams.append(potential_team)
+                challengeable_teams.append({
+                    'team': potential_team,
+                    'is_locked': is_team_locked,
+                    'is_holiday': potential_team.holiday_mode_active
+                })
 
     return render_template("ladder/my_team.html",
                          team=team,

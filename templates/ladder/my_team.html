@@ -755,14 +755,15 @@
       </h2>
 
       <div class="space-y-4">
-        {% for challengeable in challengeable_teams %}
+        {% for item in challengeable_teams %}
+        {% set challengeable = item.team %}
         {% set rank_diff = team.current_rank - challengeable.current_rank %}
         {% set max_diff = settings.max_challenge_rank_difference if settings else 3 %}
-        <div class="border-2 border-purple-200 rounded-lg p-6 bg-purple-50 hover:bg-purple-100 transition">
+        <div class="border-2 rounded-lg p-6 transition {% if item.is_locked or item.is_holiday %}border-gray-300 bg-gray-50 opacity-75{% else %}border-purple-200 bg-purple-50 hover:bg-purple-100{% endif %}">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
-                <div class="text-2xl font-bold text-purple-600">#{{ challengeable.current_rank }}</div>
+                <div class="text-2xl font-bold {% if item.is_locked or item.is_holiday %}text-gray-400{% else %}text-purple-600{% endif %}">#{{ challengeable.current_rank }}</div>
                 <div>
                   <h3 class="text-lg md:text-xl font-bold text-gray-900 truncate">{{ challengeable.team_name }}</h3>
                   <div class="text-xs md:text-sm text-gray-600 truncate">
@@ -783,14 +784,35 @@
               </div>
               {% endif %}
 
+              <!-- Status Message for Locked/Holiday Teams -->
+              {% if item.is_locked %}
+              <div class="mt-3 p-3 bg-orange-100 border-l-4 border-orange-500 rounded md:hidden">
+                <div class="text-xs font-semibold text-orange-900">
+                  🔒 Team currently under challenge
+                </div>
+              </div>
+              {% elif item.is_holiday %}
+              <div class="mt-3 p-3 bg-blue-100 border-l-4 border-blue-500 rounded md:hidden">
+                <div class="text-xs font-semibold text-blue-900">
+                  🏖️ Team in holiday mode
+                </div>
+              </div>
+              {% endif %}
+              
               <!-- Challenge Button (Mobile - Top Right) -->
               <div class="md:hidden flex-shrink-0">
+                {% if item.is_locked or item.is_holiday %}
+                <button disabled class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed text-sm opacity-60">
+                  Challenge
+                </button>
+                {% else %}
                 <form method="POST" action="{{ url_for('ladder_challenge_create') }}">
                   <input type="hidden" name="challenged_team_id" value="{{ challengeable.id }}">
                   <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition shadow-lg text-sm">
                     Challenge
                   </button>
                 </form>
+                {% endif %}
               </div>
             </div>
 
@@ -834,7 +856,28 @@
             </div>
 
             <!-- Challenge Button (Desktop - Full Width) -->
-            <div class="hidden md:block flex-shrink-0 w-full md:w-48">
+            <div class="hidden md:flex flex-col flex-shrink-0 w-full md:w-48 gap-2">
+              {% if item.is_locked %}
+              <div class="p-4 bg-orange-100 border-l-4 border-orange-500 rounded text-center">
+                <div class="text-xs font-semibold text-orange-900">🔒 Team currently under challenge</div>
+              </div>
+              <button disabled class="w-full px-6 py-4 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed opacity-60 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                </svg>
+                Challenge This Team
+              </button>
+              {% elif item.is_holiday %}
+              <div class="p-4 bg-blue-100 border-l-4 border-blue-500 rounded text-center">
+                <div class="text-xs font-semibold text-blue-900">🏖️ Team in holiday mode</div>
+              </div>
+              <button disabled class="w-full px-6 py-4 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed opacity-60 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                </svg>
+                Challenge This Team
+              </button>
+              {% else %}
               <form method="POST" action="{{ url_for('ladder_challenge_create') }}">
                 <input type="hidden" name="challenged_team_id" value="{{ challengeable.id }}">
                 <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2">
@@ -844,6 +887,7 @@
                   Challenge This Team
                 </button>
               </form>
+              {% endif %}
             </div>
           </div>
         </div>

@@ -13,13 +13,15 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-**November 23, 2025** - Ladder Challenge Filtering Bug Fix
-- **Fixed Challenge Team Availability**: Corrected filtering logic to prevent displaying teams that are already in active challenges
-  - Issue: Teams showed as challengeable even when already in active challenges with other teams
-  - Root cause: Filtering only checked current team's challenges instead of all active challenges across the ladder
-  - Solution: Query all active LadderChallenge records directly to check if potential opponents are locked
-  - Backend fix: `ladder_my_team()` route now queries `LadderChallenge.status.in_(['pending_acceptance', 'accepted'])` for ALL teams
-  - Result: Teams in active challenges now correctly hidden from challenge list
+**November 23, 2025** - Ladder Challenge UI Improvement: Show Locked Teams with Disabled Buttons
+- **Improved Challenge Team Availability Display**: Changed from hiding locked teams to showing them with disabled buttons
+  - Previous behavior: Teams in active challenges were completely hidden from the challenge list
+  - New behavior: All eligible teams are displayed, but teams currently in challenges show disabled buttons with status messages
+  - Desktop UI: Locked/holiday teams show with grayed-out card, disabled button, and "Team currently under challenge" or "Team in holiday mode" message
+  - Mobile UI: Locked/holiday teams show with grayed-out card, disabled button, and status badge
+  - UX benefit: Users can see which teams exist but understand why they can't be challenged
+  - Backend: Modified `ladder_my_team()` to return team data with `is_locked` and `is_holiday` flags
+  - Template: Updated conditional rendering for challenge buttons based on team status
 
 **November 22, 2025** - Free Agents Remove & Duplicate Contact Detection
 - **Remove Button for Each Free Agent**: Added red "Remove" button (🗑️) in Free Agents section (desktop table + mobile cards)
