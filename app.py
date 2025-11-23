@@ -2859,13 +2859,42 @@ BD Padel Ladder System
         status_color = 'green'
         status_message = 'Available'
 
-    # Get teams that can be challenged (3 ranks above)
+    # Get teams that can be challenged (3 ranks above, expandable if teams are on holiday)
     challengeable_teams = []
     if not is_locked and not team.holiday_mode_active:
         max_rank_diff = settings.max_challenge_rank_difference if settings else 3
-        min_challengeable_rank = max(1, team.current_rank - max_rank_diff)
+        
+        # First pass: get all teams in the normal range to count holiday mode teams
+        normal_min_rank = max(1, team.current_rank - max_rank_diff)
+        normal_max_rank = team.current_rank - 1
+        
+        normal_range_teams = LadderTeam.query.filter(
+            LadderTeam.ladder_type == team.ladder_type,
+            LadderTeam.gender == team.gender,
+            LadderTeam.current_rank >= normal_min_rank,
+            LadderTeam.current_rank <= normal_max_rank,
+            LadderTeam.id != team.id
+        ).order_by(LadderTeam.current_rank.asc()).all()
+        
+        # Count how many teams in the normal range are on holiday mode (not locked/under challenge)
+        holiday_count = 0
+        for t in normal_range_teams:
+            is_team_locked = LadderChallenge.query.filter(
+                db.or_(
+                    LadderChallenge.challenger_team_id == t.id,
+                    LadderChallenge.challenged_team_id == t.id
+                ),
+                LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+            ).first() is not None
+            
+            # Only count if on holiday mode AND not locked (teams under challenge don't count as missing)
+            if t.holiday_mode_active and not is_team_locked:
+                holiday_count += 1
+        
+        # Expand the range if there are holiday mode teams
+        min_challengeable_rank = max(1, team.current_rank - max_rank_diff - holiday_count)
         max_challengeable_rank = team.current_rank - 1
-
+        
         if max_challengeable_rank >= min_challengeable_rank:
             potential_teams = LadderTeam.query.filter(
                 LadderTeam.ladder_type == team.ladder_type,

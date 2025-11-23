@@ -13,6 +13,18 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**November 23, 2025** - Dynamic Challenge Range: Holiday Mode Teams Don't Reduce Available Challengers
+- **Automatic Rank Range Expansion**: When higher-ranked teams are on holiday mode, the system automatically expands the visible team list to maintain at least 3 available challengers
+  - Logic: Count holiday mode teams in the normal rank range → Expand range downward by that count → Show all teams in expanded range
+  - Teams on holiday mode still appear in the list (with disabled buttons and "🏖️ Team in holiday mode" status)
+  - Teams under active challenges still count as challengeable (they appear with "🔒 Team currently under challenge" status but are not counted toward holiday expansion)
+  - Example: If rank #1 is on holiday, show teams from current_rank-1 through current_rank-4 instead of just current_rank-1 through current_rank-3
+  - Benefits: Users always have at least 3 teams to challenge (when they exist), holiday mode doesn't artificially reduce challenge options
+  - Implementation: Backend `ladder_my_team()` route now:
+    1. Counts holiday mode teams (excluding those under challenge) in the normal range
+    2. Expands min_rank by that count: `min_rank = current_rank - max_diff - holiday_count`
+    3. Returns all teams in the expanded range with their status flags
+
 **November 23, 2025** - Ladder Challenge UI Improvement: Show Locked Teams with Disabled Buttons
 - **Improved Challenge Team Availability Display**: Changed from hiding locked teams to showing them with disabled buttons
   - Previous behavior: Teams in active challenges were completely hidden from the challenge list
