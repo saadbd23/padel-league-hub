@@ -2877,11 +2877,14 @@ BD Padel Ladder System
 
             # Filter out locked and holiday teams
             for potential_team in potential_teams:
-                is_team_locked = any(
-                    c['challenge'].challenger_team_id == potential_team.id or 
-                    c['challenge'].challenged_team_id == potential_team.id 
-                    for c in challenge_details_sent + challenge_details_received
-                )
+                # Check if potential team is already in an active challenge (with ANY opponent)
+                is_team_locked = LadderChallenge.query.filter(
+                    db.or_(
+                        LadderChallenge.challenger_team_id == potential_team.id,
+                        LadderChallenge.challenged_team_id == potential_team.id
+                    ),
+                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+                ).first() is not None
 
                 if not is_team_locked and not potential_team.holiday_mode_active:
                     challengeable_teams.append(potential_team)

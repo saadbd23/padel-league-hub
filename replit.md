@@ -13,6 +13,14 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**November 23, 2025** - Ladder Challenge Filtering Bug Fix
+- **Fixed Challenge Team Availability**: Corrected filtering logic to prevent displaying teams that are already in active challenges
+  - Issue: Teams showed as challengeable even when already in active challenges with other teams
+  - Root cause: Filtering only checked current team's challenges instead of all active challenges across the ladder
+  - Solution: Query all active LadderChallenge records directly to check if potential opponents are locked
+  - Backend fix: `ladder_my_team()` route now queries `LadderChallenge.status.in_(['pending_acceptance', 'accepted'])` for ALL teams
+  - Result: Teams in active challenges now correctly hidden from challenge list
+
 **November 22, 2025** - Free Agents Remove & Duplicate Contact Detection
 - **Remove Button for Each Free Agent**: Added red "Remove" button (🗑️) in Free Agents section (desktop table + mobile cards)
   - Desktop: Action column with inline remove button
