@@ -255,6 +255,29 @@
           </div>
         </div>
 
+        <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-amber-300">
+          <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="text-2xl">⚡</span>
+            Penalty Controls
+          </h4>
+
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-semibold text-gray-700">Activate Penalties</label>
+                <p class="text-sm text-gray-600">Enable/disable all ladder penalties (great for ladder launch or special periods like Ramadan)</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="penalties_active" class="sr-only peer" {% if settings.penalties_active %}checked{% endif %}>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
+            </div>
+            <div class="p-3 bg-amber-100 border-l-4 border-amber-600 rounded text-sm text-amber-900">
+              <strong>📌 Note:</strong> When disabled, no penalties will be applied for missed deadlines, no-shows, holiday mode, or inactivity. All penalty settings above remain configured but inactive.
+            </div>
+          </div>
+        </div>
+
         <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl p-6 border-2 border-indigo-200">
           <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span class="text-2xl">⚙️</span>

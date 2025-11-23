@@ -398,3 +398,4 @@ class LadderSettings(db.Model):
     men_registration_open = db.Column(db.Boolean, default=True)
     women_registration_open = db.Column(db.Boolean, default=True)
     mixed_registration_open = db.Column(db.Boolean, default=True)
+    penalties_active = db.Column(db.Boolean, default=False)

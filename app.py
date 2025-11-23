@@ -1656,6 +1656,11 @@ def apply_rank_penalty(team, penalty_amount, reason):
     from datetime import datetime
     from utils import send_email_notification
 
+    # Check if penalties are active
+    settings = LadderSettings.query.first()
+    if not settings or not settings.penalties_active:
+        return
+
     if penalty_amount <= 0:
         return
 
@@ -5419,6 +5424,7 @@ def admin_ladder_settings():
             no_show_penalty_ranks = request.form.get("no_show_penalty_ranks", type=int)
             men_registration_open = request.form.get("men_registration_open") == "on"
             women_registration_open = request.form.get("women_registration_open") == "on"
+            penalties_active = request.form.get("penalties_active") == "on"
 
             if challenge_acceptance_hours and challenge_acceptance_hours <= 0:
                 flash("Challenge acceptance hours must be greater than 0", "error")
@@ -5483,6 +5489,7 @@ def admin_ladder_settings():
 
             settings.men_registration_open = men_registration_open
             settings.women_registration_open = women_registration_open
+            settings.penalties_active = penalties_active
 
             db.session.commit()
             flash("✅ Ladder settings updated successfully!", "success")
