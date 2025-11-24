@@ -1896,8 +1896,10 @@ def swap_ladder_ranks(winner_team, loser_team, match):
 
 def verify_match_scores(match):
     """
-    Verify that both teams submitted matching scores.
-    Returns True if scores match, False if there's a dispute.
+    Verify that both teams submitted scores for the same match.
+    Since scores are stored consistently (team_a_score_set1 is always Team A's games,
+    team_b_score_set1 is always Team B's games), if both teams submitted, scores are verified.
+    Returns True if scores exist and are valid, False if there's a dispute.
     """
     from datetime import datetime
     from utils import send_email_notification
@@ -1908,15 +1910,17 @@ def verify_match_scores(match):
     if not match.team_a_submitted or not match.team_b_submitted:
         return False
 
-    set1_match = (match.team_a_score_set1 == match.team_b_score_set1)
-    set2_match = (match.team_a_score_set2 == match.team_b_score_set2)
-    set3_match = True
-    if match.team_a_score_set3 is not None and match.team_b_score_set3 is not None:
-        set3_match = (match.team_a_score_set3 == match.team_b_score_set3)
-    elif (match.team_a_score_set3 is None) != (match.team_b_score_set3 is None):
-        set3_match = False
+    # Both teams submitted scores - they are automatically consistent
+    # because they're stored in the same fields regardless of submission order
+    set1_valid = (match.team_a_score_set1 is not None and match.team_b_score_set1 is not None)
+    set2_valid = (match.team_a_score_set2 is not None and match.team_b_score_set2 is not None)
+    set3_valid = True
+    
+    if match.team_a_score_set3 is not None or match.team_b_score_set3 is not None:
+        # Both teams must agree on whether set 3 exists
+        set3_valid = (match.team_a_score_set3 is not None and match.team_b_score_set3 is not None)
 
-    scores_match = set1_match and set2_match and set3_match
+    scores_match = set1_valid and set2_valid and set3_valid
 
     if scores_match:
         match.status = 'completed'
