@@ -62,6 +62,7 @@ A single PostgreSQL database managed via `models.py` containing:
 - **Database Pooling**: Connection pre-ping, recycling, and timeout configurations.
 - **Health Checks**: Dedicated `/health` endpoint.
 - **Error Handling**: Custom 404/500 handlers and graceful session rollback.
+- **Gunicorn Timeout**: 120 seconds (for long-running operations like round generation with email notifications).
 
 # External Dependencies
 

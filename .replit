@@ -28,21 +28,17 @@ args = "Server"
 name = "Server"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "gunicorn --bind=0.0.0.0:5000 --reuse-port app:app"
+args = "gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout 120 app:app"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 35075
-externalPort = 3002
 
 [[ports]]
 localPort = 37841
