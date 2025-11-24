@@ -2332,6 +2332,8 @@ BD Padel Ladder Team
                 match.team_b_score_set3 = set3_opp
                 match.team_a_submitted = True
                 match.score_submitted_by_a = True
+                if not match.first_submitter_id:
+                    match.first_submitter_id = team.id
             else:
                 match.team_b_score_set1 = set1_team
                 match.team_a_score_set1 = set1_opp
@@ -2341,18 +2343,45 @@ BD Padel Ladder Team
                 match.team_a_score_set3 = set3_opp
                 match.team_b_submitted = True
                 match.score_submitted_by_b = True
+                if not match.first_submitter_id:
+                    match.first_submitter_id = team.id
 
             db.session.commit()
 
             opponent_team = LadderTeam.query.get(match.team_b_id if is_team_a else match.team_a_id)
 
             if match.team_a_submitted and match.team_b_submitted:
-                verification_result = verify_match_scores(match)
+                # Both teams submitted - opponent needs to confirm or reject
+                match.status = 'pending_score_confirmation'
+                db.session.commit()
 
-                if verification_result:
-                    flash("Scores verified! Match result has been recorded.", "success")
-                else:
-                    flash("Score mismatch detected. An administrator will review the dispute.", "warning")
+                submission_message = f"""
+Score Confirmation Needed
+
+{team.team_name} has submitted a score for your match.
+
+Match Score Reported:
+- Set 1: {match.team_a_score_set1}-{match.team_b_score_set1}
+- Set 2: {match.team_a_score_set2}-{match.team_b_score_set2}"""
+                if match.team_a_score_set3 is not None:
+                    submission_message += f"\n- Set 3: {match.team_a_score_set3}-{match.team_b_score_set3}"
+                
+                submission_message += f"""
+
+Please CONFIRM if this is correct, or REJECT and submit your own score.
+
+Manage your team: {request.url_root}ladder/my-team/{opponent_team.access_token}
+
+BD Padel Ladder Team
+"""
+
+                if opponent_team.contact_preference_email:
+                    if opponent_team.player1_email:
+                        send_email_notification(opponent_team.player1_email, f"Score Confirmation Needed - {opponent_team.team_name}", submission_message)
+                    if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
+                        send_email_notification(opponent_team.player2_email, f"Score Confirmation Needed - {opponent_team.team_name}", submission_message)
+
+                flash("Your score has been submitted. Waiting for opponent to confirm.", "success")
             else:
                 match.status = 'pending_opponent_score'
                 db.session.commit()
@@ -7767,6 +7796,95 @@ def ensure_db_initialized():
 
         if not _db_available:
             app.logger.warning("Database not available - some features will not work")
+
+
+@app.route("/ladder/score/confirm/<int:match_id>", methods=["POST"])
+def ladder_score_confirm(match_id):
+    """Confirm opponent's submitted score"""
+    from utils import send_email_notification
+    
+    token = request.form.get("token")
+    team = LadderTeam.query.filter_by(access_token=token).first_or_404()
+    match = LadderMatch.query.get_or_404(match_id)
+    
+    if match.team_a_id != team.id and match.team_b_id != team.id:
+        flash("Unauthorized", "error")
+        return redirect(url_for('ladder_my_team', token=token))
+    
+    is_team_a = (match.team_a_id == team.id)
+    
+    if is_team_a:
+        match.score_confirmed_by_a = True
+    else:
+        match.score_confirmed_by_b = True
+    
+    if match.score_confirmed_by_a and match.score_confirmed_by_b:
+        verify_match_scores(match)
+        flash("Score confirmed! Match completed.", "success")
+    else:
+        match.status = 'score_confirmed'
+        db.session.commit()
+        flash("Score confirmed. Match completed.", "success")
+    
+    return redirect(url_for('ladder_my_team', token=token))
+
+
+@app.route("/ladder/score/reject/<int:match_id>", methods=["POST"])
+def ladder_score_reject(match_id):
+    """Reject opponent's score and allow resubmission"""
+    from utils import send_email_notification
+    
+    token = request.form.get("token")
+    team = LadderTeam.query.filter_by(access_token=token).first_or_404()
+    match = LadderMatch.query.get_or_404(match_id)
+    
+    if match.team_a_id != team.id and match.team_b_id != team.id:
+        flash("Unauthorized", "error")
+        return redirect(url_for('ladder_my_team', token=token))
+    
+    match.rejection_count = (match.rejection_count or 0) + 1
+    
+    if match.rejection_count >= 2:
+        match.status = 'disputed'
+        match.disputed = True
+        db.session.commit()
+        flash("Both teams rejected scores - escalated to admin.", "warning")
+    else:
+        is_team_a = (match.team_a_id == team.id)
+        
+        if is_team_a:
+            match.team_b_submitted = False
+            match.score_confirmed_by_b = False
+        else:
+            match.team_a_submitted = False
+            match.score_confirmed_by_a = False
+        
+        match.status = 'pending_opponent_score'
+        db.session.commit()
+        
+        opponent_team = LadderTeam.query.get(match.team_b_id if is_team_a else match.team_a_id)
+        
+        rejection_message = f"""
+Score Rejected
+
+{team.team_name} rejected your submitted score. Please resubmit your score.
+
+If you reject again, match will go to admin review.
+
+Manage your team: {request.url_root}ladder/my-team/{opponent_team.access_token}
+
+BD Padel Ladder Team
+"""
+        
+        if opponent_team.contact_preference_email:
+            if opponent_team.player1_email:
+                send_email_notification(opponent_team.player1_email, "Score Rejected - Resubmit", rejection_message)
+            if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
+                send_email_notification(opponent_team.player2_email, "Score Rejected - Resubmit", rejection_message)
+        
+        flash("Score rejected. Opponent will resubmit.", "info")
+    
+    return redirect(url_for('ladder_my_team', token=token))
 
 if __name__ == "__main__":
     # Development mode only
