@@ -1119,7 +1119,10 @@ function confirmScore(matchId, token, action) {
 // Set date restrictions for booking and reschedule forms
 document.addEventListener('DOMContentLoaded', function() {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  // Use local date format to avoid timezone issues
+  const todayStr = today.getFullYear() + '-' + 
+                   String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(today.getDate()).padStart(2, '0');
 
   // Set min date for booking inputs (today)
   document.querySelectorAll('input[id^="booking-date-"]').forEach(input => {
@@ -1159,8 +1162,13 @@ document.addEventListener('DOMContentLoaded', function() {
   nextWednesday.setDate(nextMonday.getDate() + 2);
   nextWednesday.setHours(23, 59, 59, 999);
 
-  const nextMondayStr = nextMonday.toISOString().split('T')[0];
-  const nextWednesdayStr = nextWednesday.toISOString().split('T')[0];
+  // Use local date format to avoid timezone issues
+  const nextMondayStr = nextMonday.getFullYear() + '-' + 
+                        String(nextMonday.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(nextMonday.getDate()).padStart(2, '0');
+  const nextWednesdayStr = nextWednesday.getFullYear() + '-' + 
+                           String(nextWednesday.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(nextWednesday.getDate()).padStart(2, '0');
 
   // Debug: log the calculated dates
   console.log(`Today: ${todayStr}, Next Monday: ${nextMondayStr}, Next Wednesday: ${nextWednesdayStr}`);
