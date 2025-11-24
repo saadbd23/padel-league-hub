@@ -188,183 +188,202 @@
 
   <!-- Round-by-Round View -->
   {% if rounds_dict %}
-    {% for round_num in rounds_dict|sort %}
-    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-3xl font-bold text-gray-900">Round {{ round_num }}</h3>
-        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
-          {{ rounds_dict[round_num]|length }} Matches
-        </span>
-      </div>
-
-      <!-- Swiss Pairing Log (Admin Only) -->
-      {% if session.get('admin_logged_in') and rounds_dict[round_num] and rounds_dict[round_num][0].match.pairing_log %}
-      <div class="mb-6">
-        <details class="group">
-          <summary class="cursor-pointer list-none flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border-2 border-indigo-200 hover:border-indigo-400 transition-all duration-200">
-            <div class="flex items-center gap-3">
-              <svg class="w-6 h-6 text-indigo-600 group-open:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              <span class="font-semibold text-indigo-900">🔍 View Pairing Algorithm Log</span>
-            </div>
-            <span class="text-xs text-indigo-600 font-medium">Admin Only</span>
-          </summary>
-          <div class="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <div class="mb-3 flex items-center gap-2">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <p class="text-sm text-gray-700 font-medium">
-                Swiss pairing algorithm decision log showing how teams were matched based on standings and previous matchups.
-              </p>
-            </div>
-            <div class="bg-white rounded-lg p-4 border border-gray-300 font-mono text-xs overflow-x-auto">
-              <pre class="whitespace-pre-wrap text-gray-800">{{ rounds_dict[round_num][0].match.pairing_log }}</pre>
-            </div>
-          </div>
-        </details>
-      </div>
-      {% endif %}
-
-      <div class="space-y-6">
-        {% for match_data in rounds_dict[round_num] %}
-        {% set match = match_data.match %}
-        {% set team_a = match_data.team_a %}
-        {% set team_b = match_data.team_b %}
-
-        {% if match.status == 'bye' %}
-        <!-- Bye Round Display -->
-        <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200 hover:shadow-lg transition-all duration-300">
-          <div class="text-center py-4">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-xl mb-4">
-              <span class="text-3xl">🏖️</span>
-            </div>
-            <div class="text-2xl font-bold text-gray-900 mb-2">
-              {{ team_a.team_name if team_a else 'TBD' }}
-            </div>
-            {% if team_a %}
-            <div class="text-sm text-gray-600 mb-3">
-              {{ team_a.player1_name }} & {{ team_a.player2_name }}
-            </div>
-            {% endif %}
-            <div class="inline-flex items-center px-6 py-3 rounded-full text-lg font-semibold bg-blue-100 text-blue-800">
-              Bye Round - No Match
-            </div>
-            {% if match.notes %}
-            <div class="mt-3 text-sm text-gray-600">{{ match.notes }}</div>
-            {% endif %}
-          </div>
+    {% for round_num in rounds_dict|sort(reverse=True) %}
+    {% set round_matches = rounds_dict[round_num] %}
+    {% set completed_matches = round_matches|selectattr('match.status', 'equalto', 'completed')|list|length %}
+    
+    <div class="mb-4">
+      <!-- Round Accordion Header -->
+      <button onclick="toggleRoundAccordion(this)" class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white px-6 py-4 rounded-lg font-semibold text-left flex items-center justify-between transition-all duration-300 shadow-lg hover:shadow-xl">
+        <div class="flex items-center gap-4">
+          <svg class="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <div class="text-lg font-bold">Round {{ round_num }}</div>
         </div>
-        {% else %}
-        <!-- Regular Match Display -->
-        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 hover:shadow-lg transition-all duration-300">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <!-- Team A -->
-            <div class="text-center md:text-right">
-              <div class="text-2xl font-bold text-gray-900 mb-2">
-                {{ team_a.team_name if team_a else 'TBD' }}
-              </div>
-              {% if team_a %}
-              <div class="text-sm text-gray-600">
-                {{ team_a.player1_name }} & {{ team_a.player2_name }}
-              </div>
-              {% set team_a_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_a.id)|selectattr('status', 'equalto', 'approved')|first %}
-              {% if team_a_sub %}
-              <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
-                <span class="font-semibold">🔄 Substitute:</span> {{ team_a_sub.name }}
-                <br><span class="text-orange-600">replacing {{ team_a.player1_name if team_a_sub.replaces_player_number == 1 else team_a.player2_name }}</span>
-              </div>
-              {% endif %}
-              <div class="mt-2">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                  {{ team_a.wins }}W - {{ team_a.losses }}L
-                </span>
-              </div>
-              {% endif %}
-              {% if match.score_a %}
-              <div class="mt-3 text-3xl font-bold text-purple-600">
-                {{ match.score_a }}
-              </div>
-              {% endif %}
-            </div>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white">
+            {{ round_matches|length }} Matches
+          </span>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if completed_matches == round_matches|length %}bg-green-400/30 text-green-100{% else %}bg-yellow-400/30 text-yellow-100{% endif %}">
+            {{ completed_matches }}/{{ round_matches|length }} Complete
+          </span>
+        </div>
+      </button>
 
-            <!-- VS Badge -->
-            <div class="text-center">
-              <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-xl">
-                <span class="text-2xl font-bold">VS</span>
+      <!-- Round Accordion Content -->
+      <div class="hidden bg-white/95 backdrop-blur-lg rounded-b-lg shadow-lg overflow-hidden">
+        <div class="p-8">
+          <!-- Swiss Pairing Log (Admin Only) -->
+          {% if session.get('admin_logged_in') and round_matches and round_matches[0].match.pairing_log %}
+          <div class="mb-6">
+            <details class="group">
+              <summary class="cursor-pointer list-none flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border-2 border-indigo-200 hover:border-indigo-400 transition-all duration-200">
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-indigo-600 group-open:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                  <span class="font-semibold text-indigo-900">🔍 View Pairing Algorithm Log</span>
+                </div>
+                <span class="text-xs text-indigo-600 font-medium">Admin Only</span>
+              </summary>
+              <div class="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="mb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <p class="text-sm text-gray-700 font-medium">
+                    Swiss pairing algorithm decision log showing how teams were matched based on standings and previous matchups.
+                  </p>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-300 font-mono text-xs overflow-x-auto">
+                  <pre class="whitespace-pre-wrap text-gray-800">{{ round_matches[0].match.pairing_log }}</pre>
+                </div>
               </div>
-              <div class="mt-4">
-                {% if match.status == 'completed' %}
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                    ✓ Completed
-                  </span>
-                {% elif match.status == 'in_progress' %}
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800 animate-pulse">
-                    ⚡ In Progress
-                  </span>
-                {% else %}
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
-                    📅 Scheduled
-                  </span>
+            </details>
+          </div>
+          {% endif %}
+
+          <div class="space-y-6">
+            {% for match_data in round_matches %}
+            {% set match = match_data.match %}
+            {% set team_a = match_data.team_a %}
+            {% set team_b = match_data.team_b %}
+
+            {% if match.status == 'bye' %}
+            <!-- Bye Round Display -->
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200 hover:shadow-lg transition-all duration-300">
+              <div class="text-center py-4">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-xl mb-4">
+                  <span class="text-3xl">🏖️</span>
+                </div>
+                <div class="text-2xl font-bold text-gray-900 mb-2">
+                  {{ team_a.team_name if team_a else 'TBD' }}
+                </div>
+                {% if team_a %}
+                <div class="text-sm text-gray-600 mb-3">
+                  {{ team_a.player1_name }} & {{ team_a.player2_name }}
+                </div>
+                {% endif %}
+                <div class="inline-flex items-center px-6 py-3 rounded-full text-lg font-semibold bg-blue-100 text-blue-800">
+                  Bye Round - No Match
+                </div>
+                {% if match.notes %}
+                <div class="mt-3 text-sm text-gray-600">{{ match.notes }}</div>
                 {% endif %}
               </div>
             </div>
+            {% else %}
+            <!-- Regular Match Display -->
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 hover:shadow-lg transition-all duration-300">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <!-- Team A -->
+                <div class="text-center md:text-right">
+                  <div class="text-2xl font-bold text-gray-900 mb-2">
+                    {{ team_a.team_name if team_a else 'TBD' }}
+                  </div>
+                  {% if team_a %}
+                  <div class="text-sm text-gray-600">
+                    {{ team_a.player1_name }} & {{ team_a.player2_name }}
+                  </div>
+                  {% set team_a_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_a.id)|selectattr('status', 'equalto', 'approved')|first %}
+                  {% if team_a_sub %}
+                  <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
+                    <span class="font-semibold">🔄 Substitute:</span> {{ team_a_sub.name }}
+                    <br><span class="text-orange-600">replacing {{ team_a.player1_name if team_a_sub.replaces_player_number == 1 else team_a.player2_name }}</span>
+                  </div>
+                  {% endif %}
+                  <div class="mt-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                      {{ team_a.wins }}W - {{ team_a.losses }}L
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if match.score_a %}
+                  <div class="mt-3 text-3xl font-bold text-purple-600">
+                    {{ match.score_a }}
+                  </div>
+                  {% endif %}
+                </div>
 
-            <!-- Team B -->
-            <div class="text-center md:text-left">
-              <div class="text-2xl font-bold text-gray-900 mb-2">
-                {{ team_b.team_name if team_b else 'TBD' }}
+                <!-- VS Badge -->
+                <div class="text-center">
+                  <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-xl">
+                    <span class="text-2xl font-bold">VS</span>
+                  </div>
+                  <div class="mt-4">
+                    {% if match.status == 'completed' %}
+                      <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                        ✓ Completed
+                      </span>
+                    {% elif match.status == 'in_progress' %}
+                      <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800 animate-pulse">
+                        ⚡ In Progress
+                      </span>
+                    {% else %}
+                      <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
+                        📅 Scheduled
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Team B -->
+                <div class="text-center md:text-left">
+                  <div class="text-2xl font-bold text-gray-900 mb-2">
+                    {{ team_b.team_name if team_b else 'TBD' }}
+                  </div>
+                  {% if team_b %}
+                  <div class="text-sm text-gray-600">
+                    {{ team_b.player1_name }} & {{ team_b.player2_name }}
+                  </div>
+                  {% set team_b_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_b.id)|selectattr('status', 'equalto', 'approved')|first %}
+                  {% if team_b_sub %}
+                  <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
+                    <span class="font-semibold">🔄 Substitute:</span> {{ team_b_sub.name }}
+                    <br><span class="text-orange-600">replacing {{ team_b.player1_name if team_b_sub.replaces_player_number == 1 else team_b.player2_name }}</span>
+                  </div>
+                  {% endif %}
+                  <div class="mt-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                      {{ team_b.wins }}W - {{ team_b.losses }}L
+                    </span>
+                  </div>
+                  {% endif %}
+                  {% if match.score_b %}
+                  <div class="mt-3 text-3xl font-bold text-purple-600">
+                    {{ match.score_b }}
+                  </div>
+                  {% endif %}
+                </div>
               </div>
-              {% if team_b %}
-              <div class="text-sm text-gray-600">
-                {{ team_b.player1_name }} & {{ team_b.player2_name }}
-              </div>
-              {% set team_b_sub = substitutes|selectattr('match_id', 'equalto', match.id)|selectattr('team_id', 'equalto', team_b.id)|selectattr('status', 'equalto', 'approved')|first %}
-              {% if team_b_sub %}
-              <div class="mt-2 text-xs bg-orange-100 text-orange-800 px-3 py-1 rounded-full inline-block">
-                <span class="font-semibold">🔄 Substitute:</span> {{ team_b_sub.name }}
-                <br><span class="text-orange-600">replacing {{ team_b.player1_name if team_b_sub.replaces_player_number == 1 else team_b.player2_name }}</span>
+
+              {% if match.winner_id %}
+              <div class="mt-6 pt-6 border-t border-purple-200 text-center">
+                {% if match.winner_id == team_a.id %}
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                    🏆 Winner: {{ team_a.team_name }}
+                  </span>
+                {% elif match.winner_id == team_b.id %}
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                    🏆 Winner: {{ team_b.team_name }}
+                  </span>
+                {% endif %}
               </div>
               {% endif %}
-              <div class="mt-2">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                  {{ team_b.wins }}W - {{ team_b.losses }}L
-                </span>
-              </div>
-              {% endif %}
-              {% if match.score_b %}
-              <div class="mt-3 text-3xl font-bold text-purple-600">
-                {{ match.score_b }}
+
+              {% if match.notes %}
+              <div class="mt-4 pt-4 border-t border-purple-200">
+                <div class="text-sm text-gray-600">
+                  <span class="font-semibold">Notes:</span> {{ match.notes }}
+                </div>
               </div>
               {% endif %}
             </div>
-          </div>
-
-          {% if match.winner_id %}
-          <div class="mt-6 pt-6 border-t border-purple-200 text-center">
-            {% if match.winner_id == team_a.id %}
-              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                🏆 Winner: {{ team_a.team_name }}
-              </span>
-            {% elif match.winner_id == team_b.id %}
-              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                🏆 Winner: {{ team_b.team_name }}
-              </span>
             {% endif %}
+            {% endfor %}
           </div>
-          {% endif %}
-
-          {% if match.notes %}
-          <div class="mt-4 pt-4 border-t border-purple-200">
-            <div class="text-sm text-gray-600">
-              <span class="font-semibold">Notes:</span> {{ match.notes }}
-            </div>
-          </div>
-          {% endif %}
         </div>
-        {% endif %}
-        {% endfor %}
       </div>
     </div>
     {% endfor %}

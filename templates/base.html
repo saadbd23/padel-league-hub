@@ -215,6 +215,20 @@
         closeIcon.classList.add('hidden');
       });
     });
+
+    // Toggle round accordion
+    window.toggleRoundAccordion = function(button) {
+      const content = button.nextElementSibling;
+      const icon = button.querySelector('svg');
+      
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(-90deg)';
+      }
+    };
   </script>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
