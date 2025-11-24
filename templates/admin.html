@@ -1448,6 +1448,18 @@
   transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
   overflow: hidden;
 }
+
+.round-accordion-content {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+
+.round-accordion-content:not(.hidden) {
+  max-height: none;
+  opacity: 1;
+}
 </style>
 
 <script>
@@ -1535,11 +1547,19 @@ function toggleRoundAccordion(button) {
   const icon = button.querySelector('svg');
   
   if (content.classList.contains('hidden')) {
+    // Expand
     content.classList.remove('hidden');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    content.style.opacity = '1';
     icon.style.transform = 'rotate(0deg)';
   } else {
-    content.classList.add('hidden');
+    // Collapse
+    content.style.maxHeight = '0px';
+    content.style.opacity = '0';
     icon.style.transform = 'rotate(-90deg)';
+    setTimeout(() => {
+      content.classList.add('hidden');
+    }, 300);
   }
 }
 
