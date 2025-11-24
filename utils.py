@@ -24,10 +24,11 @@ def generate_round_pairings(round_number):
     - Handles odd number of teams (lowest ranked gets bye)
     - Logs all decision-making for admin transparency
     """
-    # 1. Get teams sorted by standings (wins desc, then sets differential desc)
+    # 1. Get teams sorted by standings (wins desc, then sets differential desc, then games differential desc)
     teams = Team.query.order_by(
         Team.wins.desc(),
         (Team.sets_for - Team.sets_against).desc(),
+        (Team.games_for - Team.games_against).desc(),
         Team.id
     ).all()
 
