@@ -805,6 +805,7 @@
                 </button>
                 {% else %}
                 <form method="POST" action="{{ url_for('ladder_challenge_create') }}">
+                  <input type="hidden" name="token" value="{{ team.access_token }}">
                   <input type="hidden" name="challenged_team_id" value="{{ challengeable.id }}">
                   <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition shadow-lg text-sm">
                     Challenge
@@ -877,6 +878,7 @@
               </button>
               {% else %}
               <form method="POST" action="{{ url_for('ladder_challenge_create') }}">
+                <input type="hidden" name="token" value="{{ team.access_token }}">
                 <input type="hidden" name="challenged_team_id" value="{{ challengeable.id }}">
                 <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2">
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

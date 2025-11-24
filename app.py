@@ -3020,18 +3020,33 @@ def ladder_challenge_create():
     from datetime import datetime, timedelta
     from utils import send_email_notification
 
-    if 'ladder_team_id' not in session:
+    # Try to get challenger from session first, then from token parameter
+    challenger_id = session.get('ladder_team_id')
+    challenger_token = request.form.get('token')
+    
+    if not challenger_id and not challenger_token:
         flash("Please log in to challenge other teams", "error")
         return redirect(url_for('ladder_login'))
+    
+    # If token is provided, get challenger from token
+    if challenger_token and not challenger_id:
+        challenger = LadderTeam.query.filter_by(access_token=challenger_token).first()
+        if not challenger:
+            flash("Invalid team token", "error")
+            return redirect(url_for('ladder_login'))
+        challenger_id = challenger.id
+    elif challenger_id:
+        challenger = LadderTeam.query.get(challenger_id)
+        if not challenger:
+            flash("Challenger team not found", "error")
+            return redirect(url_for('ladder_login'))
 
-    challenger_id = session.get('ladder_team_id')
     challenged_id = request.form.get('challenged_team_id', type=int)
 
     if not challenged_id:
         flash("Invalid challenge request", "error")
         return redirect(url_for('index'))
 
-    challenger = LadderTeam.query.get(challenger_id)
     challenged = LadderTeam.query.get(challenged_id)
 
     if not challenger or not challenged:
@@ -3051,11 +3066,13 @@ def ladder_challenge_create():
     # Prevent cross-gender challenges
     if challenger.ladder_type != challenged.ladder_type:
         flash("You can only challenge teams in your own ladder", "error")
-        return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
+        redirect_token = challenger_token or session.get('ladder_team_token')
+        return redirect(url_for('ladder_my_team', token=redirect_token))
 
     if challenger.gender != challenged.gender:
         flash(f"You cannot challenge teams from a different gender category. You are in the {challenger.gender.title()}'s division.", "error")
-        return redirect(url_for('ladder_my_team', token=session.get('ladder_team_token')))
+        redirect_token = challenger_token or session.get('ladder_team_token')
+        return redirect(url_for('ladder_my_team', token=redirect_token))
 
     if challenger.holiday_mode_active:
         flash("You cannot challenge while in holiday mode", "error")
@@ -3158,7 +3175,11 @@ Padel Ladder League
         )
 
     flash(f"Challenge sent to {challenged.team_name}! They have {settings.challenge_acceptance_hours // 24} days to accept.", "success")
-    return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
+    redirect_token = challenger_token or session.get('ladder_team_token')
+    if redirect_token:
+        return redirect(url_for('ladder_my_team', token=redirect_token))
+    else:
+        return redirect(url_for('ladder_men' if challenger.ladder_type == 'men' else 'ladder_women'))
 
 @app.route("/leaderboard")
 def leaderboard():
