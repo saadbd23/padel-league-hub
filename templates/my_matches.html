@@ -1258,17 +1258,23 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('input[id^="booking-date-"], input[id^="change-booking-date-"]').forEach(input => {
     const roundNumber = parseInt(input.dataset.roundNumber);
 
-    // Calculate round start date (Round 1 starts Nov 17, 2025)
+    // Calculate round start date (Round 1 starts Nov 17, 2025 - Monday)
+    // Round 2 should be Nov 24-30 (Monday-Sunday inclusive)
     const round1Start = new Date('2025-11-17T00:00:00');
     const roundStartDate = new Date(round1Start.getTime());
-    roundStartDate.setDate(roundStartDate.getDate() + (roundNumber - 1) * 7);
+    roundStartDate.setDate(round1Start.getDate() + (roundNumber - 1) * 7);
 
-    // Round ends on Sunday (6 days later)
+    // Round ends on Sunday (inclusive, so 6 days after start = 7 days total)
     const roundEndDate = new Date(roundStartDate.getTime());
-    roundEndDate.setDate(roundEndDate.getDate() + 6);
+    roundEndDate.setDate(roundStartDate.getDate() + 6);
 
-    const minDate = roundStartDate.toISOString().split('T')[0];
-    const maxDate = roundEndDate.toISOString().split('T')[0];
+    // Use local date format to avoid timezone issues
+    const minDate = roundStartDate.getFullYear() + '-' + 
+                    String(roundStartDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(roundStartDate.getDate()).padStart(2, '0');
+    const maxDate = roundEndDate.getFullYear() + '-' + 
+                    String(roundEndDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(roundEndDate.getDate()).padStart(2, '0');
 
     input.setAttribute('min', minDate);
     input.setAttribute('max', maxDate);
