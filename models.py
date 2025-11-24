@@ -305,6 +305,12 @@ class LadderMatch(db.Model):
     team_a_submitted = db.Column(db.Boolean, default=False)
     team_b_submitted = db.Column(db.Boolean, default=False)
     
+    # Score confirmation workflow
+    score_confirmed_by_a = db.Column(db.Boolean, default=False)
+    score_confirmed_by_b = db.Column(db.Boolean, default=False)
+    first_submitter_id = db.Column(db.Integer, nullable=True)  # Track who submitted first
+    rejection_count = db.Column(db.Integer, default=0)  # Track mutual rejections
+    
     status = db.Column(db.String(30), default="pending")
     
     winner_id = db.Column(db.Integer, nullable=True)
