@@ -6349,6 +6349,89 @@ def reject_playoffs():
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/generate-round", methods=["POST"])
+@require_admin_auth
+def generate_round():
+    """Generate Swiss-format round pairings"""
+    try:
+        round_number = request.form.get("round_number", type=int)
+        
+        if not round_number or round_number < 1:
+            flash("Invalid round number", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Check for existing matches in this round
+        existing_matches = Match.query.filter_by(round=round_number).first()
+        if existing_matches:
+            flash(f"Round {round_number} has already been generated", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Check if settings allow generation
+        settings = LeagueSettings.query.first()
+        if settings and settings.current_phase == "playoff_preview":
+            flash("Cannot generate Swiss rounds while in playoff phase", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Generate the pairings
+        from utils import generate_round_pairings
+        matches = generate_round_pairings(round_number)
+        
+        if not matches:
+            flash("No matches generated - check team count", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Send email notifications to teams
+        from utils import send_email_notification
+        teams_to_notify = set()
+        for match in matches:
+            if match.team_a_id:
+                teams_to_notify.add(match.team_a_id)
+            if match.team_b_id:
+                teams_to_notify.add(match.team_b_id)
+        
+        for team_id in teams_to_notify:
+            team = Team.query.get(team_id)
+            if team and team.player1_email:
+                # Find the opponent in matches
+                team_matches = [m for m in matches if m.team_a_id == team_id or m.team_b_id == team_id]
+                
+                match_details = ""
+                for match in team_matches:
+                    opponent_id = match.team_b_id if match.team_a_id == team_id else match.team_a_id
+                    if opponent_id:
+                        opponent = Team.query.get(opponent_id)
+                        match_details += f"vs {opponent.team_name}\n"
+                    else:
+                        match_details += "BYE (automatic win)\n"
+                
+                email_body = f"""
+Hello {team.team_name},
+
+Round {round_number} has been generated! Here are your matchups:
+
+{match_details}
+
+Deadline: Submit your match result by Sunday 23:59
+
+Best of luck!
+
+BD Padel League Admin
+"""
+                send_email_notification(
+                    team.player1_email,
+                    f"Round {round_number} Generated - Your Matchups",
+                    email_body
+                )
+        
+        flash(f"✅ Round {round_number} generated with {len(matches)} match(es)! Emails sent to all teams.", "success")
+        return redirect(url_for("admin_panel"))
+        
+    except Exception as e:
+        logging.error(f"Error generating round: {str(e)}")
+        flash(f"Error generating round: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
+
+
 @app.route("/admin/reset-match-booking/<int:match_id>", methods=["POST"])
 @require_admin_auth
 def reset_match_booking(match_id):

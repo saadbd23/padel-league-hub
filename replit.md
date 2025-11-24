@@ -4,6 +4,9 @@ BD Padel League is a web-based platform designed for managing competitive padel 
 
 # Recent Changes
 
+## November 24, 2025
+- **Fixed Generate Round Bug**: Added missing `/admin/generate-round` route that was causing blank page when trying to generate league rounds. Route now properly creates Swiss-format pairings and sends email notifications to teams.
+
 ## November 23, 2025
 - **Penalty Control UI Enhancement**: Added clear ON/OFF visual indicators with green (✅ PENALTIES ON) and red (⛔ PENALTIES OFF) badges for penalty activation toggle in Ladder Settings
 - **Court Booking Rule**: Added first rule in Ladder Tournament Rules section requiring teams to book and pay for courts themselves
