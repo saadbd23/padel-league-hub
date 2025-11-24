@@ -5,6 +5,7 @@ BD Padel League is a web-based platform designed for managing competitive padel 
 # Recent Changes
 
 ## November 24, 2025
+- **Accordion-Style Match Management UI**: Reorganized League Match Management section with collapsible round-based accordion. Each round now shows match count and completion status, expandable on demand for cleaner organization as more rounds are generated.
 - **Fixed Generate Round Bug**: Added missing `/admin/generate-round` route that was causing blank page when trying to generate league rounds. Route now properly creates Swiss-format pairings and sends email notifications to teams.
 
 ## November 23, 2025
