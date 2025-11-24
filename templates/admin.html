@@ -493,7 +493,7 @@
         </button>
 
         <!-- Round Matches Content (Collapsed by default) -->
-        <div class="hidden round-accordion-content bg-white divide-y divide-gray-200 max-h-[70vh] overflow-y-auto">
+        <div class="hidden round-accordion-content bg-white divide-y divide-gray-200">
           {% for m in round_matches|sort(attribute='id') %}
           {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
           {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
