@@ -4509,10 +4509,19 @@ def admin_panel():
         
         score = ""
         score_confirmed_status = "awaiting"
-        if match.status == "completed" and match.score_a and match.score_b:
+        
+        # Check if score has been submitted (by either team or finalized)
+        if match.score_a and match.score_b:
+            # Score is finalized
             score = f"{match.score_a} vs {match.score_b}"
             score_confirmed_status = "confirmed" if match.verified else "awaiting"
+        elif match.score_submission_a or match.score_submission_b:
+            # At least one team has submitted a score
+            submitted_score = match.score_submission_a if match.score_submission_a else match.score_submission_b
+            score = f"{submitted_score}"
+            score_confirmed_status = "awaiting"
         elif match.status == "completed":
+            # Match is completed but no score details
             score = "Completed"
             score_confirmed_status = "confirmed" if match.verified else "awaiting"
         
