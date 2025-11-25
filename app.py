@@ -4491,9 +4491,13 @@ def admin_panel():
             if match.booking_details:
                 todays_matches.append(match)
 
-    # Build Round Summary - all matches sorted by booking date
-    round_summary = []
+    # Build Round Summary - grouped by round number, sorted by booking date within each round
+    rounds_dict = {}
     for match in matches:
+        round_num = match.round if match.round else 0
+        if round_num not in rounds_dict:
+            rounds_dict[round_num] = []
+        
         team_a = Team.query.get(match.team_a_id)
         team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
         
@@ -4507,7 +4511,7 @@ def admin_panel():
         elif match.status == "completed":
             score = "Completed"
         
-        round_summary.append({
+        rounds_dict[round_num].append({
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
@@ -4515,14 +4519,28 @@ def admin_panel():
             'score': score
         })
     
-    # Sort by booking date (matches without datetime go to end)
+    # Sort matches within each round by booking date
     def get_sort_key(item):
         if item['match'].match_datetime:
             return (0, item['match'].match_datetime)
         else:
             return (1, '')
     
-    round_summary.sort(key=get_sort_key)
+    for round_num in rounds_dict:
+        rounds_dict[round_num].sort(key=get_sort_key)
+    
+    # Create sorted list of rounds (newest first)
+    round_summary = []
+    for round_num in sorted(rounds_dict.keys(), reverse=True):
+        matches_in_round = rounds_dict[round_num]
+        completed_count = len([m for m in matches_in_round if m['match'].status == 'completed'])
+        
+        round_summary.append({
+            'round_number': round_num,
+            'matches': matches_in_round,
+            'total_matches': len(matches_in_round),
+            'completed_matches': completed_count
+        })
 
     # Free Agents tab data with matching contact info check
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
