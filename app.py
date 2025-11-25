@@ -4509,9 +4509,16 @@ def admin_panel():
         
         score = ""
         score_confirmed_status = "awaiting"
+        is_walkover = False
         
+        # Check if it's a walkover
+        if match.status == "walkover":
+            is_walkover = True
+            winner_team = Team.query.get(match.winner_id) if match.winner_id else None
+            score = f"W - {winner_team.team_name if winner_team else 'Unknown'}"
+            score_confirmed_status = "confirmed"
         # Check if score has been submitted (by either team or finalized)
-        if match.score_a and match.score_b:
+        elif match.score_a and match.score_b:
             # Score is finalized
             score = f"{match.score_a} vs {match.score_b}"
             score_confirmed_status = "confirmed" if match.verified else "awaiting"
@@ -4532,7 +4539,8 @@ def admin_panel():
             'booking_date': booking_date,
             'booking_confirmed_status': booking_confirmed_status,
             'score': score,
-            'score_confirmed_status': score_confirmed_status
+            'score_confirmed_status': score_confirmed_status,
+            'is_walkover': is_walkover
         })
     
     # Sort matches within each round by booking date
