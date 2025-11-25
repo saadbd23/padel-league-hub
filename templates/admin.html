@@ -632,7 +632,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            {% set completed = round_matches|selectattr('status', 'equalto', 'completed')|list|length %}
+            {% set completed = round_matches|selectattr('status', 'equalto', 'completed')|list|length + round_matches|selectattr('status', 'equalto', 'walkover')|list|length %}
             {% set total = round_matches|length %}
             <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ completed }}/{{ total }} Complete</span>
           </div>
@@ -646,7 +646,7 @@
           <div class="p-6 hover:bg-gray-50 transition-colors">
             <div class="flex justify-between items-start mb-4">
               <div class="flex gap-2">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if m.status == 'completed' %}bg-green-100 text-green-800{% elif m.status == 'bye' %}bg-blue-100 text-blue-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if m.status == 'completed' %}bg-green-100 text-green-800{% elif m.status == 'bye' %}bg-blue-100 text-blue-800{% elif m.status == 'walkover' %}bg-orange-100 text-orange-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                   {{ m.status|capitalize }}
                 </span>
               </div>
