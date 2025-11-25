@@ -3896,6 +3896,30 @@ def submit_reschedule(token):
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         opponent = Team.query.get(opponent_id)
 
+        # Send admin notification
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            admin_body = f"""🔔 NEW RESCHEDULE REQUEST
+
+Team Requesting: {team.team_name}
+Opponent Team: {opponent.team_name if opponent else 'Unknown'}
+
+Match Details:
+- Round: {match.round}
+- Current Match Date: {match.match_datetime.strftime('%a, %b %d, %Y %I:%M %p') if match.match_datetime else 'Not scheduled'}
+- Proposed Date/Time: {proposed_time_formatted}
+- Makeup Match Deadline: Wednesday {wednesday_deadline.strftime('%B %d')} 23:59
+
+Team Reschedules Used: {team.reschedules_used}/2
+
+Status: PENDING APPROVAL
+
+Access the admin panel to approve or deny this request.
+
+- BD Padel League
+"""
+            send_email_notification(admin_email, f"🔔 Reschedule Request - Round {match.round} - {team.team_name}", admin_body)
+
         # Email to requester team
         requester_body = f"""Hi {team.team_name},
 
@@ -4002,6 +4026,36 @@ def submit_substitute(token):
 
         # Send notifications to all parties
         from utils import send_email_notification
+
+        # Send admin notification
+        admin_email = os.environ.get("ADMIN_EMAIL")
+        if admin_email:
+            opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
+            opponent = Team.query.get(opponent_id)
+            admin_body = f"""🔔 NEW SUBSTITUTE REQUEST
+
+Team Requesting: {team.team_name}
+Opponent Team: {opponent.team_name if opponent else 'Unknown'}
+
+Match Details:
+- Round: {match.round}
+- Match Date: {match.match_datetime.strftime('%a, %b %d, %Y %I:%M %p') if match.match_datetime else 'Not scheduled'}
+
+Substitute Information:
+- Name: {sub_name}
+- Phone: {sub_phone}
+- Email: {sub_email}
+- Replacing: {replaced_player_name} (Player {replaces_player})
+
+Team Substitutes Used: {team.subs_used}/2
+
+Status: PENDING APPROVAL
+
+Access the admin panel to approve or deny this request.
+
+- BD Padel League
+"""
+            send_email_notification(admin_email, f"🔔 Substitute Request - Round {match.round} - {team.team_name}", admin_body)
 
         # Email subject and body
         subject = f"Substitute Request Submitted - Round {match.round}"
