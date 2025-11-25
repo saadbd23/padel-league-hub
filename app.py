@@ -4502,21 +4502,28 @@ def admin_panel():
         team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
         
         booking_date = "Yet to be scheduled"
+        booking_confirmed_status = "awaiting"
         if match.match_datetime:
             booking_date = match.match_datetime.strftime("%a, %b %d")
+            booking_confirmed_status = "confirmed" if match.booking_confirmed else "awaiting"
         
         score = ""
+        score_confirmed_status = "awaiting"
         if match.status == "completed" and match.score_a and match.score_b:
             score = f"{match.score_a} vs {match.score_b}"
+            score_confirmed_status = "confirmed" if match.verified else "awaiting"
         elif match.status == "completed":
             score = "Completed"
+            score_confirmed_status = "confirmed" if match.verified else "awaiting"
         
         rounds_dict[round_num].append({
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
             'booking_date': booking_date,
-            'score': score
+            'booking_confirmed_status': booking_confirmed_status,
+            'score': score,
+            'score_confirmed_status': score_confirmed_status
         })
     
     # Sort matches within each round by booking date
