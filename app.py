@@ -4515,6 +4515,8 @@ def admin_panel():
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
+            'team_a_players': f"{team_a.player1_name if team_a else ''}{' & ' + team_a.player2_name if team_a and team_a.player2_name else ''}" if team_a else '',
+            'team_b_players': f"{team_b.player1_name if team_b else ''}{' & ' + team_b.player2_name if team_b and team_b.player2_name else ''}" if team_b else '',
             'booking_date': booking_date,
             'score': score
         })
