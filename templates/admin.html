@@ -298,11 +298,7 @@
                       {% for item in round_data.matches %}
                         <tr class="hover:bg-purple-50 transition-colors">
                           <td class="px-3 py-2">
-                            <div class="text-xs font-semibold text-gray-900">{{ item.team_a.team_name if item.team_a else 'Unknown' }}</div>
-                            <div class="text-xs text-gray-600">{{ item.team_a_players }}</div>
-                            <div class="text-xs text-gray-500 my-1">vs</div>
-                            <div class="text-xs font-semibold text-gray-900">{{ item.team_b.team_name if item.team_b else 'BYE' }}</div>
-                            {% if item.team_b_players %}<div class="text-xs text-gray-600">{{ item.team_b_players }}</div>{% endif %}
+                            <span class="text-xs font-semibold text-gray-900">{{ item.team_a.team_name if item.team_a else 'Unknown' }} vs {{ item.team_b.team_name if item.team_b else 'BYE' }}</span>
                           </td>
                           <td class="px-3 py-2 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
@@ -327,27 +323,21 @@
                 <!-- Mobile Card View -->
                 <div class="md:hidden p-3 space-y-2">
                   {% for item in round_data.matches %}
-                    <div class="bg-gray-50 rounded-lg p-3 border-l-4 border-purple-400">
-                      <div class="flex justify-between items-start gap-2">
-                        <div class="flex-1">
-                          <div class="text-xs font-semibold text-gray-900">{{ item.team_a.team_name if item.team_a else 'Unknown' }}</div>
-                          <div class="text-xs text-gray-600 mb-1">{{ item.team_a_players }}</div>
-                          <div class="text-xs text-gray-500 mb-1">vs</div>
-                          <div class="text-xs font-semibold text-gray-900">{{ item.team_b.team_name if item.team_b else 'BYE' }}</div>
-                          {% if item.team_b_players %}<div class="text-xs text-gray-600 mb-1">{{ item.team_b_players }}</div>{% endif %}
+                    <div class="bg-gray-50 rounded-lg p-2 border-l-4 border-purple-400 flex justify-between items-start gap-2">
+                      <div class="text-xs font-semibold text-gray-900 flex-1">
+                        {{ item.team_a.team_name if item.team_a else 'Unknown' }} vs {{ item.team_b.team_name if item.team_b else 'BYE' }}
+                      </div>
+                      <div class="text-right flex-shrink-0">
+                        <div class="text-xs font-medium 
+                          {% if item.booking_date == 'Yet to be scheduled' %}text-yellow-700 bg-yellow-100
+                          {% else %}text-green-700 bg-green-100{% endif %} px-2 py-1 rounded mb-1 whitespace-nowrap">
+                          {{ item.booking_date }}
                         </div>
-                        <div class="text-right flex-shrink-0">
-                          <div class="text-xs font-medium 
-                            {% if item.booking_date == 'Yet to be scheduled' %}text-yellow-700 bg-yellow-100
-                            {% else %}text-green-700 bg-green-100{% endif %} px-2 py-1 rounded mb-1 whitespace-nowrap">
-                            {{ item.booking_date }}
-                          </div>
-                          {% if item.score %}
-                            <div class="text-xs font-semibold text-green-600">{{ item.score }}</div>
-                          {% else %}
-                            <div class="text-xs text-gray-500">-</div>
-                          {% endif %}
-                        </div>
+                        {% if item.score %}
+                          <div class="text-xs font-semibold text-green-600">{{ item.score }}</div>
+                        {% else %}
+                          <div class="text-xs text-gray-500">-</div>
+                        {% endif %}
                       </div>
                     </div>
                   {% endfor %}
