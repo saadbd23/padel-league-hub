@@ -4519,8 +4519,8 @@ def admin_panel():
             score_confirmed_status = "confirmed"
         # Check if score has been submitted (by either team or finalized)
         elif match.score_a and match.score_b:
-            # Score is finalized
-            score = f"{match.score_a} vs {match.score_b}"
+            # Score is finalized - show only one set
+            score = f"{match.score_a}"
             score_confirmed_status = "confirmed" if match.verified else "awaiting"
         elif match.score_submission_a or match.score_submission_b:
             # At least one team has submitted a score
