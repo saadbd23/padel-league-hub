@@ -6644,7 +6644,9 @@ def approve_reschedule(reschedule_id):
                 booking_datetime_str = f"{formatted_date} at {formatted_time}"
                 
                 # Set all booking-related fields to match normal booking confirmation
-                match.match_date = booking_datetime_str
+                # Keep match_date in original format (YYYY-MM-DD), only update match_datetime
+                if not match.match_date:
+                    match.match_date = date_str  # Set to YYYY-MM-DD format if empty
                 match.match_datetime = parsed_date.replace(hour=time_obj.hour, minute=time_obj.minute)
                 match.court = "Court assigned on arrival"
                 match.booking_details = f"{booking_datetime_str}\nCourt assigned on arrival\n✓ Confirmed by both teams"
