@@ -4491,6 +4491,39 @@ def admin_panel():
             if match.booking_details:
                 todays_matches.append(match)
 
+    # Build Round Summary - all matches sorted by booking date
+    round_summary = []
+    for match in matches:
+        team_a = Team.query.get(match.team_a_id)
+        team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
+        
+        booking_date = "Yet to be scheduled"
+        if match.match_datetime:
+            booking_date = match.match_datetime.strftime("%a, %b %d")
+        
+        score = ""
+        if match.status == "completed" and match.score_a and match.score_b:
+            score = f"{match.score_a} vs {match.score_b}"
+        elif match.status == "completed":
+            score = "Completed"
+        
+        round_summary.append({
+            'match': match,
+            'team_a': team_a,
+            'team_b': team_b,
+            'booking_date': booking_date,
+            'score': score
+        })
+    
+    # Sort by booking date (matches without datetime go to end)
+    def get_sort_key(item):
+        if item['match'].match_datetime:
+            return (0, item['match'].match_datetime)
+        else:
+            return (1, '')
+    
+    round_summary.sort(key=get_sort_key)
+
     # Free Agents tab data with matching contact info check
     ladder_free_agents = LadderFreeAgent.query.order_by(LadderFreeAgent.created_at.desc()).all()
     
@@ -4546,6 +4579,7 @@ def admin_panel():
         free_agent_status=free_agent_status,
         matches=matches,
         todays_matches=todays_matches,
+        round_summary=round_summary,
         reschedules=reschedules,
         substitutes=substitutes,
         reschedules_history=reschedules_history,
