@@ -943,14 +943,8 @@ def ladder_register_team():
                 return render_template("ladder/register_team.html", form_data=request.form)
 
         else:
-            # For Men's and Women's ladder, check across all teams (league and ladder)
-            # Check Player 1 email in both Team and LadderTeam
-            existing_team_p1_email = Team.query.filter(
-                db.or_(
-                    Team.player1_email == p1_email,
-                    Team.player2_email == p1_email
-                )
-            ).first()
+            # For Men's and Women's ladder, only check within ladder teams (allow league players)
+            # Check Player 1 email in LadderTeam only
             existing_ladder_p1_email = LadderTeam.query.filter(
                 db.or_(
                     LadderTeam.player1_email == p1_email,
@@ -958,21 +952,11 @@ def ladder_register_team():
                 )
             ).first()
 
-            if existing_team_p1_email:
-                flash(f"Player 1's email ({p1_email}) is already registered in league team '{existing_team_p1_email.team_name}'. Each player can only be in one team.", "error")
-                return render_template("ladder/register_team.html", form_data=request.form)
-
             if existing_ladder_p1_email:
-                flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one team.", "error")
+                flash(f"Player 1's email ({p1_email}) is already registered in ladder team '{existing_ladder_p1_email.team_name}'. Each player can only be in one ladder team.", "error")
                 return render_template("ladder/register_team.html", form_data=request.form)
 
-            # Check Player 1 phone in both Team and LadderTeam
-            existing_team_p1_phone = Team.query.filter(
-                db.or_(
-                    Team.player1_phone == p1_phone_normalized,
-                    Team.player2_phone == p1_phone_normalized
-                )
-            ).first()
+            # Check Player 1 phone in LadderTeam only
             existing_ladder_p1_phone = LadderTeam.query.filter(
                 db.or_(
                     LadderTeam.player1_phone == p1_phone_normalized,
@@ -980,21 +964,11 @@ def ladder_register_team():
                 )
             ).first()
 
-            if existing_team_p1_phone:
-                flash(f"Player 1's WhatsApp number is already registered in league team '{existing_team_p1_phone.team_name}'. Each player can only be in one team.", "error")
-                return render_template("ladder/register_team.html", form_data=request.form)
-
             if existing_ladder_p1_phone:
-                flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one team.", "error")
+                flash(f"Player 1's WhatsApp number is already registered in ladder team '{existing_ladder_p1_phone.team_name}'. Each player can only be in one ladder team.", "error")
                 return render_template("ladder/register_team.html", form_data=request.form)
 
-            # Check Player 2 email in both Team and LadderTeam
-            existing_team_p2_email = Team.query.filter(
-                db.or_(
-                    Team.player1_email == p2_email,
-                    Team.player2_email == p2_email
-                )
-            ).first()
+            # Check Player 2 email in LadderTeam only
             existing_ladder_p2_email = LadderTeam.query.filter(
                 db.or_(
                     LadderTeam.player1_email == p2_email,
@@ -1002,21 +976,11 @@ def ladder_register_team():
                 )
             ).first()
 
-            if existing_team_p2_email:
-                flash(f"Player 2's email ({p2_email}) is already registered in league team '{existing_team_p2_email.team_name}'. Each player can only be in one team.", "error")
-                return render_template("ladder/register_team.html", form_data=request.form)
-
             if existing_ladder_p2_email:
-                flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one team.", "error")
+                flash(f"Player 2's email ({p2_email}) is already registered in ladder team '{existing_ladder_p2_email.team_name}'. Each player can only be in one ladder team.", "error")
                 return render_template("ladder/register_team.html", form_data=request.form)
 
-            # Check Player 2 phone in both Team and LadderTeam
-            existing_team_p2_phone = Team.query.filter(
-                db.or_(
-                    Team.player1_phone == p2_phone_normalized,
-                    Team.player2_phone == p2_phone_normalized
-                )
-            ).first()
+            # Check Player 2 phone in LadderTeam only
             existing_ladder_p2_phone = LadderTeam.query.filter(
                 db.or_(
                     LadderTeam.player1_phone == p2_phone_normalized,
@@ -1024,12 +988,8 @@ def ladder_register_team():
                 )
             ).first()
 
-            if existing_team_p2_phone:
-                flash(f"Player 2's WhatsApp number is already registered in league team '{existing_team_p2_phone.team_name}'. Each player can only be in one team.", "error")
-                return render_template("ladder/register_team.html", form_data=request.form)
-
             if existing_ladder_p2_phone:
-                flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one team.", "error")
+                flash(f"Player 2's WhatsApp number is already registered in ladder team '{existing_ladder_p2_phone.team_name}'. Each player can only be in one ladder team.", "error")
                 return render_template("ladder/register_team.html", form_data=request.form)
 
         # Generate unique access token
@@ -1276,19 +1236,7 @@ def ladder_register_freeagent():
         # Normalize phone number
         phone_normalized = normalize_phone_number(phone)
 
-        # Check if email is already registered in Team
-        existing_team_email = Team.query.filter(
-            db.or_(
-                Team.player1_email == email,
-                Team.player2_email == email
-            )
-        ).first()
-
-        if existing_team_email:
-            flash(f"This email ({email}) is already registered in league team '{existing_team_email.team_name}'. Please use a different email.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        # Check if email is already registered in LadderTeam
+        # Check if email is already registered in LadderTeam only (allow league players)
         existing_ladder_email = LadderTeam.query.filter(
             db.or_(
                 LadderTeam.player1_email == email,
@@ -1300,19 +1248,7 @@ def ladder_register_freeagent():
             flash(f"This email ({email}) is already registered in ladder team '{existing_ladder_email.team_name}'. Please use a different email.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
 
-        # Check if phone is already registered in Team
-        existing_team_phone = Team.query.filter(
-            db.or_(
-                Team.player1_phone == phone_normalized,
-                Team.player2_phone == phone_normalized
-            )
-        ).first()
-
-        if existing_team_phone:
-            flash(f"This WhatsApp number is already registered in league team '{existing_team_phone.team_name}'. Please use a different number.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        # Check if phone is already registered in LadderTeam
+        # Check if phone is already registered in LadderTeam only (allow league players)
         existing_ladder_phone = LadderTeam.query.filter(
             db.or_(
                 LadderTeam.player1_phone == phone_normalized,
@@ -1324,63 +1260,7 @@ def ladder_register_freeagent():
             flash(f"This WhatsApp number is already registered in ladder team '{existing_ladder_phone.team_name}'. Please use a different number.", "error")
             return render_template("ladder/register_freeagent.html", form_data=request.form)
 
-        # Check if email is already registered in ANY capacity (league team, ladder team, or free agents)
-        # This ensures NO player can be in both league AND ladder
-
-        # Check league teams
-        existing_league_team_email = Team.query.filter(
-            db.or_(
-                Team.player1_email == email,
-                Team.player2_email == email
-            )
-        ).first()
-        if existing_league_team_email:
-            flash(f"This email is already registered in league team '{existing_league_team_email.team_name}'. A player cannot be in both league and ladder.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        existing_league_team_phone = Team.query.filter(
-            db.or_(
-                Team.player1_phone == phone_normalized,
-                Team.player2_phone == phone_normalized
-            )
-        ).first()
-        if existing_league_team_phone:
-            flash(f"This WhatsApp number is already registered in league team '{existing_league_team_phone.team_name}'. A player cannot be in both league and ladder.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        # Check ladder teams
-        existing_ladder_team_email = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_email == email,
-                LadderTeam.player2_email == email
-            )
-        ).first()
-        if existing_ladder_team_email:
-            flash(f"This email is already registered in ladder team '{existing_ladder_team_email.team_name}'. Please use a different email.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        existing_ladder_team_phone = LadderTeam.query.filter(
-            db.or_(
-                LadderTeam.player1_phone == phone_normalized,
-                LadderTeam.player2_phone == phone_normalized
-            )
-        ).first()
-        if existing_ladder_team_phone:
-            flash(f"This WhatsApp number is already registered in ladder team '{existing_ladder_team_phone.team_name}'. Please use a different number.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        # Check league free agents
-        existing_league_fa_email = FreeAgent.query.filter_by(email=email).first()
-        if existing_league_fa_email:
-            flash(f"This email is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        existing_league_fa_phone = FreeAgent.query.filter_by(phone=phone_normalized).first()
-        if existing_league_fa_phone:
-            flash(f"This WhatsApp number is already registered as a league free agent. A player cannot be in both league and ladder.", "error")
-            return render_template("ladder/register_freeagent.html", form_data=request.form)
-
-        # Check ladder free agents (duplicate within ladder free agents)
+        # Check ladder free agents (duplicate within ladder free agents only)
         existing_ladder_fa_email = LadderFreeAgent.query.filter_by(email=email).first()
         if existing_ladder_fa_email:
             flash(f"This email is already registered as a ladder free agent. Please use a different email.", "error")
