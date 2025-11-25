@@ -190,7 +190,7 @@
   {% if rounds_dict %}
     {% for round_num in rounds_dict|sort(reverse=True) %}
     {% set round_matches = rounds_dict[round_num] %}
-    {% set completed_matches = round_matches|selectattr('match.status', 'equalto', 'completed')|list|length %}
+    {% set completed_matches = round_completed_counts.get(round_num, 0) %}
     
     <div class="mb-4">
       <!-- Round Accordion Header -->

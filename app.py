@@ -338,7 +338,7 @@ def check_deadline_violations():
                     if now > wednesday_deadline:
                         # Get the match
                         match = Match.query.get(reschedule.match_id)
-                        if match and match.status != "completed":
+                        if match and match.status not in ("completed", "walkover"):
                             # Apply walkover - opponent wins
                             opponent_id = match.team_b_id if match.team_a_id == reschedule.requester_team_id else match.team_a_id
                             opponent_team = Team.query.get(opponent_id)
@@ -394,7 +394,7 @@ def check_deadline_violations():
     rescheduled_match_ids = [r.match_id for r in pending_reschedules]
 
     # Find matches that should have been completed by last Sunday
-    all_matches = Match.query.filter(Match.status != "completed").all()
+    all_matches = Match.query.filter(Match.status.notin_(["completed", "walkover"])).all()
 
     for match in all_matches:
         # Skip if this match has a pending reschedule (it gets Wednesday deadline)
@@ -4557,7 +4557,7 @@ def admin_panel():
     round_summary = []
     for round_num in sorted(rounds_dict.keys(), reverse=True):
         matches_in_round = rounds_dict[round_num]
-        completed_count = len([m for m in matches_in_round if m['match'].status == 'completed'])
+        completed_count = len([m for m in matches_in_round if m['match'].status in ('completed', 'walkover')])
         
         round_summary.append({
             'round_number': round_num,
@@ -7570,7 +7570,7 @@ def override_match(match_id):
             match.sets_b = 0
             match.games_a = 0
             match.games_b = 0
-            match.status = "completed"
+            match.status = "walkover"
             match.stats_calculated = True
             team_a = Team.query.get(match.team_a_id)
             team_b = Team.query.get(match.team_b_id)
@@ -7773,12 +7773,14 @@ def rounds():
 
     # Group regular matches by round
     rounds_dict = {}
+    round_completed_counts = {}
     playoff_matches_list = []
 
     for match in matches:
         if match.round and match.round <= 100:  # Regular rounds (1-100)
             if match.round not in rounds_dict:
                 rounds_dict[match.round] = []
+                round_completed_counts[match.round] = 0
 
             team_a = Team.query.get(match.team_a_id)
             team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
@@ -7788,6 +7790,10 @@ def rounds():
                 'team_a': team_a,
                 'team_b': team_b
             })
+            
+            # Count completed matches (including walkovers)
+            if match.status in ('completed', 'walkover'):
+                round_completed_counts[match.round] += 1
         elif match.round and match.round > 100:  # Playoff rounds (101+)
             playoff_matches_list.append(match)
 
@@ -7800,6 +7806,7 @@ def rounds():
     return render_template(
         "rounds.html",
         rounds_dict=rounds_dict,
+        round_completed_counts=round_completed_counts,
         playoff_matches=playoff_bracket,
         teams=teams,
         substitutes=substitutes
