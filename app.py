@@ -3100,9 +3100,16 @@ def leaderboard():
 def player_leaderboard():
     """
     Player leaderboard with individual statistics
-    Sorted by: Points > Win % > Matches Played > Sets Diff > Games Diff
+    Sorted by: Points > Wins > Matches Played > Sets Diff > Games Diff
+    Includes all players with any match history (even if only 1 match played)
     """
-    players = Player.query.filter(Player.matches_played > 0).order_by(
+    # Get all players who have ANY stats from completed matches
+    players = Player.query.filter(
+        (Player.wins > 0) | 
+        (Player.losses > 0) | 
+        (Player.draws > 0) |
+        (Player.matches_played > 0)
+    ).order_by(
         Player.points.desc(),
         Player.wins.desc(),
         Player.matches_played.desc(),
@@ -7238,6 +7245,24 @@ def approve_substitute(substitute_id):
 
     if team:
         team.subs_used += 1
+
+    # Create a Player record for the substitute so they can accumulate stats
+    from datetime import datetime
+    if substitute.phone:
+        substitute_player = Player.query.filter_by(phone=substitute.phone).first()
+        if not substitute_player:
+            substitute_player = Player(
+                name=substitute.name,
+                phone=substitute.phone,
+                email=substitute.email,
+                current_team_id=team.id if team else None,
+                created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+            db.session.add(substitute_player)
+            db.session.flush()
+        
+        # Link the player to the substitute record
+        substitute.player_id = substitute_player.id
 
     db.session.commit()
 
