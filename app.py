@@ -3980,6 +3980,20 @@ Admin will review this request. You'll be notified once approved/denied.
         print(f"[ERROR] Reschedule request failed: {e}")
         return {"success": False, "message": str(e)}, 500
 
+@app.route("/get-previous-substitutes/<token>", methods=["GET"])
+def get_previous_substitutes(token):
+    """Get list of previously requested substitutes for a team (only pending/approved)"""
+    team = Team.query.filter_by(access_token=token).first_or_404()
+    
+    # Get unique substitute names from this team's approved substitute requests
+    subs = db.session.query(Substitute).filter(
+        Substitute.team_id == team.id,
+        Substitute.status.in_(["pending", "approved"])
+    ).distinct(Substitute.name).all()
+    
+    result = [{"id": s.id, "name": s.name, "phone": s.phone, "email": s.email} for s in subs]
+    return result
+
 @app.route("/submit-substitute/<token>", methods=["POST"])
 def submit_substitute(token):
     """Handle substitute request from team's secure page"""
