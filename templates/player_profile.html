@@ -29,9 +29,8 @@
             {% endif %}
             {% if substitute_info %}
             <p class="text-sm text-blue-600 mt-2">
-              🔄 Played as substitute for <a href="{{ url_for('team_profile', team_id=substitute_info.team_id) }}" class="underline hover:text-blue-800">
-                {% set sub_team = query.get_or_404(substitute_info.team_id) %}
-                {{ substitute_info.team_id }}
+              🔄 Played as substitute for <a href="{{ url_for('team_profile', team_id=substitute_team.id) }}" class="underline hover:text-blue-800">
+                {{ substitute_team.team_name }}
               </a> (replaced Player {{ substitute_info.replaces_player_number }})
             </p>
             {% endif %}

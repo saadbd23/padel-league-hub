@@ -3181,6 +3181,7 @@ def player_profile(player_id: int):
 
     # Get substitute info if player is a substitute
     substitute_info = Substitute.query.filter_by(player_id=player.id).first()
+    substitute_team = Team.query.get(substitute_info.team_id) if substitute_info else None
 
     # Calculate additional stats
     recent_form = []
@@ -3198,7 +3199,8 @@ def player_profile(player_id: int):
         current_team=current_team,
         match_details=match_details,
         recent_form=recent_form,
-        substitute_info=substitute_info
+        substitute_info=substitute_info,
+        substitute_team=substitute_team
     )
 
 @app.route("/my-matches/<token>")
