@@ -3182,23 +3182,15 @@ def player_profile(player_id: int):
     # Get substitute info if player is a substitute
     substitute_info = Substitute.query.filter_by(player_id=player.id).first()
     substitute_team = Team.query.get(substitute_info.team_id) if substitute_info else None
-    replaced_player = None
+    replaced_player_name = None
     
-    if substitute_info:
-        # Get the match to find the replaced player
-        match = Match.query.get(substitute_info.match_id)
-        if match:
-            # Determine which player was replaced
-            if substitute_info.replaces_player_number == 1:
-                if substitute_info.team_id == match.team_a_id:
-                    replaced_player = Player.query.get(match.team_a_player1_id)
-                else:
-                    replaced_player = Player.query.get(match.team_b_player1_id)
-            else:  # replaces_player_number == 2
-                if substitute_info.team_id == match.team_a_id:
-                    replaced_player = Player.query.get(match.team_a_player2_id)
-                else:
-                    replaced_player = Player.query.get(match.team_b_player2_id)
+    if substitute_info and substitute_team:
+        # Get the replaced player name from team roster
+        # (Don't use match record because it's already been updated with substitute ID)
+        if substitute_info.replaces_player_number == 1:
+            replaced_player_name = substitute_team.player1_name
+        else:  # replaces_player_number == 2
+            replaced_player_name = substitute_team.player2_name
 
     # Calculate additional stats
     recent_form = []
@@ -3218,7 +3210,7 @@ def player_profile(player_id: int):
         recent_form=recent_form,
         substitute_info=substitute_info,
         substitute_team=substitute_team,
-        replaced_player=replaced_player
+        replaced_player_name=replaced_player_name
     )
 
 @app.route("/my-matches/<token>")
