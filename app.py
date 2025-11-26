@@ -3117,6 +3117,11 @@ def player_leaderboard():
         (Player.games_for - Player.games_against).desc(),
         Player.name
     ).all()
+    
+    # Add substitute indicator to each player
+    for player in players:
+        player.is_substitute = db.session.query(Substitute).filter_by(player_id=player.id).first() is not None
+    
     return render_template("player_leaderboard.html", players=players)
 
 @app.route("/player/<int:player_id>")
@@ -3174,6 +3179,9 @@ def player_profile(player_id: int):
     # Get current team
     current_team = Team.query.get(player.current_team_id) if player.current_team_id else None
 
+    # Get substitute info if player is a substitute
+    substitute_info = Substitute.query.filter_by(player_id=player.id).first()
+
     # Calculate additional stats
     recent_form = []
     for detail in match_details[:5]:  # Last 5 matches
@@ -3189,7 +3197,8 @@ def player_profile(player_id: int):
         player=player,
         current_team=current_team,
         match_details=match_details,
-        recent_form=recent_form
+        recent_form=recent_form,
+        substitute_info=substitute_info
     )
 
 @app.route("/my-matches/<token>")

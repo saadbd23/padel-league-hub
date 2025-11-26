@@ -12,7 +12,12 @@
             {{ player.name[0].upper() }}
           </div>
           <div>
-            <h1 class="text-4xl font-bold text-gray-900">{{ player.name }}</h1>
+            <div class="flex items-center gap-3">
+              <h1 class="text-4xl font-bold text-gray-900">{{ player.name }}</h1>
+              {% if substitute_info %}
+              <span class="inline-block px-3 py-1 text-sm font-semibold bg-blue-100 text-blue-700 rounded-lg">Substitute</span>
+              {% endif %}
+            </div>
             {% if current_team %}
             <p class="text-lg text-gray-600 mt-1">
               <a href="{{ url_for('team_profile', team_id=current_team.id) }}" class="text-indigo-600 hover:underline">
@@ -21,6 +26,14 @@
             </p>
             {% else %}
             <p class="text-lg text-gray-500 mt-1">Free Agent</p>
+            {% endif %}
+            {% if substitute_info %}
+            <p class="text-sm text-blue-600 mt-2">
+              🔄 Played as substitute for <a href="{{ url_for('team_profile', team_id=substitute_info.team_id) }}" class="underline hover:text-blue-800">
+                {% set sub_team = query.get_or_404(substitute_info.team_id) %}
+                {{ substitute_info.team_id }}
+              </a> (replaced Player {{ substitute_info.replaces_player_number }})
+            </p>
             {% endif %}
           </div>
         </div>

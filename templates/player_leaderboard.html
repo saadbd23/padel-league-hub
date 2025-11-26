@@ -60,10 +60,15 @@
               </div>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
-              <a href="{{ url_for('player_profile', player_id=p.id) }}" 
-                 class="text-base font-bold text-indigo-700 hover:underline">
-                {{ p.name }}
-              </a>
+              <div class="flex items-center gap-2">
+                <a href="{{ url_for('player_profile', player_id=p.id) }}" 
+                   class="text-base font-bold text-indigo-700 hover:underline">
+                  {{ p.name }}
+                </a>
+                {% if p.is_substitute %}
+                <span class="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded">SUB</span>
+                {% endif %}
+              </div>
             </td>
             <td class="px-4 py-4">
               {% if p.current_team_id %}
