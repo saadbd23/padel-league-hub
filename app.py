@@ -239,6 +239,38 @@ def update_player_stats_from_match(match, team_a, team_b):
             player.points += 1
 
 
+def recalculate_all_player_stats():
+    """Recalculate player stats for all completed league matches"""
+    # Reset all player stats to 0
+    for player in Player.query.all():
+        player.wins = 0
+        player.losses = 0
+        player.draws = 0
+        player.points = 0
+        player.matches_played = 0
+        player.sets_for = 0
+        player.sets_against = 0
+        player.games_for = 0
+        player.games_against = 0
+    
+    # Get all completed matches sorted by round and id (to maintain order)
+    completed_matches = Match.query.filter(
+        Match.status == "completed"
+    ).order_by(Match.round, Match.id).all()
+    
+    # Recalculate stats for each match
+    for match in completed_matches:
+        team_a = Team.query.get(match.team_a_id)
+        team_b = Team.query.get(match.team_b_id)
+        
+        if team_a and team_b:
+            # Use update_player_stats_from_match from app to get proper calculations
+            update_player_stats_from_match(match, team_a, team_b)
+    
+    db.session.commit()
+    return len(completed_matches)
+
+
 def digits_only(s: str) -> str:
     return "".join(ch for ch in (s or "") if ch.isdigit())
 
@@ -7761,6 +7793,19 @@ def cleanup_duplicate_freeagents():
     else:
         flash("No duplicate free agents found.", "info")
 
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/recalculate-player-stats", methods=["POST"])
+@require_admin_auth
+def admin_recalculate_player_stats():
+    """Admin route to recalculate all player stats from completed matches"""
+    try:
+        matches_count = recalculate_all_player_stats()
+        flash(f"Player stats recalculated for {matches_count} completed league matches!", "success")
+    except Exception as e:
+        flash(f"Error recalculating player stats: {str(e)}", "error")
+    
     return redirect(url_for("admin_panel"))
 
 
