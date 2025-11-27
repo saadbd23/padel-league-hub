@@ -1839,6 +1839,12 @@ def verify_match_scores(match):
         match.completed_at = datetime.now()
         match.verified = True
         match.disputed = False
+        
+        # Mark the associated challenge as completed if it exists
+        if match.challenge_id:
+            challenge = LadderChallenge.query.get(match.challenge_id)
+            if challenge:
+                challenge.status = 'completed'
 
         team_a_sets_won = 0
         team_b_sets_won = 0
@@ -4829,11 +4835,9 @@ def admin_ladder_challenges(ladder_type):
             'is_overdue': challenge.acceptance_deadline and now > challenge.acceptance_deadline
         }
 
-        # Skip challenges that have completed matches
-        if challenge.status == 'accepted':
-            completed_match = LadderMatch.query.filter_by(challenge_id=challenge.id, verified=True).first()
-            if completed_match:
-                continue  # Skip this challenge - its match is already completed
+        # Skip challenges that are completed (match was verified)
+        if challenge.status == 'completed':
+            continue
 
         if challenge.status == 'pending_acceptance':
             pending_acceptance.append(challenge_data)
