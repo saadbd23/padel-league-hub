@@ -8020,13 +8020,17 @@ def ladder_score_confirm(match_id):
     
     db.session.commit()
     
-    if match.score_confirmed_by_a and match.score_confirmed_by_b:
-        verify_match_scores(match)
-        flash("Score confirmed! Match completed.", "success")
+    # Check if both teams have submitted (submission counts as confirmation)
+    if match.team_a_submitted and match.team_b_submitted:
+        # Both teams submitted - verify and complete
+        if verify_match_scores(match):
+            flash("Both teams confirmed! Match completed.", "success")
+        else:
+            flash("Scores need admin review due to mismatch.", "warning")
     else:
         match.status = 'score_confirmed'
         db.session.commit()
-        flash("Score confirmed. Match completed.", "success")
+        flash("Score confirmed. Waiting for opponent.", "success")
     
     return redirect(url_for('ladder_my_team', token=token))
 
