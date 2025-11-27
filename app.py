@@ -8025,8 +8025,10 @@ def ladder_score_confirm(match_id):
     
     if is_team_a:
         match.score_confirmed_by_a = True
+        match.team_a_submitted = True  # Confirm counts as submission
     else:
         match.score_confirmed_by_b = True
+        match.team_b_submitted = True  # Confirm counts as submission
     
     db.session.commit()
     
