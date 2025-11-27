@@ -426,87 +426,137 @@
 
           <!-- Score Submission Form -->
           {% if not detail.team_submitted %}
-          <div class="mt-4 p-4 bg-white rounded-lg border-2 border-purple-200">
-            <h4 class="font-semibold text-gray-900 mb-3">Submit Match Score</h4>
-            <p class="text-xs text-gray-600 mb-4">Enter the score from your team's perspective. Typical padel scores: 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6</p>
-
-            <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" id="scoreForm">
-              <input type="hidden" name="action" value="submit_score">
-              <input type="hidden" name="match_id" value="{{ m.id }}">
-
-              <!-- Set 1 -->
-              <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-800 mb-2">Set 1 (Required)</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Your Team</label>
-                    <input type="number" name="set1_team_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="6" required>
-                  </div>
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Opponent</label>
-                    <input type="number" name="set1_opponent_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="4" required>
-                  </div>
+            {% if detail.opponent_submitted %}
+            <!-- Opponent Has Submitted - Show Score & Confirm/Reject -->
+            <div class="mt-4 p-4 bg-white rounded-lg border-2 border-green-200">
+              <h4 class="font-semibold text-gray-900 mb-3">{{ opp.team_name }}'s Submitted Score</h4>
+              <div class="mb-4 p-3 bg-green-50 rounded border border-green-200">
+                <div class="text-sm text-gray-800">
+                  {% if detail.is_team_a %}
+                    <div>Set 1: {{ m.team_b_score_set1 }}-{{ m.team_a_score_set1 }}</div>
+                    <div>Set 2: {{ m.team_b_score_set2 }}-{{ m.team_a_score_set2 }}</div>
+                    {% if m.team_b_score_set3 %}<div>Set 3: {{ m.team_b_score_set3 }}-{{ m.team_a_score_set3 }}</div>{% endif %}
+                  {% else %}
+                    <div>Set 1: {{ m.team_a_score_set1 }}-{{ m.team_b_score_set1 }}</div>
+                    <div>Set 2: {{ m.team_a_score_set2 }}-{{ m.team_b_score_set2 }}</div>
+                    {% if m.team_a_score_set3 %}<div>Set 3: {{ m.team_a_score_set3 }}-{{ m.team_b_score_set3 }}</div>{% endif %}
+                  {% endif %}
                 </div>
               </div>
 
-              <!-- Set 2 -->
-              <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-800 mb-2">Set 2 (Required)</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Your Team</label>
-                    <input type="number" name="set2_team_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="6" required>
-                  </div>
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Opponent</label>
-                    <input type="number" name="set2_opponent_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="3" required>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Set 3 (Optional) -->
-              <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-800 mb-2">Set 3 (Optional - only if played)</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Your Team</label>
-                    <input type="number" name="set3_team_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="Leave empty if not played">
-                  </div>
-                  <div>
-                    <label class="block text-xs text-gray-600 mb-1">Opponent</label>
-                    <input type="number" name="set3_opponent_score" min="0" max="7" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                           placeholder="Leave empty if not played">
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                 <div class="flex items-start">
-                  <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                   </svg>
-                  <div class="text-xs text-yellow-800">
-                    <strong>Important:</strong> Both teams must submit scores. Your submission will be verified against your opponent's. Make sure the scores are accurate!
+                  <div class="text-xs text-blue-800">
+                    <strong>Quick Action:</strong> If this score is correct, click "Confirm Score" to accept it. Otherwise, click "Reject & Submit" to enter your version.
                   </div>
                 </div>
               </div>
 
-              <button type="submit" class="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition shadow-lg">
-                Submit Score
-              </button>
-            </form>
-          </div>
+              <div class="flex gap-3">
+                <form method="POST" action="{{ url_for('ladder_score_confirm', match_id=m.id, token=team.access_token) }}" class="flex-1">
+                  <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-lg">
+                    ✓ Confirm Score
+                  </button>
+                </form>
+                <button onclick="document.getElementById('rejectSubmitForm').scrollIntoView({behavior: 'smooth'}); this.parentElement.style.display='none'; document.getElementById('submitScoreForm').style.display='block';" 
+                        class="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition shadow-lg">
+                  ✗ Reject & Submit
+                </button>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Score Submission Form (hidden until needed) -->
+            <div class="mt-4 p-4 bg-white rounded-lg border-2 border-purple-200" id="submitScoreForm" {% if detail.opponent_submitted %}style="display:none;"{% endif %}>
+              <h4 class="font-semibold text-gray-900 mb-3">
+                {% if detail.opponent_submitted %}Submit Your Score{% else %}Submit Match Score{% endif %}
+              </h4>
+              <p class="text-xs text-gray-600 mb-4">Enter the score from your team's perspective. Typical padel scores: 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6</p>
+
+              <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" id="scoreForm">
+                <input type="hidden" name="action" value="submit_score">
+                <input type="hidden" name="match_id" value="{{ m.id }}">
+
+                <!-- Set 1 -->
+                <div class="mb-4">
+                  <label class="block text-sm font-semibold text-gray-800 mb-2">Set 1 (Required)</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Your Team</label>
+                      <input type="number" name="set1_team_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="6" required>
+                    </div>
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Opponent</label>
+                      <input type="number" name="set1_opponent_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="4" required>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Set 2 -->
+                <div class="mb-4">
+                  <label class="block text-sm font-semibold text-gray-800 mb-2">Set 2 (Required)</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Your Team</label>
+                      <input type="number" name="set2_team_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="6" required>
+                    </div>
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Opponent</label>
+                      <input type="number" name="set2_opponent_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="3" required>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Set 3 (Optional) -->
+                <div class="mb-4">
+                  <label class="block text-sm font-semibold text-gray-800 mb-2">Set 3 (Optional - only if played)</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Your Team</label>
+                      <input type="number" name="set3_team_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="Leave empty if not played">
+                    </div>
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Opponent</label>
+                      <input type="number" name="set3_opponent_score" min="0" max="7" 
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                             placeholder="Leave empty if not played">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div class="flex items-start">
+                    <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-xs text-yellow-800">
+                      {% if detail.opponent_submitted %}
+                        <strong>Important:</strong> If your score differs from the opponent's, your submission will trigger admin review for dispute resolution.
+                      {% else %}
+                        <strong>Important:</strong> Your team submits first. The opponent can then confirm your score or submit their own version for verification.
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition shadow-lg">
+                  Submit Score
+                </button>
+              </form>
+            </div>
           {% endif %}
 
           <!-- No-Show Reporting Section -->
