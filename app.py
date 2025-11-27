@@ -3141,6 +3141,7 @@ def player_leaderboard():
     Player leaderboard organized by team ranking
     Teams are ranked by: Points > Sets Diff > Games Diff > Wins > Team Name
     Players within each team are sorted by: Points > Wins > Matches Played > Sets Diff > Games Diff
+    Includes all players with stats including substitutes and free agents
     """
     # Get teams in ranked order (same as team leaderboard)
     teams = Team.query.order_by(
@@ -3153,6 +3154,7 @@ def player_leaderboard():
     
     # Build players list grouped by team rank
     players_by_team = []
+    processed_player_ids = set()
     
     for team_rank, team in enumerate(teams, start=1):
         # Get all players from this team who have stats
@@ -3178,8 +3180,34 @@ def player_leaderboard():
             player.is_substitute = db.session.query(Substitute).filter_by(player_id=player.id).first() is not None
             player.team_rank = team_rank
             player.team_name = team.team_name
+            processed_player_ids.add(player.id)
         
         players_by_team.extend(team_players)
+    
+    # Also include players with stats who aren't currently on any ranked team (substitutes, free agents)
+    other_players = Player.query.filter(
+        Player.id.notin_(processed_player_ids),
+        db.or_(
+            (Player.wins > 0) | 
+            (Player.losses > 0) | 
+            (Player.draws > 0) |
+            (Player.matches_played > 0)
+        )
+    ).order_by(
+        Player.points.desc(),
+        Player.wins.desc(),
+        Player.matches_played.desc(),
+        (Player.sets_for - Player.sets_against).desc(),
+        (Player.games_for - Player.games_against).desc(),
+        Player.name
+    ).all()
+    
+    for player in other_players:
+        player.is_substitute = db.session.query(Substitute).filter_by(player_id=player.id).first() is not None
+        player.team_rank = None
+        player.team_name = None
+    
+    players_by_team.extend(other_players)
     
     return render_template("player_leaderboard.html", players=players_by_team)
 
