@@ -2700,9 +2700,16 @@ BD Padel Ladder System
     for challenge in challenges_received:
         opponent = LadderTeam.query.get(challenge.challenger_team_id)
         if opponent:
-            hours_until_deadline = (challenge.acceptance_deadline - now).total_seconds() / 3600
-            is_deadline_approaching = hours_until_deadline < 24 and hours_until_deadline > 0
-            is_past_deadline = hours_until_deadline <= 0
+            # Only calculate deadline info for pending_acceptance challenges
+            # Accepted challenges don't have an acceptance deadline to worry about
+            hours_until_deadline = 0
+            is_deadline_approaching = False
+            is_past_deadline = False
+            
+            if challenge.status == 'pending_acceptance':
+                hours_until_deadline = (challenge.acceptance_deadline - now).total_seconds() / 3600
+                is_deadline_approaching = hours_until_deadline < 24 and hours_until_deadline > 0
+                is_past_deadline = hours_until_deadline <= 0
 
             challenge_details_received.append({
                 'challenge': challenge,
