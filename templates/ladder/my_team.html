@@ -425,8 +425,7 @@
           </div>
 
           <!-- Score Submission Form -->
-          {% if not detail.team_submitted %}
-            {% if detail.opponent_submitted %}
+          {% if detail.opponent_submitted %}
             <!-- Opponent Has Submitted - Show Score & Confirm/Reject -->
             <div class="mt-4 p-4 bg-white rounded-lg border-2 border-green-200">
               <h4 class="font-semibold text-gray-900 mb-3">{{ opp.team_name }}'s Submitted Score</h4>
@@ -489,13 +488,11 @@
                 </button>
               </div>
             </div>
-            {% endif %}
+          {% elif not detail.team_submitted %}
 
-            <!-- Score Submission Form (hidden until needed) -->
-            <div class="mt-4 p-4 bg-white rounded-lg border-2 border-purple-200" id="submitScoreForm" {% if detail.opponent_submitted %}style="display:none;"{% endif %}>
-              <h4 class="font-semibold text-gray-900 mb-3">
-                {% if detail.opponent_submitted %}Submit Your Score{% else %}Submit Match Score{% endif %}
-              </h4>
+            <!-- Score Submission Form (when opponent hasn't submitted) -->
+            <div class="mt-4 p-4 bg-white rounded-lg border-2 border-purple-200" id="submitScoreForm" style="display:block;">
+              <h4 class="font-semibold text-gray-900 mb-3">Submit Match Score</h4>
               <p class="text-xs text-gray-600 mb-4">Enter the score from your team's perspective. Typical padel scores: 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6</p>
 
               <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" id="scoreForm">
@@ -565,11 +562,7 @@
                       <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
                     <div class="text-xs text-yellow-800">
-                      {% if detail.opponent_submitted %}
-                        <strong>Important:</strong> If your score differs from the opponent's, your submission will trigger admin review for dispute resolution.
-                      {% else %}
-                        <strong>Important:</strong> Your team submits first. The opponent can then confirm your score or submit their own version for verification.
-                      {% endif %}
+                      <strong>Important:</strong> Your team submits first. The opponent can then confirm your score or submit their own version for verification.
                     </div>
                   </div>
                 </div>
