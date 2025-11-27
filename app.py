@@ -3138,30 +3138,50 @@ def leaderboard():
 @app.route("/players")
 def player_leaderboard():
     """
-    Player leaderboard with individual statistics
-    Sorted by: Points > Wins > Matches Played > Sets Diff > Games Diff
-    Includes all players with any match history (even if only 1 match played)
+    Player leaderboard organized by team ranking
+    Teams are ranked by: Points > Sets Diff > Games Diff > Wins > Team Name
+    Players within each team are sorted by: Points > Wins > Matches Played > Sets Diff > Games Diff
     """
-    # Get all players who have ANY stats from completed matches
-    players = Player.query.filter(
-        (Player.wins > 0) | 
-        (Player.losses > 0) | 
-        (Player.draws > 0) |
-        (Player.matches_played > 0)
-    ).order_by(
-        Player.points.desc(),
-        Player.wins.desc(),
-        Player.matches_played.desc(),
-        (Player.sets_for - Player.sets_against).desc(),
-        (Player.games_for - Player.games_against).desc(),
-        Player.name
+    # Get teams in ranked order (same as team leaderboard)
+    teams = Team.query.order_by(
+        Team.points.desc(),
+        (Team.sets_for - Team.sets_against).desc(),
+        (Team.games_for - Team.games_against).desc(),
+        Team.wins.desc(),
+        Team.team_name
     ).all()
     
-    # Add substitute indicator to each player
-    for player in players:
-        player.is_substitute = db.session.query(Substitute).filter_by(player_id=player.id).first() is not None
+    # Build players list grouped by team rank
+    players_by_team = []
     
-    return render_template("player_leaderboard.html", players=players)
+    for team_rank, team in enumerate(teams, start=1):
+        # Get all players from this team who have stats
+        team_players = Player.query.filter(
+            Player.current_team_id == team.id,
+            db.or_(
+                (Player.wins > 0) | 
+                (Player.losses > 0) | 
+                (Player.draws > 0) |
+                (Player.matches_played > 0)
+            )
+        ).order_by(
+            Player.points.desc(),
+            Player.wins.desc(),
+            Player.matches_played.desc(),
+            (Player.sets_for - Player.sets_against).desc(),
+            (Player.games_for - Player.games_against).desc(),
+            Player.name
+        ).all()
+        
+        # Add substitute indicator and team info
+        for player in team_players:
+            player.is_substitute = db.session.query(Substitute).filter_by(player_id=player.id).first() is not None
+            player.team_rank = team_rank
+            player.team_name = team.team_name
+        
+        players_by_team.extend(team_players)
+    
+    return render_template("player_leaderboard.html", players=players_by_team)
 
 @app.route("/player/<int:player_id>")
 def player_profile(player_id: int):
