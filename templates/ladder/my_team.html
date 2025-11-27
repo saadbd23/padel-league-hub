@@ -477,12 +477,13 @@
               </div>
 
               <div class="flex gap-3">
-                <form method="POST" action="{{ url_for('ladder_score_confirm', match_id=m.id, token=team.access_token) }}" class="flex-1">
+                <form method="POST" action="{{ url_for('ladder_score_confirm', match_id=m.id) }}" class="flex-1">
+                  <input type="hidden" name="token" value="{{ team.access_token }}">
                   <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-lg">
                     ✓ Confirm Score
                   </button>
                 </form>
-                <form method="POST" action="{{ url_for('ladder_score_reject', match_id=m.id) }}" class="flex-1" id="rejectForm{{ m.id }}">
+                <form method="POST" action="{{ url_for('ladder_score_reject', match_id=m.id) }}" class="flex-1">
                   <input type="hidden" name="token" value="{{ team.access_token }}">
                   <button type="submit" class="w-full px-4 py-3 bg-red-700 text-white rounded-lg font-semibold hover:bg-red-800 transition shadow-lg">
                     ✗ Reject & Submit
