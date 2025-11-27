@@ -80,9 +80,6 @@ def update_team_stats_from_match(match):
     if not team_a or not team_b:
         return
 
-    # CRITICAL: Set flag IMMEDIATELY to prevent duplicate processing
-    match.stats_calculated = True
-
     # Update team sets and games statistics
     team_a.sets_for += match.sets_a
     team_a.sets_against += match.sets_b
@@ -112,6 +109,9 @@ def update_team_stats_from_match(match):
 
     # Update player statistics for both teams
     update_player_stats_from_match(match, team_a, team_b)
+
+    # CRITICAL: Set flag AFTER updating all stats (team and player) to prevent duplicate processing
+    match.stats_calculated = True
 
 
 def update_player_stats_from_match(match, team_a, team_b):
