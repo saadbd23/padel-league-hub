@@ -431,16 +431,38 @@
             <div class="mt-4 p-4 bg-white rounded-lg border-2 border-green-200">
               <h4 class="font-semibold text-gray-900 mb-3">{{ opp.team_name }}'s Submitted Score</h4>
               <div class="mb-4 p-3 bg-green-50 rounded border border-green-200">
-                <div class="text-sm text-gray-800">
+                <div class="text-sm text-gray-800 space-y-2">
                   {% if detail.is_team_a %}
                     <div>Set 1: {{ m.team_b_score_set1 }}-{{ m.team_a_score_set1 }}</div>
                     <div>Set 2: {{ m.team_b_score_set2 }}-{{ m.team_a_score_set2 }}</div>
                     {% if m.team_b_score_set3 %}<div>Set 3: {{ m.team_b_score_set3 }}-{{ m.team_a_score_set3 }}</div>{% endif %}
+                    
+                    {% set opp_score_sets = 0 %}
+                    {% set your_score_sets = 0 %}
+                    {% if m.team_b_score_set1 and m.team_b_score_set1 > m.team_a_score_set1 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_a_score_set1 and m.team_a_score_set1 > m.team_b_score_set1 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
+                    {% if m.team_b_score_set2 and m.team_b_score_set2 > m.team_a_score_set2 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_a_score_set2 and m.team_a_score_set2 > m.team_b_score_set2 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
+                    {% if m.team_b_score_set3 and m.team_b_score_set3 > m.team_a_score_set3 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_a_score_set3 and m.team_a_score_set3 > m.team_b_score_set3 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
                   {% else %}
                     <div>Set 1: {{ m.team_a_score_set1 }}-{{ m.team_b_score_set1 }}</div>
                     <div>Set 2: {{ m.team_a_score_set2 }}-{{ m.team_b_score_set2 }}</div>
                     {% if m.team_a_score_set3 %}<div>Set 3: {{ m.team_a_score_set3 }}-{{ m.team_b_score_set3 }}</div>{% endif %}
+                    
+                    {% set opp_score_sets = 0 %}
+                    {% set your_score_sets = 0 %}
+                    {% if m.team_a_score_set1 and m.team_a_score_set1 > m.team_b_score_set1 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_b_score_set1 and m.team_b_score_set1 > m.team_a_score_set1 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
+                    {% if m.team_a_score_set2 and m.team_a_score_set2 > m.team_b_score_set2 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_b_score_set2 and m.team_b_score_set2 > m.team_a_score_set2 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
+                    {% if m.team_a_score_set3 and m.team_a_score_set3 > m.team_b_score_set3 %}{% set opp_score_sets = opp_score_sets + 1 %}{% elif m.team_b_score_set3 and m.team_b_score_set3 > m.team_a_score_set3 %}{% set your_score_sets = your_score_sets + 1 %}{% endif %}
                   {% endif %}
+                  
+                  <div class="mt-3 pt-3 border-t border-green-300 font-bold text-lg">
+                    {% if opp_score_sets > your_score_sets %}
+                    🏆 Winner: {{ opp.team_name }}
+                    {% elif your_score_sets > opp_score_sets %}
+                    🏆 Winner: {{ team.team_name }}
+                    {% else %}
+                    ⚖️ Result: Tied/Incomplete
+                    {% endif %}
+                  </div>
                 </div>
               </div>
 
@@ -462,7 +484,7 @@
                   </button>
                 </form>
                 <button onclick="document.getElementById('rejectSubmitForm').scrollIntoView({behavior: 'smooth'}); this.parentElement.style.display='none'; document.getElementById('submitScoreForm').style.display='block';" 
-                        class="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition shadow-lg">
+                        class="flex-1 px-4 py-3 bg-red-700 text-white rounded-lg font-semibold hover:bg-red-800 transition shadow-lg">
                   ✗ Reject & Submit
                 </button>
               </div>
