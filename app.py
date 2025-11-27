@@ -8018,6 +8018,8 @@ def ladder_score_confirm(match_id):
     else:
         match.score_confirmed_by_b = True
     
+    db.session.commit()
+    
     if match.score_confirmed_by_a and match.score_confirmed_by_b:
         verify_match_scores(match)
         flash("Score confirmed! Match completed.", "success")
