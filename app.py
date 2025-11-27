@@ -4829,6 +4829,12 @@ def admin_ladder_challenges(ladder_type):
             'is_overdue': challenge.acceptance_deadline and now > challenge.acceptance_deadline
         }
 
+        # Skip challenges that have completed matches
+        if challenge.status == 'accepted':
+            completed_match = LadderMatch.query.filter_by(challenge_id=challenge.id, verified=True).first()
+            if completed_match:
+                continue  # Skip this challenge - its match is already completed
+
         if challenge.status == 'pending_acceptance':
             pending_acceptance.append(challenge_data)
         elif challenge.status == 'accepted':
@@ -4885,7 +4891,7 @@ def admin_ladder_matches(ladder_type):
             disputed.append(match_data)
         elif match.reported_no_show_team_id and not match.no_show_verified:
             no_shows.append(match_data)
-        elif match.status == 'completed':
+        elif match.verified or match.status == 'completed':
             if len(completed) < 20:
                 completed.append(match_data)
         elif match.team_a_submitted and match.team_b_submitted:
