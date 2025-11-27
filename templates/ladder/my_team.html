@@ -482,10 +482,12 @@
                     ✓ Confirm Score
                   </button>
                 </form>
-                <button onclick="document.getElementById('submitScoreForm').scrollIntoView({behavior: 'smooth'}); this.parentElement.style.display='none'; document.getElementById('submitScoreForm').style.display='block';" 
-                        class="flex-1 px-4 py-3 bg-red-700 text-white rounded-lg font-semibold hover:bg-red-800 transition shadow-lg">
-                  ✗ Reject & Submit
-                </button>
+                <form method="POST" action="{{ url_for('ladder_score_reject', match_id=m.id) }}" class="flex-1" id="rejectForm{{ m.id }}">
+                  <input type="hidden" name="token" value="{{ team.access_token }}">
+                  <button type="submit" class="w-full px-4 py-3 bg-red-700 text-white rounded-lg font-semibold hover:bg-red-800 transition shadow-lg">
+                    ✗ Reject & Submit
+                  </button>
+                </form>
               </div>
             </div>
           {% elif not detail.team_submitted %}
