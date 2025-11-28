@@ -4604,14 +4604,31 @@ def admin_panel():
             score = "Completed"
             score_confirmed_status = "confirmed" if match.verified else "awaiting"
         
+        # Determine which team needs to confirm booking
+        booking_pending_team = None
+        if booking_confirmed_status == "awaiting" and team_a and team_b:
+            booking_pending_team = team_a.team_name
+        
+        # Determine which team needs to submit score
+        score_pending_team = None
+        if score_confirmed_status == "awaiting" and not is_walkover:
+            if match.score_submission_a and not match.score_submission_b:
+                score_pending_team = team_b.team_name if team_b else "Unknown"
+            elif match.score_submission_b and not match.score_submission_a:
+                score_pending_team = team_a.team_name if team_a else "Unknown"
+            elif not match.score_submission_a and not match.score_submission_b and (match.score_submission_a is None or match.score_submission_b is None):
+                score_pending_team = f"{team_a.team_name if team_a else 'Unknown'}/{team_b.team_name if team_b else 'Unknown'}"
+        
         rounds_dict[round_num].append({
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
             'booking_date': booking_date,
             'booking_confirmed_status': booking_confirmed_status,
+            'booking_pending_team': booking_pending_team,
             'score': score,
             'score_confirmed_status': score_confirmed_status,
+            'score_pending_team': score_pending_team,
             'is_walkover': is_walkover
         })
     

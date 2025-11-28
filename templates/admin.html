@@ -310,7 +310,7 @@
                               {% if item.booking_confirmed_status == 'confirmed' %}
                                 <span class="text-green-600 font-bold" title="Booking confirmed">✓</span>
                               {% elif item.booking_date != 'Yet to be scheduled' %}
-                                <span class="text-orange-600 font-bold" title="Awaiting confirmation">⏳</span>
+                                <span class="text-orange-600 font-bold" title="Awaiting confirmation from {% if item.booking_pending_team %}{{ item.booking_pending_team }}{% else %}both teams{% endif %}">⏳</span>
                               {% endif %}
                             </div>
                           </td>
@@ -325,7 +325,7 @@
                                 {% if item.score_confirmed_status == 'confirmed' %}
                                   <span class="text-green-600 font-bold" title="Score confirmed">✓</span>
                                 {% else %}
-                                  <span class="text-orange-600 font-bold" title="Awaiting confirmation">⏳</span>
+                                  <span class="text-orange-600 font-bold" title="Awaiting confirmation from {% if item.score_pending_team %}{{ item.score_pending_team }}{% else %}both teams{% endif %}">⏳</span>
                                 {% endif %}
                               {% else %}
                                 <span class="text-xs text-gray-500">-</span>
@@ -355,7 +355,7 @@
                           {% if item.booking_confirmed_status == 'confirmed' %}
                             <span class="text-green-600 font-bold" title="Booking confirmed">✓</span>
                           {% elif item.booking_date != 'Yet to be scheduled' %}
-                            <span class="text-orange-600 font-bold" title="Awaiting confirmation">⏳</span>
+                            <span class="text-orange-600 font-bold" title="Awaiting confirmation from {% if item.booking_pending_team %}{{ item.booking_pending_team }}{% else %}both teams{% endif %}">⏳</span>
                           {% endif %}
                         </div>
                         <div class="flex items-center justify-end gap-1">
@@ -368,7 +368,7 @@
                             {% if item.score_confirmed_status == 'confirmed' %}
                               <span class="text-green-600 font-bold" title="Score confirmed">✓</span>
                             {% else %}
-                              <span class="text-orange-600 font-bold" title="Awaiting confirmation">⏳</span>
+                              <span class="text-orange-600 font-bold" title="Awaiting confirmation from {% if item.score_pending_team %}{{ item.score_pending_team }}{% else %}both teams{% endif %}">⏳</span>
                             {% endif %}
                           {% else %}
                             <span class="text-xs text-gray-500">-</span>
