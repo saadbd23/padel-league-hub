@@ -18,6 +18,7 @@ class Team(db.Model):
     subs_used = db.Column(db.Integer, default=0)
     reschedules_used = db.Column(db.Integer, default=0)
     access_token = db.Column(db.String(64), unique=True, index=True)  # Unique token for secure access
+    status = db.Column(db.String(20), default='active')  # 'active', 'inactive', 'withdrawn'
 
     # Match statistics
     wins = db.Column(db.Integer, default=0)

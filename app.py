@@ -7242,6 +7242,20 @@ def confirm_team(team_id):
         flash("Team not found", "error")
     return redirect(url_for("admin_panel"))
 
+@app.route("/admin/toggle-team-status/<int:team_id>", methods=["POST"])
+@require_admin_auth
+def toggle_team_status(team_id):
+    """Toggle team between active and inactive status for league"""
+    team = Team.query.get(team_id)
+    if team:
+        new_status = 'inactive' if team.status == 'active' else 'active'
+        team.status = new_status
+        db.session.commit()
+        flash(f"Team {team.team_name} is now {new_status}!", "success")
+    else:
+        flash("Team not found", "error")
+    return redirect(url_for("admin_panel"))
+
 @app.route("/admin/edit-team/<int:team_id>", methods=["GET", "POST"])
 @require_admin_auth
 def edit_team(team_id):

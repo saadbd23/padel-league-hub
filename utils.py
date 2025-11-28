@@ -23,9 +23,11 @@ def generate_round_pairings(round_number):
     - Avoids repeat matchups when possible
     - Handles odd number of teams (lowest ranked gets bye)
     - Logs all decision-making for admin transparency
+    - Excludes inactive teams from pairing
     """
     # 1. Get teams sorted by standings (wins desc, then sets differential desc, then games differential desc)
-    teams = Team.query.order_by(
+    # Filter to only active teams
+    teams = Team.query.filter_by(status='active').order_by(
         Team.wins.desc(),
         (Team.sets_for - Team.sets_against).desc(),
         (Team.games_for - Team.games_against).desc(),
