@@ -3110,13 +3110,15 @@ Padel Ladder League
 def leaderboard():
     """
     Leaderboard with proper padel league ranking:
-    1. Points (3 for win, 1 for draw, 0 for loss)
-    2. Sets difference
-    3. Games difference
-    4. Wins
-    5. Team name (alphabetical)
+    1. Status (active teams first, inactive teams last)
+    2. Points (3 for win, 1 for draw, 0 for loss)
+    3. Sets difference
+    4. Games difference
+    5. Wins
+    6. Team name (alphabetical)
     """
     teams = Team.query.order_by(
+        Team.status.asc(),  # 'active' comes before 'inactive' alphabetically
         Team.points.desc(),
         (Team.sets_for - Team.sets_against).desc(),
         (Team.games_for - Team.games_against).desc(),
@@ -3145,12 +3147,13 @@ def leaderboard():
 def player_leaderboard():
     """
     Player leaderboard organized by team ranking
-    Teams are ranked by: Points > Sets Diff > Games Diff > Wins > Team Name
+    Teams are ranked by: Status > Points > Sets Diff > Games Diff > Wins > Team Name
     Players within each team are sorted by: Points > Wins > Matches Played > Sets Diff > Games Diff
     Includes all players with stats including substitutes and free agents
     """
     # Get teams in ranked order (same as team leaderboard)
     teams = Team.query.order_by(
+        Team.status.asc(),  # 'active' comes before 'inactive' alphabetically
         Team.points.desc(),
         (Team.sets_for - Team.sets_against).desc(),
         (Team.games_for - Team.games_against).desc(),

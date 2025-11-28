@@ -116,7 +116,11 @@
               </span>
             </td>
             <td class="px-4 py-4 text-center">
-              {% if t.confirmed %}
+              {% if t.status == 'inactive' %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800" title="Team is inactive - not eligible for pairing">
+                  ✗
+                </span>
+              {% elif t.confirmed %}
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                   ✓
                 </span>
@@ -214,7 +218,11 @@
 
         <!-- Status Badge -->
         <div class="flex justify-center pt-2">
-          {% if t.confirmed %}
+          {% if t.status == 'inactive' %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800" title="Team is inactive - not eligible for pairing">
+              ✗ Inactive
+            </span>
+          {% elif t.confirmed %}
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
               ✓ Confirmed
             </span>

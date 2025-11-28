@@ -16,7 +16,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Database Schema
 A single PostgreSQL database is managed via `models.py` and includes models for:
-- **League**: Team, Player, Match, Reschedule, Substitute, LeagueSettings.
+- **League**: Team (with status field for active/inactive), Player, Match, Reschedule, Substitute, LeagueSettings.
 - **Ladder**: LadderTeam, LadderFreeAgent, LadderChallenge, LadderMatch, AmericanoTournament, AmericanoMatch, LadderSettings.
 
 ## Authentication & Security
@@ -28,13 +28,21 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 ## Key Features Architecture
 
 ### Tournament Systems
-- **Swiss Format Pairing**: Automated pairing based on standings, avoiding repeat matchups.
+- **Swiss Format Pairing**: Automated pairing based on standings, avoiding repeat matchups. Only active teams are eligible for pairing in future rounds. Inactive teams retain their stats but don't get paired.
+- **Team Status Management**: Teams can be marked as 'active' or 'inactive' via admin panel. Inactive teams appear at bottom of leaderboard with "✗" badge (red) instead of confirmation badge.
 - **Ladder Tournament**: Challenge system allowing teams to challenge up to 3 ranks above, including holiday mode, activity monitoring, and separate divisions.
 - **Americano Tournament System**: Monthly tournaments for free agent pairing with a smart round-robin algorithm, individual scoring, and admin management.
 
 ### Match Management
 - **Scheduling & Deadlines**: Weekly rounds, reschedule deadlines, and automatic walkover enforcement.
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
+- **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
+
+## Recent Changes (November 28, 2025)
+- **Added Team Status System**: Implemented 'active'/'inactive' status field to Team model for Swiss league management
+- **Updated Pairing Algorithm**: Modified `generate_round_pairings()` to exclude inactive teams from future round pairings
+- **Admin UI Enhancement**: Added Deactivate/Activate buttons in team management section (desktop & mobile views)
+- **Leaderboard Display**: Updated leaderboard to show inactive teams at bottom with "✗" badge (red) instead of confirmation status; active teams remain at top with normal confirmation badges
 
 ### UI/UX Decisions
 - **Frontend**: Tailwind CSS (CDN-based) for styling.
