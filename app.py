@@ -2542,6 +2542,96 @@ BD Padel Ladder Team
             flash("Challenge rejected successfully. Both teams are now unlocked.", "success")
             return redirect(url_for('ladder_my_team', token=token))
 
+        elif action == "cancel_challenge":
+            from utils import send_email_notification
+            
+            challenge_id = request.form.get("challenge_id")
+            if not challenge_id:
+                flash("Challenge ID is required", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+
+            challenge = LadderChallenge.query.get(challenge_id)
+            if not challenge:
+                flash("Challenge not found", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+
+            if challenge.status != 'accepted':
+                flash("Only accepted challenges can be cancelled", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+
+            # Verify the requesting team is the challenger
+            if challenge.challenger_team_id != team.id:
+                flash("You are not authorized to cancel this challenge", "error")
+                return redirect(url_for('ladder_my_team', token=token))
+
+            challenger_team = team
+            challenged_team = LadderTeam.query.get(challenge.challenged_team_id)
+            match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
+
+            # Cancel the challenge
+            challenge.status = 'cancelled'
+            db.session.commit()
+
+            # Delete the associated match if it exists and no scores have been submitted
+            if match and not match.team_a_submitted and not match.team_b_submitted:
+                db.session.delete(match)
+                db.session.commit()
+
+            challenger_message = f"""Challenge Cancelled
+
+You have cancelled your challenge against {challenged_team.team_name}.
+
+Challenge Details:
+- Challenged Team: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+- Status: Cancelled
+
+Both teams are now unlocked and available to send or receive new challenges.
+
+You can challenge other teams by visiting the ladder rankings page.
+
+Regards,
+BD Padel Ladder Team
+"""
+
+            challenged_message = f"""Challenge Cancelled
+
+{challenger_team.team_name} has cancelled their challenge against you.
+
+Challenge Details:
+- Challenger Team: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+- Status: Cancelled
+
+Both teams are now unlocked and available to send or receive new challenges.
+
+Regards,
+BD Padel Ladder Team
+"""
+
+            if challenger_team.contact_preference_email:
+                if challenger_team.player1_email:
+                    send_email_notification(challenger_team.player1_email, 
+                                          f"Challenge Cancelled - {challenger_team.team_name}", 
+                                          challenger_message)
+                if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+                    send_email_notification(challenger_team.player2_email, 
+                                          f"Challenge Cancelled - {challenger_team.team_name}", 
+                                          challenger_message)
+
+            if challenged_team.contact_preference_email:
+                if challenged_team.player1_email:
+                    send_email_notification(challenged_team.player1_email, 
+                                          f"Challenge Cancelled - {challenged_team.team_name}", 
+                                          challenged_message)
+                if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+                    send_email_notification(challenged_team.player2_email, 
+                                          f"Challenge Cancelled - {challenged_team.team_name}", 
+                                          challenged_message)
+
+            flash("Challenge cancelled successfully. Both teams are now unlocked.", "success")
+            return redirect(url_for('ladder_my_team', token=token))
+
         elif action == "report_no_show":
             from utils import send_email_notification
 
