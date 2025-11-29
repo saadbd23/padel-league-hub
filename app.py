@@ -5255,8 +5255,13 @@ def admin_ladder_edit_team(team_id):
             player2_name = request.form.get("player2_name", "").strip()
             player2_email = request.form.get("player2_email", "").strip()
             player2_phone = request.form.get("player2_phone", "").strip()
-            contact_preference_email = request.form.get("contact_preference_email") == "on"
-            contact_preference_whatsapp = request.form.get("contact_preference_whatsapp") == "on"
+            # Handle contact preferences - default to email if neither is selected
+            contact_preference_email = "contact_preference_email" in request.form
+            contact_preference_whatsapp = "contact_preference_whatsapp" in request.form
+            
+            # If neither is selected, default to email
+            if not contact_preference_email and not contact_preference_whatsapp:
+                contact_preference_email = True
 
             if not all([team_name, player1_name, player1_phone, player2_name, player2_phone]):
                 flash("All required fields must be filled", "error")
