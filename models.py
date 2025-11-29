@@ -133,6 +133,9 @@ class Match(db.Model):
     score_submission_b = db.Column(db.Text)  # Team B's submitted score
     score_submitted_by_a = db.Column(db.Boolean, default=False)  # Team A submitted
     score_submitted_by_b = db.Column(db.Boolean, default=False)  # Team B submitted
+    
+    # Draft status for round preview workflow
+    is_draft = db.Column(db.Boolean, default=False)  # True = preview mode, False = live match
 
     # Player participation tracking (for individual stats)
     # Stores player IDs who actually played in this match
