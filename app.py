@@ -2559,8 +2559,11 @@ BD Padel Ladder Team
                 flash("Only accepted challenges can be cancelled", "error")
                 return redirect(url_for('ladder_my_team', token=token))
 
-            # Verify the requesting team is the challenger
-            if challenge.challenger_team_id != team.id:
+            # Verify the requesting team is either the challenger or challenged team
+            is_challenger = challenge.challenger_team_id == team.id
+            is_challenged = challenge.challenged_team_id == team.id
+            
+            if not is_challenger and not is_challenged:
                 flash("You are not authorized to cancel this challenge", "error")
                 return redirect(url_for('ladder_my_team', token=token))
 

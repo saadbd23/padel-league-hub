@@ -327,14 +327,23 @@
                     Deadline: {{ c.acceptance_deadline.strftime('%b %d, %I:%M %p') }}
                   </div>
                   {% else %}
-                  <div class="text-center">
-                    <div class="text-sm text-gray-600">Status</div>
-                    <div class="font-semibold text-green-600">Accepted</div>
-                    {% if c.completion_deadline %}
-                    <div class="text-xs text-gray-500 mt-1">
-                      Complete by: {{ c.completion_deadline.strftime('%b %d, %Y') }}
+                  <div class="flex flex-col gap-2">
+                    <div class="text-center">
+                      <div class="text-sm text-gray-600">Status</div>
+                      <div class="font-semibold text-green-600">Accepted</div>
+                      {% if c.completion_deadline %}
+                      <div class="text-xs text-gray-500 mt-1">
+                        Complete by: {{ c.completion_deadline.strftime('%b %d, %Y') }}
+                      </div>
+                      {% endif %}
                     </div>
-                    {% endif %}
+                    <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline">
+                      <input type="hidden" name="action" value="cancel_challenge">
+                      <input type="hidden" name="challenge_id" value="{{ c.id }}">
+                      <button type="submit" class="px-3 py-1 bg-orange-500 text-white text-xs rounded-lg font-semibold hover:bg-orange-600 transition w-full" onclick="return confirm('Are you sure? You can reschedule later.')">
+                        Cancel Challenge
+                      </button>
+                    </form>
                   </div>
                   {% endif %}
                 </div>
