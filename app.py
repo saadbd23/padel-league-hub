@@ -4835,11 +4835,16 @@ def admin_ladder_challenges(ladder_type):
     """Admin page to manage all ladder challenges for a division"""
     from datetime import datetime
 
-    if ladder_type not in ['men', 'women']:
+    if ladder_type not in ['men', 'women', 'mixed']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
 
-    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    if ladder_type == 'men':
+        division_title = "Men's Division"
+    elif ladder_type == 'women':
+        division_title = "Women's Division"
+    else:
+        division_title = "Mixed Division"
 
     all_challenges = LadderChallenge.query.filter_by(ladder_type=ladder_type).order_by(
         LadderChallenge.created_at.desc()
@@ -4893,11 +4898,16 @@ def admin_ladder_matches(ladder_type):
     """Admin page to manage all ladder matches for a division"""
     from datetime import datetime
 
-    if ladder_type not in ['men', 'women']:
+    if ladder_type not in ['men', 'women', 'mixed']:
         flash("Invalid ladder type", "error")
         return redirect(url_for('admin_panel'))
 
-    division_title = "Men's Division" if ladder_type == 'men' else "Women's Division"
+    if ladder_type == 'men':
+        division_title = "Men's Division"
+    elif ladder_type == 'women':
+        division_title = "Women's Division"
+    else:
+        division_title = "Mixed Division"
 
     all_matches = LadderMatch.query.filter_by(ladder_type=ladder_type).order_by(
         LadderMatch.created_at.desc()
