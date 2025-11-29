@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 sm:p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Round {{ round_number }} Preview</h1>
+        <p class="text-gray-600 mt-1">{{ match_count }} match{{ 'es' if match_count != 1 else '' }} generated</p>
+      </div>
+      <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold text-sm">
+        📋 DRAFT - Not Yet Live
+      </div>
+    </div>
+
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">ℹ️</span>
+        <div>
+          <p class="font-semibold text-blue-900">Review the pairings below</p>
+          <p class="text-sm text-blue-800 mt-1">
+            Once you confirm, emails will be sent to all teams and the round will go live.
+            If you want different pairings, click "Discard & Regenerate" to try again.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-4 mb-8">
+      {% for item in preview_data %}
+        <div class="bg-gradient-to-r {% if item.is_bye %}from-gray-50 to-gray-100 border-gray-300{% else %}from-purple-50 to-indigo-50 border-purple-300{% endif %} rounded-lg p-4 border-2 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-3">
+                <span class="text-lg font-bold text-gray-900">
+                  {{ item.team_a.team_name if item.team_a else 'Unknown' }}
+                </span>
+                <span class="text-gray-500 font-medium">vs</span>
+                <span class="text-lg font-bold {% if item.is_bye %}text-gray-500 italic{% else %}text-gray-900{% endif %}">
+                  {% if item.is_bye %}
+                    BYE
+                  {% else %}
+                    {{ item.team_b.team_name if item.team_b else 'Unknown' }}
+                  {% endif %}
+                </span>
+              </div>
+              
+              {% if not item.is_bye %}
+                <div class="mt-2 flex gap-4 text-sm text-gray-600">
+                  <div>
+                    <span class="font-medium">{{ item.team_a.team_name }}:</span>
+                    {{ item.team_a.wins }}W-{{ item.team_a.losses }}L ({{ item.team_a.points }} pts)
+                  </div>
+                  <div>
+                    <span class="font-medium">{{ item.team_b.team_name }}:</span>
+                    {{ item.team_b.wins }}W-{{ item.team_b.losses }}L ({{ item.team_b.points }} pts)
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+            
+            {% if item.is_bye %}
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                Auto Win
+              </span>
+            {% endif %}
+          </div>
+          
+          <div class="mt-3 pt-3 border-t border-gray-200">
+            <div class="flex items-start gap-2">
+              <span class="text-purple-600 font-bold text-sm">💡 Reason:</span>
+              <span class="text-sm text-gray-700">{{ item.reason }}</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <form method="POST" action="{{ url_for('confirm_round', round_number=round_number) }}">
+        <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2">
+          <span>✅</span>
+          <span>Confirm & Send Emails</span>
+        </button>
+      </form>
+      
+      <form method="POST" action="{{ url_for('discard_round', round_number=round_number) }}" onsubmit="return confirm('Are you sure you want to discard this preview? You can regenerate the round afterwards.');">
+        <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2">
+          <span>🗑️</span>
+          <span>Discard & Regenerate</span>
+        </button>
+      </form>
+      
+      <a href="{{ url_for('admin_panel') }}" class="w-full sm:w-auto bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 text-center">
+        <span>⬅️</span>
+        <span>Back to Admin</span>
+      </a>
+    </div>
+    
+    <div class="mt-6 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+      <p class="text-sm text-yellow-800">
+        <strong>Note:</strong> This preview will remain available until you confirm or discard it. 
+        If you navigate away, you can return to this preview by generating Round {{ round_number }} again.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

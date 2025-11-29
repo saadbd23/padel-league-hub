@@ -4420,21 +4420,28 @@ def admin_logout():
 def admin_panel():
     teams = Team.query.all()
     free_agents = FreeAgent.query.filter_by(paired=False).all()
-    matches = Match.query.all()
+    # Filter out draft matches from main query - only show live matches
+    matches = Match.query.filter(
+        db.or_(Match.is_draft == False, Match.is_draft == None)
+    ).all()
     reschedules = Reschedule.query.filter_by(status="pending").all()
     substitutes = Substitute.query.filter_by(status="pending").all()
     # History (approved/denied)
     reschedules_history = Reschedule.query.filter(Reschedule.status != "pending").all()
     substitutes_history = Substitute.query.filter(Substitute.status != "pending").all()
 
+    # Check for pending draft rounds
+    pending_draft = Match.query.filter_by(is_draft=True).first()
+    pending_draft_round = pending_draft.round if pending_draft else None
+
     # Get reschedule data for dashboard
     pending_reschedules_count = len(reschedules)
     max_reschedules = get_max_reschedules_per_round()
 
-    # Calculate current and next round numbers
+    # Calculate current and next round numbers (only from live matches)
     current_round = 0
     if matches:
-        # Get the highest round number from existing matches
+        # Get the highest round number from existing live matches
         current_round = max([m.round for m in matches if m.round])
     next_round = current_round + 1
 
@@ -4745,6 +4752,7 @@ def admin_panel():
         ladder_free_agents=ladder_free_agents,
         ladder_free_agents_with_matches=ladder_free_agents_with_matches,
         tournament_data=tournament_data,
+        pending_draft_round=pending_draft_round,
     )
 
 
@@ -6575,7 +6583,7 @@ def reject_playoffs():
 @app.route("/admin/generate-round", methods=["POST"])
 @require_admin_auth
 def generate_round():
-    """Generate Swiss-format round pairings"""
+    """Generate Swiss-format round pairings as DRAFT for preview"""
     try:
         round_number = request.form.get("round_number", type=int)
         
@@ -6583,11 +6591,18 @@ def generate_round():
             flash("Invalid round number", "error")
             return redirect(url_for("admin_panel"))
         
-        # Check for existing matches in this round
-        existing_matches = Match.query.filter_by(round=round_number).first()
-        if existing_matches:
-            flash(f"Round {round_number} has already been generated", "error")
+        # Check for existing live matches in this round (not drafts)
+        existing_live_matches = Match.query.filter_by(round=round_number, is_draft=False).first()
+        if existing_live_matches:
+            flash(f"Round {round_number} has already been generated and confirmed", "error")
             return redirect(url_for("admin_panel"))
+        
+        # Check for existing draft matches - delete them to regenerate
+        existing_drafts = Match.query.filter_by(round=round_number, is_draft=True).all()
+        if existing_drafts:
+            for draft in existing_drafts:
+                db.session.delete(draft)
+            db.session.commit()
         
         # Check if settings allow generation
         settings = LeagueSettings.query.first()
@@ -6603,10 +6618,78 @@ def generate_round():
             flash("No matches generated - check team count", "error")
             return redirect(url_for("admin_panel"))
         
+        # Mark all generated matches as DRAFT
+        for match in matches:
+            match.is_draft = True
+        db.session.commit()
+        
+        # Redirect to preview page instead of sending emails
+        flash(f"📋 Round {round_number} preview generated with {len(matches)} match(es). Review and confirm below.", "info")
+        return redirect(url_for("round_preview", round_number=round_number))
+        
+    except Exception as e:
+        logging.error(f"Error generating round: {str(e)}")
+        flash(f"Error generating round: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/round-preview/<int:round_number>")
+@require_admin_auth
+def round_preview(round_number):
+    """Show preview of generated round pairings before confirmation"""
+    # Get draft matches for this round
+    draft_matches = Match.query.filter_by(round=round_number, is_draft=True).all()
+    
+    if not draft_matches:
+        flash(f"No preview found for Round {round_number}. Generate the round first.", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Build preview data with team info and pairing reasons
+    preview_data = []
+    for match in draft_matches:
+        team_a = Team.query.get(match.team_a_id)
+        team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
+        
+        # Parse pairing log for reason
+        pairing_reason = match.pairing_log if match.pairing_log else "Swiss pairing algorithm"
+        
+        preview_data.append({
+            'match': match,
+            'team_a': team_a,
+            'team_b': team_b,
+            'is_bye': team_b is None,
+            'reason': pairing_reason
+        })
+    
+    return render_template(
+        "round-preview.html",
+        round_number=round_number,
+        preview_data=preview_data,
+        match_count=len(draft_matches)
+    )
+
+
+@app.route("/admin/confirm-round/<int:round_number>", methods=["POST"])
+@require_admin_auth
+def confirm_round(round_number):
+    """Confirm round preview - make matches live and send emails"""
+    try:
+        # Get draft matches for this round
+        draft_matches = Match.query.filter_by(round=round_number, is_draft=True).all()
+        
+        if not draft_matches:
+            flash(f"No preview found for Round {round_number}", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Promote drafts to live matches
+        for match in draft_matches:
+            match.is_draft = False
+        db.session.commit()
+        
         # Send email notifications to teams
         from utils import send_email_notification
         teams_to_notify = set()
-        for match in matches:
+        for match in draft_matches:
             if match.team_a_id:
                 teams_to_notify.add(match.team_a_id)
             if match.team_b_id:
@@ -6616,7 +6699,7 @@ def generate_round():
             team = Team.query.get(team_id)
             if team and team.player1_email:
                 # Find the opponent in matches
-                team_matches = [m for m in matches if m.team_a_id == team_id or m.team_b_id == team_id]
+                team_matches = [m for m in draft_matches if m.team_a_id == team_id or m.team_b_id == team_id]
                 
                 match_details = ""
                 for match in team_matches:
@@ -6646,12 +6729,38 @@ BD Padel League Admin
                     email_body
                 )
         
-        flash(f"✅ Round {round_number} generated with {len(matches)} match(es)! Emails sent to all teams.", "success")
+        flash(f"✅ Round {round_number} confirmed with {len(draft_matches)} match(es)! Emails sent to all teams.", "success")
         return redirect(url_for("admin_panel"))
         
     except Exception as e:
-        logging.error(f"Error generating round: {str(e)}")
-        flash(f"Error generating round: {str(e)}", "error")
+        logging.error(f"Error confirming round: {str(e)}")
+        flash(f"Error confirming round: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/discard-round/<int:round_number>", methods=["POST"])
+@require_admin_auth
+def discard_round(round_number):
+    """Discard draft round preview - delete all draft matches"""
+    try:
+        # Get draft matches for this round
+        draft_matches = Match.query.filter_by(round=round_number, is_draft=True).all()
+        
+        if not draft_matches:
+            flash(f"No preview found for Round {round_number}", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Delete all draft matches
+        for match in draft_matches:
+            db.session.delete(match)
+        db.session.commit()
+        
+        flash(f"🗑️ Round {round_number} preview discarded. You can regenerate when ready.", "info")
+        return redirect(url_for("admin_panel"))
+        
+    except Exception as e:
+        logging.error(f"Error discarding round: {str(e)}")
+        flash(f"Error discarding round: {str(e)}", "error")
         return redirect(url_for("admin_panel"))
 
 
