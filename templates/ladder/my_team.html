@@ -251,7 +251,7 @@
                   <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline mt-2">
                     <input type="hidden" name="action" value="cancel_challenge">
                     <input type="hidden" name="challenge_id" value="{{ c.id }}">
-                    <button type="submit" class="px-3 py-1 bg-orange-500 text-white text-xs rounded-lg font-semibold hover:bg-orange-600 transition" onclick="return confirm('Are you sure? You can reschedule later.')">
+                    <button type="submit" class="px-3 py-1 bg-orange-500 text-red-600 text-xs rounded-lg font-semibold hover:bg-orange-600 transition" onclick="return confirm('Are you sure? You can reschedule later.')">
                       Cancel Challenge
                     </button>
                   </form>
@@ -340,7 +340,7 @@
                     <form method="POST" action="{{ url_for('ladder_my_team', token=team.access_token) }}" class="inline">
                       <input type="hidden" name="action" value="cancel_challenge">
                       <input type="hidden" name="challenge_id" value="{{ c.id }}">
-                      <button type="submit" class="px-3 py-1 bg-orange-500 text-white text-xs rounded-lg font-semibold hover:bg-orange-600 transition w-full" onclick="return confirm('Are you sure? You can reschedule later.')">
+                      <button type="submit" class="px-3 py-1 bg-orange-500 text-red-600 text-xs rounded-lg font-semibold hover:bg-orange-600 transition w-full" onclick="return confirm('Are you sure? You can reschedule later.')">
                         Cancel Challenge
                       </button>
                     </form>
