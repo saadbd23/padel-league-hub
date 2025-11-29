@@ -38,7 +38,14 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (November 28, 2025)
+## Recent Changes (November 29, 2025)
+- **Round Preview Workflow**: Implemented draft-based round generation with preview before sending emails. Generate → Preview pairings with reasons → Confirm (sends emails) or Discard (delete drafts)
+- **Match Draft System**: Added `is_draft` boolean field to Match model. Draft matches are excluded from leaderboards, round summaries, and current round calculations
+- **New Admin Endpoints**: `/admin/round-preview/<round>` (show preview), `/admin/confirm-round/<round>` (approve + send emails), `/admin/discard-round/<round>` (delete drafts)
+- **Pairing Reasoning Display**: Preview page shows why each pairing was made (standings, avoiding repeats, etc.)
+- **Admin Panel Enhancement**: Warning banner for pending draft rounds with link to preview page
+
+## Previous Changes (November 28, 2025)
 - **Added Team Status System**: Implemented 'active'/'inactive' status field to Team model for Swiss league management
 - **Updated Pairing Algorithm**: Modified `generate_round_pairings()` to exclude inactive teams from future round pairings
 - **Admin UI Enhancement**: Added Deactivate/Activate buttons in team management section (desktop & mobile views)
