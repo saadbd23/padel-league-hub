@@ -4778,6 +4778,20 @@ def admin_panel():
             'matching_teams': matching_teams
         })
 
+    # Get all walkover matches for admin override tracking
+    walkovers = Match.query.filter_by(status='walkover').order_by(Match.round.desc()).all()
+    walkover_data = []
+    for walkover in walkovers:
+        team_a = Team.query.get(walkover.team_a_id)
+        team_b = Team.query.get(walkover.team_b_id) if walkover.team_b_id else None
+        winner = Team.query.get(walkover.winner_id) if walkover.winner_id else None
+        walkover_data.append({
+            'match': walkover,
+            'team_a': team_a,
+            'team_b': team_b,
+            'winner': winner
+        })
+
     # Americano tournaments data (similar to admin_americano_tournaments route)
     tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
     tournament_data = []
@@ -4822,6 +4836,7 @@ def admin_panel():
         total_swiss=total_swiss,
         show_playoff_preview=show_playoff_preview,
         settings=settings,
+        walkover_data=walkover_data,
         current_round=current_round,
         next_round=next_round,
         men_teams_count=men_teams_count,
