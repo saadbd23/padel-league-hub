@@ -28,7 +28,7 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 ## Key Features Architecture
 
 ### Tournament Systems
-- **Swiss Format Pairing**: Automated pairing based on standings, avoiding repeat matchups. Only active teams are eligible for pairing in future rounds. Inactive teams retain their stats but don't get paired.
+- **Swiss Format Pairing**: Automated pairing based on standings, avoiding repeat matchups. Only active teams are eligible for pairing in future rounds. Inactive teams retain their stats but don't get paired. **CRITICAL: Pairing algorithm now uses IDENTICAL ranking logic to public leaderboard (Points > Sets Diff > Games Diff > Wins > Team Name) to ensure consistency.**
 - **Team Status Management**: Teams can be marked as 'active' or 'inactive' via admin panel. Inactive teams appear at bottom of leaderboard with "✗" badge (red) instead of confirmation badge.
 - **Ladder Tournament**: Challenge system allowing teams to challenge up to 3 ranks above, including holiday mode, activity monitoring, and separate divisions.
 - **Americano Tournament System**: Monthly tournaments for free agent pairing with a smart round-robin algorithm, individual scoring, and admin management.
@@ -38,18 +38,18 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (November 29, 2025)
+## Recent Changes (December 1, 2025)
+- **Fixed Pairing Algorithm Ranking**: Updated `generate_round_pairings()` to use identical ranking logic as public leaderboard: Points → Sets Diff → Games Diff → Wins → Team Name (previously used: Wins → Sets Diff → Games Diff → Team ID)
+- **Enhanced Pairing Explanations**: Improved logging to show ALL skipped candidates with reasons (e.g., "Already played in previous round") even when a match is found
+- **Walkovers Admin Section**: Added compact UI section in League admin panel showing all walkovers awarded with round, matchup details, and player names
+- **Cancel Challenge for Both Teams**: Both challenger and challenged teams can now cancel accepted challenges without penalty, with proper authorization checks
+
+## Previous Changes (November 29, 2025)
 - **Round Preview Workflow**: Implemented draft-based round generation with preview before sending emails. Generate → Preview pairings with reasons → Confirm (sends emails) or Discard (delete drafts)
 - **Match Draft System**: Added `is_draft` boolean field to Match model. Draft matches are excluded from leaderboards, round summaries, and current round calculations
 - **New Admin Endpoints**: `/admin/round-preview/<round>` (show preview), `/admin/confirm-round/<round>` (approve + send emails), `/admin/discard-round/<round>` (delete drafts)
 - **Pairing Reasoning Display**: Preview page shows why each pairing was made (standings, avoiding repeats, etc.)
 - **Admin Panel Enhancement**: Warning banner for pending draft rounds with link to preview page
-
-## Previous Changes (November 28, 2025)
-- **Added Team Status System**: Implemented 'active'/'inactive' status field to Team model for Swiss league management
-- **Updated Pairing Algorithm**: Modified `generate_round_pairings()` to exclude inactive teams from future round pairings
-- **Admin UI Enhancement**: Added Deactivate/Activate buttons in team management section (desktop & mobile views)
-- **Leaderboard Display**: Updated leaderboard to show inactive teams at bottom with "✗" badge (red) instead of confirmation status; active teams remain at top with normal confirmation badges
 
 ### UI/UX Decisions
 - **Frontend**: Tailwind CSS (CDN-based) for styling.

@@ -19,19 +19,21 @@ def normalize_team_name(name: str) -> str:
 def generate_round_pairings(round_number):
     """
     Generates Swiss-format round pairings with detailed logging:
-    - Pairs teams with similar standings (wins, then sets differential)
+    - Pairs teams with similar standings using exact leaderboard ranking logic
     - Avoids repeat matchups when possible
     - Handles odd number of teams (lowest ranked gets bye)
     - Logs all decision-making for admin transparency
     - Excludes inactive teams from pairing
+    - Uses identical ranking to team leaderboard: Status > Points > Sets Diff > Games Diff > Wins > Team Name
     """
-    # 1. Get teams sorted by standings (wins desc, then sets differential desc, then games differential desc)
-    # Filter to only active teams
+    # 1. Get teams sorted by standings (same as public leaderboard)
+    # Filter to only active teams, then rank by: Points > Sets Diff > Games Diff > Wins > Team Name
     teams = Team.query.filter_by(status='active').order_by(
-        Team.wins.desc(),
+        Team.points.desc(),
         (Team.sets_for - Team.sets_against).desc(),
         (Team.games_for - Team.games_against).desc(),
-        Team.id
+        Team.wins.desc(),
+        Team.team_name
     ).all()
 
     if len(teams) < 2:
