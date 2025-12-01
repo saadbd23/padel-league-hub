@@ -495,25 +495,42 @@
             <!-- Score Form -->
             {% if not m.verified and not ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
             <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, '{{ team.access_token }}', '{{ team.team_name }}', '{{ opp.team_name }}')">
-              <div class="space-y-2">
-                <div class="grid grid-cols-3 gap-2 items-center">
-                  <label class="text-xs font-semibold text-gray-700">Set 1 *</label>
-                  <input type="text" name="set1" required placeholder="6-4"
-                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
-                </div>
-                <div class="grid grid-cols-3 gap-2 items-center">
-                  <label class="text-xs font-semibold text-gray-700">Set 2 *</label>
-                  <input type="text" name="set2" required placeholder="6-3"
-                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
-                </div>
-                <div class="grid grid-cols-3 gap-2 items-center">
-                  <label class="text-xs font-semibold text-gray-700">Set 3</label>
-                  <input type="text" name="set3" placeholder="10-8 (if played)"
-                         class="col-span-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm">
-                </div>
+              <!-- Header Row -->
+              <div class="grid grid-cols-3 gap-2 items-center mb-2">
+                <div class="text-xs font-bold text-gray-700">Set</div>
+                <div class="text-xs font-bold text-gray-700 text-center">{{ team.team_name }}</div>
+                <div class="text-xs font-bold text-gray-700 text-center">{{ opp.team_name }}</div>
               </div>
+
+              <!-- Set 1 Row -->
+              <div class="grid grid-cols-3 gap-2 items-center">
+                <label class="text-xs font-semibold text-gray-700">Set 1 *</label>
+                <input type="number" name="set1_team" required min="0" max="99" placeholder="6"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                <input type="number" name="set1_opp" required min="0" max="99" placeholder="4"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+              </div>
+
+              <!-- Set 2 Row -->
+              <div class="grid grid-cols-3 gap-2 items-center">
+                <label class="text-xs font-semibold text-gray-700">Set 2 *</label>
+                <input type="number" name="set2_team" required min="0" max="99" placeholder="6"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                <input type="number" name="set2_opp" required min="0" max="99" placeholder="3"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+              </div>
+
+              <!-- Set 3 Row -->
+              <div class="grid grid-cols-3 gap-2 items-center">
+                <label class="text-xs font-semibold text-gray-700">Set 3</label>
+                <input type="number" name="set3_team" min="0" max="99" placeholder="10"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                <input type="number" name="set3_opp" min="0" max="99" placeholder="8"
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+              </div>
+
               <div class="text-xs text-gray-600 bg-white p-2 rounded">
-                <strong>Format:</strong> Enter scores from YOUR team's perspective (e.g., "6-4" means you won 6-4)
+                <strong>Note:</strong> Enter just the numbers. Set 3 is optional (only if played).
               </div>
               <button type="submit"
                       class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
@@ -805,16 +822,25 @@ function previewScore(event, matchId, token, myTeamName, oppTeamName) {
   
   const form = event.target;
   const formData = new FormData(form);
-  const set1 = formData.get('set1').trim();
-  const set2 = formData.get('set2').trim();
-  const set3 = formData.get('set3').trim();
   
-  if (!set1 || !set2) {
-    alert('Please enter at least Set 1 and Set 2');
+  // Get individual set scores
+  const set1Team = formData.get('set1_team');
+  const set1Opp = formData.get('set1_opp');
+  const set2Team = formData.get('set2_team');
+  const set2Opp = formData.get('set2_opp');
+  const set3Team = formData.get('set3_team');
+  const set3Opp = formData.get('set3_opp');
+  
+  if (!set1Team || !set1Opp || !set2Team || !set2Opp) {
+    alert('Please enter scores for Set 1 and Set 2');
     return;
   }
   
-  // Build score string
+  // Build score string in format "6-4, 6-3" or "6-4, 6-3, 10-8"
+  const set1 = `${set1Team}-${set1Opp}`;
+  const set2 = `${set2Team}-${set2Opp}`;
+  const set3 = (set3Team && set3Opp) ? `${set3Team}-${set3Opp}` : '';
+  
   const scoreString = set3 ? `${set1}, ${set2}, ${set3}` : `${set1}, ${set2}`;
   const winner = calculateWinner(scoreString, myTeamName, oppTeamName);
   
@@ -850,7 +876,13 @@ function previewScore(event, matchId, token, myTeamName, oppTeamName) {
     set1: set1,
     set2: set2,
     set3: set3,
-    token: token
+    token: token,
+    set1_team: set1Team,
+    set1_opp: set1Opp,
+    set2_team: set2Team,
+    set2_opp: set2Opp,
+    set3_team: set3Team,
+    set3_opp: set3Opp
   };
   
   // Show modal
