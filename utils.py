@@ -99,6 +99,13 @@ def generate_round_pairings(round_number):
             matchup = (min(team.id, candidate.id), max(team.id, candidate.id))
             if matchup not in already_played:
                 opponent = candidate
+                
+                # Log all skipped candidates before showing the match
+                if skipped_candidates:
+                    log_lines.append(f"  Skipped candidates:")
+                    for skip_msg in skipped_candidates:
+                        log_lines.append(skip_msg)
+                
                 log_lines.append(
                     f"  ✅ Matched with #{candidate_rank} {candidate.team_name} ({candidate_record}, {candidate.points} pts)"
                 )
@@ -109,7 +116,7 @@ def generate_round_pairings(round_number):
                     f"  ⚠️  #{candidate_rank} {candidate.team_name} - Already played in previous round"
                 )
 
-        # Log skipped candidates
+        # Log skipped candidates if no opponent found
         if skipped_candidates and not opponent:
             log_lines.append(f"  Candidates considered:")
             for skip_msg in skipped_candidates:
