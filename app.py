@@ -4708,9 +4708,10 @@ def admin_panel():
             score_confirmed_status = "confirmed"
         # Check if score has been submitted (by either team or finalized)
         elif match.score_a and match.score_b:
-            # Score is finalized - show only one set
+            # Score is finalized - both teams have scores recorded
             score = f"{match.score_a}"
-            score_confirmed_status = "confirmed" if match.verified else "awaiting"
+            # If both scores exist, it's confirmed (either via normal flow or admin entry)
+            score_confirmed_status = "confirmed"
         elif match.score_submission_a or match.score_submission_b:
             # At least one team has submitted a score
             submitted_score = match.score_submission_a if match.score_submission_a else match.score_submission_b
@@ -4719,7 +4720,7 @@ def admin_panel():
         elif match.status == "completed":
             # Match is completed but no score details
             score = "Completed"
-            score_confirmed_status = "confirmed" if match.verified else "awaiting"
+            score_confirmed_status = "confirmed"
         
         # Determine which team needs to confirm booking
         booking_pending_team = None
