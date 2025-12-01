@@ -494,7 +494,7 @@
 
             <!-- Score Form -->
             {% if not m.verified and not ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
-            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="submitScore(event, {{ m.id }}, '{{ team.access_token }}')">
+            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, '{{ team.access_token }}', '{{ team.team_name }}', '{{ opp.team_name }}')">
               <div class="space-y-2">
                 <div class="grid grid-cols-3 gap-2 items-center">
                   <label class="text-xs font-semibold text-gray-700">Set 1 *</label>
@@ -517,10 +517,40 @@
               </div>
               <button type="submit"
                       class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-                Submit Score
+                Review & Submit Score
               </button>
               <div id="score-message-{{ m.id }}" class="text-sm"></div>
             </form>
+            
+            <!-- Score Preview Modal (hidden by default) -->
+            <div id="score-preview-modal-{{ m.id }}" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+                <h3 class="text-xl font-bold text-gray-900">📋 Confirm Your Score</h3>
+                
+                <div class="space-y-3">
+                  <div id="score-preview-content-{{ m.id }}" class="space-y-3">
+                    <!-- Will be populated by JavaScript -->
+                  </div>
+                </div>
+                
+                <div class="p-3 bg-blue-50 rounded border border-blue-200">
+                  <p class="text-xs text-blue-800">
+                    <strong>💡 Tip:</strong> Double-check before confirming. Your opponent will see this score.
+                  </p>
+                </div>
+                
+                <div class="flex gap-3">
+                  <button type="button" onclick="editScore({{ m.id }})"
+                          class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold text-sm transition-colors">
+                    ✏️ Edit Score
+                  </button>
+                  <button type="button" onclick="confirmAndSubmitScore({{ m.id }}, '{{ team.access_token }}')"
+                          class="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold text-sm transition-all">
+                    ✓ Confirm & Submit
+                  </button>
+                </div>
+              </div>
+            </div>
             {% endif %}
           </div>
 
@@ -749,6 +779,168 @@ function submitBooking(event, matchId, token) {
     button.disabled = false;
     button.textContent = 'Submit Booking';
   });
+}
+
+// Calculate winner from score string (e.g., "6-4, 6-3" or "6-4, 3-6, 10-8")
+function calculateWinner(scoreString, myTeamName, oppTeamName) {
+  try {
+    const sets = scoreString.split(',').map(s => s.trim());
+    let myWins = 0;
+    
+    for (let set of sets) {
+      const [myScore, oppScore] = set.split('-').map(Number);
+      if (myScore > oppScore) myWins++;
+    }
+    
+    // Winner is whoever won more sets
+    return myWins > sets.length / 2 ? myTeamName : oppTeamName;
+  } catch (e) {
+    return 'Unknown';
+  }
+}
+
+// Preview score before submission - show confirmation modal
+function previewScore(event, matchId, token, myTeamName, oppTeamName) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  const set1 = formData.get('set1').trim();
+  const set2 = formData.get('set2').trim();
+  const set3 = formData.get('set3').trim();
+  
+  if (!set1 || !set2) {
+    alert('Please enter at least Set 1 and Set 2');
+    return;
+  }
+  
+  // Build score string
+  const scoreString = set3 ? `${set1}, ${set2}, ${set3}` : `${set1}, ${set2}`;
+  const winner = calculateWinner(scoreString, myTeamName, oppTeamName);
+  
+  // Show preview content
+  const previewContent = document.getElementById(`score-preview-content-${matchId}`);
+  previewContent.innerHTML = `
+    <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+      <div class="flex justify-between items-center pb-2 border-b">
+        <div>
+          <div class="text-xs text-gray-600">Your Team</div>
+          <div class="font-bold text-gray-900">${myTeamName}</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xs text-gray-600 mb-1">Score</div>
+          <div class="font-bold text-lg text-green-600">${scoreString}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-gray-600">Opponent</div>
+          <div class="font-bold text-gray-900">${oppTeamName}</div>
+        </div>
+      </div>
+      
+      <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+        <div class="text-xs text-gray-600 mb-1">🏆 Winner</div>
+        <div class="font-bold text-green-700 text-lg">${winner}</div>
+      </div>
+    </div>
+  `;
+  
+  // Store score data for confirmation
+  window.pendingScore = {
+    matchId: matchId,
+    set1: set1,
+    set2: set2,
+    set3: set3,
+    token: token
+  };
+  
+  // Show modal
+  document.getElementById(`score-preview-modal-${matchId}`).classList.remove('hidden');
+}
+
+// Edit score - hide modal and go back to form
+function editScore(matchId) {
+  document.getElementById(`score-preview-modal-${matchId}`).classList.add('hidden');
+}
+
+// Confirm and submit score
+function confirmAndSubmitScore(matchId, token) {
+  if (!window.pendingScore || window.pendingScore.matchId !== matchId) {
+    alert('Error: Score data not found');
+    return;
+  }
+  
+  const form = document.getElementById(`score-form-${matchId}`);
+  const button = form.querySelector('button[type="submit"]');
+  const messageDiv = document.getElementById(`score-message-${matchId}`);
+  const statusDiv = document.getElementById(`score-status-${matchId}`);
+  
+  const data = {
+    match_id: matchId,
+    set1: window.pendingScore.set1,
+    set2: window.pendingScore.set2,
+    set3: window.pendingScore.set3
+  };
+  
+  // Hide modal
+  document.getElementById(`score-preview-modal-${matchId}`).classList.add('hidden');
+  
+  // Disable button
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+  messageDiv.innerHTML = '';
+  
+  // Submit via AJAX
+  fetch(`/submit-score/${token}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      
+      if (result.verified) {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <div class="text-sm font-semibold text-green-800">✓ Verified - ${result.winner}</div>
+                <div class="text-sm text-green-700 mt-1">Score: ${result.score}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        form.style.display = 'none';
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        statusDiv.innerHTML = `
+          <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
+            <div class="text-sm font-semibold text-yellow-800">⏳ Your score submitted</div>
+            <div class="text-sm text-yellow-700 mt-1">Waiting for opponent to confirm: ${result.your_score}</div>
+          </div>
+        `;
+        form.style.display = 'none';
+      }
+    } else {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      button.disabled = false;
+      button.textContent = 'Review & Submit Score';
+    }
+  })
+  .catch(error => {
+    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    button.disabled = false;
+    button.textContent = 'Review & Submit Score';
+  });
+  
+  // Clean up
+  window.pendingScore = null;
 }
 
 // Score submission with AJAX
