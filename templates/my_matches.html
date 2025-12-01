@@ -75,20 +75,28 @@
 
         <!-- Match Header -->
         <div class="bg-gradient-to-r 
-                    {% if m.status == 'scheduled' %}from-blue-500 to-blue-600
+                    {% if detail.is_rescheduled %}from-orange-500 to-orange-600
+                    {% elif m.status == 'scheduled' %}from-blue-500 to-blue-600
                     {% elif m.status == 'completed' %}from-green-500 to-green-600
                     {% elif m.status == 'bye' %}from-gray-500 to-gray-600
                     {% else %}from-yellow-500 to-yellow-600{% endif %}
                     text-white px-6 py-4">
           <div class="flex items-center justify-between">
             <div>
-              <span class="text-sm font-semibold opacity-90">
-                Round {{ m.round }}
-                {% if m.round and m.round_dates %}
-                  <span class="text-xs opacity-75">({{ m.round_dates }})</span>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm font-semibold opacity-90">
+                  Round {{ m.round }}
+                  {% if m.round and m.round_dates %}
+                    <span class="text-xs opacity-75">({{ m.round_dates }})</span>
+                  {% endif %}
+                </span>
+                {% if detail.is_rescheduled %}
+                <span class="inline-block px-2 py-1 bg-white/30 rounded-full text-xs font-bold border border-white/50">
+                  🔄 RESCHEDULED
+                </span>
                 {% endif %}
-              </span>
-              <h3 class="text-xl font-bold mt-1">
+              </div>
+              <h3 class="text-xl font-bold">
                 {% if m.status == 'bye' %}
                   Bye Round
                 {% else %}
@@ -102,7 +110,9 @@
                            {% elif m.status == 'completed' %}{% if m.winner_id == team.id %}bg-green-500{% else %}bg-red-500{% endif %}
                            {% elif m.status == 'bye' %}bg-white/20
                            {% else %}bg-white/25{% endif %}">
-                {% if m.status == 'completed' %}
+                {% if detail.is_rescheduled %}
+                  RESCHEDULED
+                {% elif m.status == 'completed' %}
                   {% if m.winner_id == team.id %}WIN{% else %}LOSS{% endif %}
                 {% else %}
                   {{ m.status|upper }}

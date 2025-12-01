@@ -3420,17 +3420,34 @@ def my_matches(token):
 
         # Add round date range
         match.round_dates = get_round_date_range(match.round)
+        
+        # Check if match has been rescheduled
+        is_rescheduled = Reschedule.query.filter_by(match_id=match.id).first() is not None
 
         match_details.append({
             'match': match,
             'opponent': opponent,
-            'is_team_a': match.team_a_id == team.id
+            'is_team_a': match.team_a_id == team.id,
+            'is_rescheduled': is_rescheduled
         })
+
+    # Sort: rescheduled matches first (by round ascending), then all matches by round descending
+    rescheduled = [m for m in match_details if m['is_rescheduled']]
+    active = [m for m in match_details if not m['is_rescheduled']]
+    
+    # Sort rescheduled by round (oldest first, ascending)
+    rescheduled.sort(key=lambda x: x['match'].round if x['match'].round else 999)
+    
+    # Sort active by round (newest first, descending)
+    active.sort(key=lambda x: x['match'].round if x['match'].round else 0, reverse=True)
+    
+    # Rescheduled matches appear first
+    sorted_match_details = rescheduled + active
 
     return render_template(
         "my_matches.html",
         team=team,
-        match_details=match_details
+        match_details=sorted_match_details
     )
 
 @app.route("/submit-booking/<token>", methods=["POST"])
