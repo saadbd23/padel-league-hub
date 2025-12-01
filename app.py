@@ -6820,7 +6820,7 @@ def confirm_round(round_number):
         
         for team_id in teams_to_notify:
             team = Team.query.get(team_id)
-            if team and team.player1_email:
+            if team and (team.player1_email or team.player2_email):
                 # Find the opponent in matches
                 team_matches = [m for m in draft_matches if m.team_a_id == team_id or m.team_b_id == team_id]
                 
@@ -6833,6 +6833,10 @@ def confirm_round(round_number):
                     else:
                         match_details += "BYE (automatic win)\n"
                 
+                # Get base URL for link
+                base_url = os.environ.get('APP_BASE_URL', 'https://goeclectic.xyz')
+                matches_link = f"{base_url}/my-matches/{team.access_token}"
+                
                 email_body = f"""
 Hello {team.team_name},
 
@@ -6842,15 +6846,27 @@ Round {round_number} has been generated! Here are your matchups:
 
 Deadline: Submit your match result by Sunday 23:59
 
+View your matches and manage bookings here: {matches_link}
+
 Best of luck!
 
 BD Padel League Admin
 """
-                send_email_notification(
-                    team.player1_email,
-                    f"Round {round_number} Generated - Your Matchups",
-                    email_body
-                )
+                # Send to player 1
+                if team.player1_email:
+                    send_email_notification(
+                        team.player1_email,
+                        f"Round {round_number} Generated - Your Matchups",
+                        email_body
+                    )
+                
+                # Send to player 2 if different from player 1
+                if team.player2_email and team.player2_email != team.player1_email:
+                    send_email_notification(
+                        team.player2_email,
+                        f"Round {round_number} Generated - Your Matchups",
+                        email_body
+                    )
         
         flash(f"✅ Round {round_number} confirmed with {len(draft_matches)} match(es)! Emails sent to all teams.", "success")
         return redirect(url_for("admin_panel"))
