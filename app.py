@@ -5018,6 +5018,233 @@ def admin_ladder_challenges(ladder_type):
     )
 
 
+@app.route("/admin/ladder/challenge/force-accept/<int:challenge_id>", methods=["POST"])
+@require_admin_auth
+def admin_force_accept_challenge(challenge_id):
+    """Admin force accepts a pending challenge"""
+    from utils import send_email_notification
+    
+    challenge = LadderChallenge.query.get(challenge_id)
+    if not challenge:
+        flash("Challenge not found", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    if challenge.status != 'pending_acceptance':
+        flash("Challenge is not pending acceptance", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+    challenged_team = LadderTeam.query.get(challenge.challenged_team_id)
+    
+    # Accept the challenge
+    challenge.status = 'accepted'
+    challenger_team.is_locked = True
+    challenged_team.is_locked = True
+    db.session.commit()
+    
+    # Create match if not exists
+    existing_match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
+    if not existing_match:
+        match = LadderMatch(
+            challenge_id=challenge.id,
+            team_a_id=challenger_team.id,
+            team_b_id=challenged_team.id,
+            ladder_type=challenge.ladder_type,
+            status='pending'
+        )
+        db.session.add(match)
+        db.session.commit()
+    
+    # Send notifications
+    challenger_message = f"""Challenge Accepted (Admin Force)
+
+Your challenge against {challenged_team.team_name} has been accepted by admin.
+
+Challenge Details:
+- Opponent: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+- Complete by: {challenge.completion_deadline.strftime('%b %d, %Y') if challenge.completion_deadline else 'N/A'}
+
+Both teams are now locked and must complete the match by the deadline.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    challenged_message = f"""Challenge Accepted (Admin Force)
+
+{challenger_team.team_name} has been accepted to challenge you (admin force).
+
+Challenge Details:
+- Challenger: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+- Complete by: {challenge.completion_deadline.strftime('%b %d, %Y') if challenge.completion_deadline else 'N/A'}
+
+Both teams are now locked and must complete the match by the deadline.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    if challenger_team.contact_preference_email:
+        if challenger_team.player1_email:
+            send_email_notification(challenger_team.player1_email, "Challenge Accepted", challenger_message)
+        if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+            send_email_notification(challenger_team.player2_email, "Challenge Accepted", challenger_message)
+    
+    if challenged_team.contact_preference_email:
+        if challenged_team.player1_email:
+            send_email_notification(challenged_team.player1_email, "Challenge Received", challenged_message)
+        if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+            send_email_notification(challenged_team.player2_email, "Challenge Received", challenged_message)
+    
+    flash("Challenge accepted successfully. Both teams are now locked.", "success")
+    return redirect(request.referrer or url_for('admin_panel'))
+
+
+@app.route("/admin/ladder/challenge/force-reject/<int:challenge_id>", methods=["POST"])
+@require_admin_auth
+def admin_force_reject_challenge(challenge_id):
+    """Admin force rejects a pending challenge"""
+    from utils import send_email_notification
+    
+    challenge = LadderChallenge.query.get(challenge_id)
+    if not challenge:
+        flash("Challenge not found", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    if challenge.status != 'pending_acceptance':
+        flash("Challenge is not pending acceptance", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+    challenged_team = LadderTeam.query.get(challenge.challenged_team_id)
+    
+    # Reject the challenge
+    challenge.status = 'rejected'
+    challenged_team.is_locked = False
+    db.session.commit()
+    
+    # Send notifications
+    challenger_message = f"""Challenge Rejected (Admin Force)
+
+Your challenge against {challenged_team.team_name} has been rejected by admin.
+
+Challenge Details:
+- Challenged Team: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+
+You are now unlocked and can send new challenges.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    challenged_message = f"""Challenge Rejected (Admin Force)
+
+Your challenge from {challenger_team.team_name} has been rejected by admin.
+
+Challenge Details:
+- Challenger: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+
+You are now unlocked and available for new challenges.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    if challenger_team.contact_preference_email:
+        if challenger_team.player1_email:
+            send_email_notification(challenger_team.player1_email, "Challenge Rejected", challenger_message)
+        if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+            send_email_notification(challenger_team.player2_email, "Challenge Rejected", challenger_message)
+    
+    if challenged_team.contact_preference_email:
+        if challenged_team.player1_email:
+            send_email_notification(challenged_team.player1_email, "Challenge Rejected", challenged_message)
+        if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+            send_email_notification(challenged_team.player2_email, "Challenge Rejected", challenged_message)
+    
+    flash("Challenge rejected successfully. Teams are now unlocked.", "success")
+    return redirect(request.referrer or url_for('admin_panel'))
+
+
+@app.route("/admin/ladder/challenge/cancel/<int:challenge_id>", methods=["POST"])
+@require_admin_auth
+def admin_cancel_challenge(challenge_id):
+    """Admin cancels a challenge (pending or accepted)"""
+    from utils import send_email_notification
+    
+    challenge = LadderChallenge.query.get(challenge_id)
+    if not challenge:
+        flash("Challenge not found", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    if challenge.status not in ['pending_acceptance', 'accepted']:
+        flash("Can only cancel pending or accepted challenges", "error")
+        return redirect(request.referrer or url_for('admin_panel'))
+    
+    challenger_team = LadderTeam.query.get(challenge.challenger_team_id)
+    challenged_team = LadderTeam.query.get(challenge.challenged_team_id)
+    
+    # Cancel the challenge
+    challenge.status = 'cancelled'
+    challenger_team.is_locked = False
+    challenged_team.is_locked = False
+    db.session.commit()
+    
+    # Delete match if exists and no scores submitted
+    match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
+    if match and not match.team_a_submitted and not match.team_b_submitted:
+        db.session.delete(match)
+        db.session.commit()
+    
+    # Send notifications
+    challenger_message = f"""Challenge Cancelled (Admin)
+
+Your challenge against {challenged_team.team_name} has been cancelled by admin.
+
+Challenge Details:
+- Challenged Team: {challenged_team.team_name} ({challenged_team.player1_name} & {challenged_team.player2_name})
+- Their Rank: #{challenged_team.current_rank}
+
+Both teams are now unlocked.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    challenged_message = f"""Challenge Cancelled (Admin)
+
+The challenge from {challenger_team.team_name} has been cancelled by admin.
+
+Challenge Details:
+- Challenger: {challenger_team.team_name} ({challenger_team.player1_name} & {challenger_team.player2_name})
+- Their Rank: #{challenger_team.current_rank}
+
+Both teams are now unlocked.
+
+Regards,
+BD Padel Ladder Team
+"""
+    
+    if challenger_team.contact_preference_email:
+        if challenger_team.player1_email:
+            send_email_notification(challenger_team.player1_email, "Challenge Cancelled", challenger_message)
+        if challenger_team.player2_email and challenger_team.player2_email != challenger_team.player1_email:
+            send_email_notification(challenger_team.player2_email, "Challenge Cancelled", challenger_message)
+    
+    if challenged_team.contact_preference_email:
+        if challenged_team.player1_email:
+            send_email_notification(challenged_team.player1_email, "Challenge Cancelled", challenged_message)
+        if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
+            send_email_notification(challenged_team.player2_email, "Challenge Cancelled", challenged_message)
+    
+    flash("Challenge cancelled successfully. Both teams are now unlocked.", "success")
+    return redirect(request.referrer or url_for('admin_panel'))
+
+
 @app.route("/admin/ladder/matches/<ladder_type>")
 @require_admin_auth
 def admin_ladder_matches(ladder_type):
