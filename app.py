@@ -2555,8 +2555,8 @@ BD Padel Ladder Team
                 flash("Challenge not found", "error")
                 return redirect(url_for('ladder_my_team', token=token))
 
-            if challenge.status != 'accepted':
-                flash("Only accepted challenges can be cancelled", "error")
+            if challenge.status not in ['accepted', 'pending_acceptance']:
+                flash("Only pending or accepted challenges can be cancelled", "error")
                 return redirect(url_for('ladder_my_team', token=token))
 
             # Verify the requesting team is either the challenger or challenged team
