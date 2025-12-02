@@ -38,7 +38,12 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (December 1, 2025)
+## Recent Changes (December 2, 2025)
+- **League Score Entry UI Improvement**: Changed score submission form from text input (e.g., "6-4") to separate number boxes for each team per set. Clear headers show team names. Format: Team A vs Team B scores for Set 1, Set 2, Set 3 (optional).
+- **Score Preview & Confirmation Popup**: Teams now see a preview modal showing the exact scores they entered and the calculated winner before final submission. Options to Edit or Confirm.
+- **Cancel Pending Challenges**: Challengers can now cancel (withdraw) their pending challenges from the "Challenges Sent" section. Challenged teams receive notification and become unlocked.
+
+## Previous Changes (December 1, 2025)
 - **Fixed Pairing Algorithm Ranking**: Updated `generate_round_pairings()` to use identical ranking logic as public leaderboard: Points → Sets Diff → Games Diff → Wins → Team Name (previously used: Wins → Sets Diff → Games Diff → Team ID)
 - **Enhanced Pairing Explanations**: Improved logging to show ALL skipped candidates with reasons (e.g., "Already played in previous round") even when a match is found
 - **Walkovers Admin Section**: Added compact UI section in League admin panel showing all walkovers awarded with round, matchup details, and player names
