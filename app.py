@@ -3028,8 +3028,17 @@ BD Padel Ladder System
                     'is_holiday': potential_team.holiday_mode_active
                 })
 
+    # Calculate display rank (sequential position in ladder for this team's type/gender)
+    all_teams_in_ladder = LadderTeam.query.filter_by(
+        ladder_type=team.ladder_type,
+        gender=team.gender
+    ).order_by(LadderTeam.current_rank.asc()).all()
+    
+    team_display_rank = next((idx + 1 for idx, t in enumerate(all_teams_in_ladder) if t.id == team.id), None)
+    
     return render_template("ladder/my_team.html",
                          team=team,
+                         team_display_rank=team_display_rank,
                          challenges_sent=challenge_details_sent,
                          challenges_received=challenge_details_received,
                          pending_matches=pending_matches,

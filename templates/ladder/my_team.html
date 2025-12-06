@@ -97,10 +97,10 @@
           <div class="text-center">
             <div class="text-sm text-gray-600 mb-1">Current Rank</div>
             <div class="text-4xl font-bold">
-              {% if team.current_rank == 1 %}🥇
-              {% elif team.current_rank == 2 %}🥈
-              {% elif team.current_rank == 3 %}🥉
-              {% else %}<span class="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">#{{ team.current_rank }}</span>{% endif %}
+              {% if team_display_rank == 1 %}🥇
+              {% elif team_display_rank == 2 %}🥈
+              {% elif team_display_rank == 3 %}🥉
+              {% else %}<span class="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">#{{ team_display_rank }}</span>{% endif %}
             </div>
           </div>
           <div class="text-center">
