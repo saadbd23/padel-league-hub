@@ -3564,6 +3564,7 @@ def submit_booking(token):
                 if match.booking_confirmed:
                     # Reset confirmation and store new proposal
                     match.booking_confirmed = False
+                    match.booking_requested_by = team.id
                     formatted_datetime = match_datetime.strftime("%A, %B %d at %I:%M %p")
                     match.booking_details = f"{formatted_datetime}\nCourt assigned on arrival\nWaiting for {opponent.team_name} to confirm..."
                     match.match_datetime = match_datetime
@@ -3600,6 +3601,7 @@ Please log in to confirm or propose a different time:
         # Store this team's booking (waiting for opponent confirmation)
         formatted_datetime = match_datetime.strftime("%A, %B %d at %I:%M %p")
         match.booking_details = f"{formatted_datetime}\nCourt assigned on arrival\nWaiting for {opponent.team_name} to confirm..."
+        match.booking_requested_by = team.id
         match.match_datetime = match_datetime  # Store for potential confirmation
         db.session.commit()
 
