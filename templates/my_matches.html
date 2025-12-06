@@ -287,7 +287,7 @@
                 </div>
                 <div class="flex gap-2 mt-3">
                   <button type="submit"
-                          class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                          class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
                     Submit New Booking
                   </button>
                   <button type="button" onclick="toggleChangeBooking({{ m.id }})"
@@ -356,7 +356,7 @@
                     </div>
                     <div class="flex gap-2 mt-3">
                       <button type="submit"
-                              class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                              class="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
                         Submit New Proposal
                       </button>
                       <button type="button" onclick="toggleBookingForm({{ m.id }})"
@@ -395,7 +395,7 @@
                   <strong>Court:</strong> Assigned on arrival
                 </div>
                 <button type="submit"
-                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg font-semibold text-sm shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
                   Submit Booking
                 </button>
               </form>
@@ -749,8 +749,15 @@ function submitBooking(event, matchId, token) {
     },
     body: JSON.stringify(data)
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
   .then(result => {
+    button.disabled = false;
+    
     if (result.success) {
       // Show success message
       messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
@@ -782,16 +789,17 @@ function submitBooking(event, matchId, token) {
 
       // Reset form if not confirmed (allow re-submission with different time)
       if (!result.confirmed) {
-        button.disabled = false;
         button.textContent = 'Submit Booking';
       }
     } else {
       messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
-      button.disabled = false;
       button.textContent = 'Submit Booking';
     }
   })
   .catch(error => {
+    button.disabled = false;
+    button.textContent = 'Submit Booking';
+    console.error('Booking error:', error);
     messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
     button.disabled = false;
     button.textContent = 'Submit Booking';
