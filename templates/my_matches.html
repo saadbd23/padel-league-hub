@@ -296,6 +296,7 @@
                   </button>
                 </div>
               </form>
+              <div id="booking-message-{{ m.id }}" class="text-sm"></div>
             </div>
             {% endif %}
 
@@ -739,7 +740,9 @@ function submitBooking(event, matchId, token) {
   // Disable button
   button.disabled = true;
   button.textContent = 'Submitting...';
-  messageDiv.innerHTML = '';
+  if (messageDiv) {
+    messageDiv.innerHTML = '';
+  }
 
   // Submit via AJAX
   fetch(`/submit-booking/${token}`, {
@@ -760,7 +763,9 @@ function submitBooking(event, matchId, token) {
     
     if (result.success) {
       // Show success message
-      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      }
 
       // Update status display
       if (result.confirmed) {
@@ -792,7 +797,9 @@ function submitBooking(event, matchId, token) {
         button.textContent = 'Submit Booking';
       }
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
       button.textContent = 'Submit Booking';
     }
   })
@@ -800,7 +807,9 @@ function submitBooking(event, matchId, token) {
     button.disabled = false;
     button.textContent = 'Submit Booking';
     console.error('Booking error:', error);
-    messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    if (messageDiv) {
+      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">Error: ${error.message}</div>`;
+    }
     button.disabled = false;
     button.textContent = 'Submit Booking';
   });
@@ -927,7 +936,9 @@ function confirmAndSubmitScore(matchId, token) {
   // Disable button
   button.disabled = true;
   button.textContent = 'Submitting...';
-  messageDiv.innerHTML = '';
+  if (messageDiv) {
+    messageDiv.innerHTML = '';
+  }
   
   // Submit via AJAX
   fetch(`/submit-score/${token}`, {
@@ -968,7 +979,9 @@ function confirmAndSubmitScore(matchId, token) {
         form.style.display = 'none';
       }
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
       button.disabled = false;
       button.textContent = 'Review & Submit Score';
     }
@@ -1004,7 +1017,9 @@ function submitScore(event, matchId, token) {
   // Disable button
   button.disabled = true;
   button.textContent = 'Submitting...';
-  messageDiv.innerHTML = '';
+  if (messageDiv) {
+    messageDiv.innerHTML = '';
+  }
 
   // Submit via AJAX
   fetch(`/submit-score/${token}`, {
@@ -1018,7 +1033,9 @@ function submitScore(event, matchId, token) {
   .then(result => {
     if (result.success) {
       // Show success message
-      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      }
 
       // Update status display
       if (result.verified) {
@@ -1049,7 +1066,9 @@ function submitScore(event, matchId, token) {
         form.style.display = 'none';
       }
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
       button.disabled = false;
       button.textContent = 'Submit Score';
     }
@@ -1125,7 +1144,9 @@ function submitReschedule(event, matchId, token) {
   // Disable button
   button.disabled = true;
   button.textContent = 'Submitting...';
-  messageDiv.innerHTML = '';
+  if (messageDiv) {
+    messageDiv.innerHTML = '';
+  }
 
   // Submit via AJAX
   fetch(`/submit-reschedule/${token}`, {
@@ -1143,7 +1164,9 @@ function submitReschedule(event, matchId, token) {
       button.disabled = false;
       button.textContent = 'Submit Reschedule Request';
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
       button.disabled = false;
       button.textContent = 'Submit Reschedule Request';
     }
@@ -1212,7 +1235,9 @@ function submitSubstitute(event, matchId, token) {
   // Disable button
   button.disabled = true;
   button.textContent = 'Submitting...';
-  messageDiv.innerHTML = '';
+  if (messageDiv) {
+    messageDiv.innerHTML = '';
+  }
 
   // Submit via AJAX
   fetch(`/submit-substitute/${token}`, {
@@ -1230,7 +1255,9 @@ function submitSubstitute(event, matchId, token) {
       button.disabled = false;
       button.textContent = 'Submit Substitute Request';
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
       button.disabled = false;
       button.textContent = 'Submit Substitute Request';
     }
@@ -1262,7 +1289,9 @@ function confirmBooking(matchId, token) {
   .then(result => {
     if (result.success) {
       // Show success message
-      messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-green-100 text-green-800 rounded border-l-4 border-green-500">${result.message}</div>`;
+      }
 
       // Update status display
       statusDiv.innerHTML = `
@@ -1284,7 +1313,9 @@ function confirmBooking(matchId, token) {
       bookingSection.style.display = 'none';
 
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
     }
   })
   .catch(error => {
@@ -1396,7 +1427,9 @@ function confirmScore(matchId, token, action) {
       }
 
     } else {
-      messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      if (messageDiv) {
+        messageDiv.innerHTML = `<div class="p-3 bg-red-100 text-red-800 rounded border-l-4 border-red-500">${result.message}</div>`;
+      }
     }
   })
   .catch(error => {
