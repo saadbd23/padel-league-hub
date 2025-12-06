@@ -24,7 +24,7 @@
           {{ logged_in_team.team_name }}
         </p>
         <p class="text-sm text-gray-600">
-          Current Rank: #{{ logged_in_team.current_rank }}
+          Current Rank: #{{ logged_in_team.display_rank if logged_in_team.display_rank else logged_in_team.current_rank }}
           {% if logged_in_team.id in locked_team_ids %}
             <span class="ml-2 text-orange-600 font-semibold">🔒 In Active Challenge</span>
           {% elif logged_in_team.holiday_mode_active %}
@@ -111,7 +111,7 @@
                 {% elif loop.index == 3 %}
                   <span class="text-2xl">🥉</span>
                 {% else %}
-                  <span class="text-base font-bold text-gray-600">{{ t.current_rank }}</span>
+                  <span class="text-base font-bold text-gray-600">{{ t.display_rank }}</span>
                 {% endif %}
               </div>
             </td>
@@ -170,7 +170,7 @@
             </td>
             {% if logged_in_team %}
             <td class="px-4 py-4 text-center">
-              {% set rank_diff = logged_in_team.current_rank - t.current_rank %}
+              {% set rank_diff = logged_in_team.display_rank - t.display_rank %}
               {% set can_challenge = (
                 logged_in_team.id != t.id and
                 rank_diff > 0 and
@@ -232,7 +232,7 @@
               {% if loop.index == 1 %}🥇
               {% elif loop.index == 2 %}🥈
               {% elif loop.index == 3 %}🥉
-              {% else %}<span class="text-white font-bold text-lg">#{{ t.current_rank }}</span>
+              {% else %}<span class="text-white font-bold text-lg">#{{ t.display_rank }}</span>
               {% endif %}
             </div>
             <div>
@@ -297,7 +297,7 @@
         </div>
 
         {% if logged_in_team %}
-          {% set rank_diff = logged_in_team.current_rank - t.current_rank %}
+          {% set rank_diff = (logged_in_team.display_rank if logged_in_team.display_rank else logged_in_team.current_rank) - t.display_rank %}
           {% set can_challenge = (
             logged_in_team.id != t.id and
             rank_diff > 0 and

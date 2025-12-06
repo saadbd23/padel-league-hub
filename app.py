@@ -1415,7 +1415,20 @@ def ladder_men():
     teams = LadderTeam.query.filter_by(
         gender='men',
         payment_received=True
-    ).order_by(LadderTeam.current_rank.asc()).all()
+    ).all()
+
+    # Recalculate display ranks based on standings (not stored ranks which have gaps)
+    teams_sorted = sorted(teams, key=lambda t: (
+        t.wins,
+        t.sets_for - t.sets_against,
+        t.games_for - t.games_against,
+        t.matches_played,
+        t.team_name
+    ), reverse=True)
+    
+    # Assign sequential display ranks
+    for idx, team in enumerate(teams_sorted, start=1):
+        team.display_rank = idx
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1433,18 +1446,18 @@ def ladder_men():
     ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
 
     top_performers = []
-    if teams:
-        teams_with_matches = [t for t in teams if t.matches_played > 0]
+    if teams_sorted:
+        teams_with_matches = [t for t in teams_sorted if t.matches_played > 0]
         if teams_with_matches:
             sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
             top_performers = sorted_by_wins[:3]
 
-    team_map = {t.id: t for t in teams}
+    team_map = {t.id: t for t in teams_sorted}
 
     settings = LadderSettings.query.first()
 
     return render_template("ladder/ladder_rankings.html",
-                         teams=teams,
+                         teams=teams_sorted,
                          ladder_type=ladder_type,
                          locked_team_ids=locked_team_ids,
                          recent_matches=recent_matches,
@@ -1462,7 +1475,20 @@ def ladder_women():
     teams = LadderTeam.query.filter_by(
         gender='women',
         payment_received=True
-    ).order_by(LadderTeam.current_rank.asc()).all()
+    ).all()
+
+    # Recalculate display ranks based on standings (not stored ranks which have gaps)
+    teams_sorted = sorted(teams, key=lambda t: (
+        t.wins,
+        t.sets_for - t.sets_against,
+        t.games_for - t.games_against,
+        t.matches_played,
+        t.team_name
+    ), reverse=True)
+    
+    # Assign sequential display ranks
+    for idx, team in enumerate(teams_sorted, start=1):
+        team.display_rank = idx
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1480,8 +1506,8 @@ def ladder_women():
     ).order_by(LadderMatch.completed_at.desc()).limit(10).all()
 
     top_performers = []
-    if teams:
-        teams_with_matches = [t for t in teams if t.matches_played > 0]
+    if teams_sorted:
+        teams_with_matches = [t for t in teams_sorted if t.matches_played > 0]
         if teams_with_matches:
             sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
             top_performers = sorted_by_wins[:3]
