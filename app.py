@@ -1426,26 +1426,17 @@ def ladder_men():
         t.team_name
     ), reverse=True)
     
-    # Assign sequential display ranks and calculate initial rank
-    all_teams_by_gender = LadderTeam.query.filter_by(gender=ladder_type if ladder_type in ['men', 'women'] else 'men', payment_received=True).all()
+    # Assign sequential display ranks
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
-        
-        # Calculate initial rank based on where they would have ranked when created
-        teams_at_creation = sorted(
-            [t for t in all_teams_by_gender if t.created_at <= team.created_at],
-            key=lambda t: (
-                t.wins,
-                t.sets_for - t.sets_against,
-                t.games_for - t.games_against,
-                t.matches_played,
-                t.team_name
-            ),
-            reverse=True
-        )
-        team.initial_rank = next((i for i, t in enumerate(teams_at_creation, start=1) if t.id == team.id), len(teams_at_creation))
-        
-        # Calculate rank movement (positive = moved up, negative = moved down)
+    
+    # Calculate initial rank based on registration order (when they joined the ladder)
+    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
+    for idx, team in enumerate(teams_by_creation, start=1):
+        team.initial_rank = idx
+    
+    # Calculate rank movement (positive = moved up, negative = moved down)
+    for team in teams:
         team.rank_movement = team.initial_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
@@ -1504,26 +1495,17 @@ def ladder_women():
         t.team_name
     ), reverse=True)
     
-    # Assign sequential display ranks and calculate initial rank
-    all_teams_by_gender = LadderTeam.query.filter_by(gender=ladder_type if ladder_type in ['men', 'women'] else 'men', payment_received=True).all()
+    # Assign sequential display ranks
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
-        
-        # Calculate initial rank based on where they would have ranked when created
-        teams_at_creation = sorted(
-            [t for t in all_teams_by_gender if t.created_at <= team.created_at],
-            key=lambda t: (
-                t.wins,
-                t.sets_for - t.sets_against,
-                t.games_for - t.games_against,
-                t.matches_played,
-                t.team_name
-            ),
-            reverse=True
-        )
-        team.initial_rank = next((i for i, t in enumerate(teams_at_creation, start=1) if t.id == team.id), len(teams_at_creation))
-        
-        # Calculate rank movement (positive = moved up, negative = moved down)
+    
+    # Calculate initial rank based on registration order (when they joined the ladder)
+    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
+    for idx, team in enumerate(teams_by_creation, start=1):
+        team.initial_rank = idx
+    
+    # Calculate rank movement (positive = moved up, negative = moved down)
+    for team in teams:
         team.rank_movement = team.initial_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
