@@ -1438,14 +1438,11 @@ def ladder_men():
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
-    # Calculate initial rank based on registration order (when they joined the ladder)
-    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
-    for idx, team in enumerate(teams_by_creation, start=1):
-        team.initial_rank = idx
-    
-    # Calculate rank movement (positive = moved up, negative = moved down)
+    # Use stored current_rank as previous rank (reflects any rank swaps from matches)
+    # movement = where they were (previous) - where they are now (display)
     for team in teams:
-        team.rank_movement = team.initial_rank - team.display_rank
+        team.initial_rank = team.current_rank  # Previous rank before recalculation
+        team.rank_movement = team.current_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1515,14 +1512,11 @@ def ladder_women():
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
-    # Calculate initial rank based on registration order (when they joined the ladder)
-    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
-    for idx, team in enumerate(teams_by_creation, start=1):
-        team.initial_rank = idx
-    
-    # Calculate rank movement (positive = moved up, negative = moved down)
+    # Use stored current_rank as previous rank (reflects any rank swaps from matches)
+    # movement = where they were (previous) - where they are now (display)
     for team in teams:
-        team.rank_movement = team.initial_rank - team.display_rank
+        team.initial_rank = team.current_rank  # Previous rank before recalculation
+        team.rank_movement = team.current_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
