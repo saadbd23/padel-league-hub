@@ -1417,32 +1417,22 @@ def ladder_men():
         payment_received=True
     ).all()
 
-    # Separate teams into two groups: with matches and without matches
-    teams_with_matches = [t for t in teams if t.matches_played > 0]
-    teams_without_matches = [t for t in teams if t.matches_played == 0]
+    # Calculate initial rank based on registration order (when they joined)
+    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
+    initial_ranks = {team.id: idx for idx, team in enumerate(teams_by_creation, start=1)}
     
-    # Sort teams with matches by performance (wins, sets diff, games diff)
-    teams_with_matches_sorted = sorted(teams_with_matches, key=lambda t: (
-        t.wins,
-        t.sets_for - t.sets_against,
-        t.games_for - t.games_against
-    ), reverse=True)
+    # Sort by current_rank (which preserves rank swaps from matches)
+    # If current_rank is None, assign based on registration order
+    teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
     
-    # Sort teams without matches by registration order (earliest first = higher rank)
-    teams_without_matches_sorted = sorted(teams_without_matches, key=lambda t: t.created_at)
-    
-    # Combine: teams with matches first, then teams without matches
-    teams_sorted = teams_with_matches_sorted + teams_without_matches_sorted
-    
-    # Assign sequential display ranks
+    # Assign display ranks (these are the current ranks)
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
-    # Use stored current_rank as previous rank (reflects any rank swaps from matches)
-    # movement = where they were (previous) - where they are now (display)
+    # Calculate movement: initial rank - current rank (positive = moved up)
     for team in teams:
-        team.initial_rank = team.current_rank  # Previous rank before recalculation
-        team.rank_movement = team.current_rank - team.display_rank
+        team.initial_rank = initial_ranks.get(team.id, 999)
+        team.rank_movement = team.initial_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1491,32 +1481,22 @@ def ladder_women():
         payment_received=True
     ).all()
 
-    # Separate teams into two groups: with matches and without matches
-    teams_with_matches = [t for t in teams if t.matches_played > 0]
-    teams_without_matches = [t for t in teams if t.matches_played == 0]
+    # Calculate initial rank based on registration order (when they joined)
+    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
+    initial_ranks = {team.id: idx for idx, team in enumerate(teams_by_creation, start=1)}
     
-    # Sort teams with matches by performance (wins, sets diff, games diff)
-    teams_with_matches_sorted = sorted(teams_with_matches, key=lambda t: (
-        t.wins,
-        t.sets_for - t.sets_against,
-        t.games_for - t.games_against
-    ), reverse=True)
+    # Sort by current_rank (which preserves rank swaps from matches)
+    # If current_rank is None, assign based on registration order
+    teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
     
-    # Sort teams without matches by registration order (earliest first = higher rank)
-    teams_without_matches_sorted = sorted(teams_without_matches, key=lambda t: t.created_at)
-    
-    # Combine: teams with matches first, then teams without matches
-    teams_sorted = teams_with_matches_sorted + teams_without_matches_sorted
-    
-    # Assign sequential display ranks
+    # Assign display ranks (these are the current ranks)
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
-    # Use stored current_rank as previous rank (reflects any rank swaps from matches)
-    # movement = where they were (previous) - where they are now (display)
+    # Calculate movement: initial rank - current rank (positive = moved up)
     for team in teams:
-        team.initial_rank = team.current_rank  # Previous rank before recalculation
-        team.rank_movement = team.current_rank - team.display_rank
+        team.initial_rank = initial_ranks.get(team.id, 999)
+        team.rank_movement = team.initial_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
@@ -1540,12 +1520,12 @@ def ladder_women():
             sorted_by_wins = sorted(teams_with_matches, key=lambda t: (t.wins / t.matches_played if t.matches_played > 0 else 0, t.wins), reverse=True)
             top_performers = sorted_by_wins[:3]
 
-    team_map = {t.id: t for t in teams}
+    team_map = {t.id: t for t in teams_sorted}
 
     settings = LadderSettings.query.first()
 
     return render_template("ladder/ladder_rankings.html",
-                         teams=teams,
+                         teams=teams_sorted,
                          ladder_type=ladder_type,
                          locked_team_ids=locked_team_ids,
                          recent_matches=recent_matches,
@@ -1563,7 +1543,24 @@ def ladder_mixed():
     teams = LadderTeam.query.filter_by(
         gender='mixed',
         payment_received=True
-    ).order_by(LadderTeam.current_rank.asc()).all()
+    ).all()
+    
+    # Calculate initial rank based on registration order (when they joined)
+    teams_by_creation = sorted(teams, key=lambda t: t.created_at)
+    initial_ranks = {team.id: idx for idx, team in enumerate(teams_by_creation, start=1)}
+    
+    # Sort by current_rank (which preserves rank swaps from matches)
+    # If current_rank is None, assign based on registration order
+    teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
+    
+    # Assign display ranks (these are the current ranks)
+    for idx, team in enumerate(teams_sorted, start=1):
+        team.display_rank = idx
+    
+    # Calculate movement: initial rank - current rank (positive = moved up)
+    for team in teams:
+        team.initial_rank = initial_ranks.get(team.id, 999)
+        team.rank_movement = team.initial_rank - team.display_rank
 
     active_challenges = LadderChallenge.query.filter(
         LadderChallenge.ladder_type == ladder_type,
