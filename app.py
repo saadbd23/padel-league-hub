@@ -1417,15 +1417,22 @@ def ladder_men():
         payment_received=True
     ).all()
 
-    # Recalculate display ranks based on standings (not stored ranks which have gaps)
-    # Sort by: wins, sets diff, games diff, matches played, then registration order (created_at)
-    teams_sorted = sorted(teams, key=lambda t: (
+    # Separate teams into two groups: with matches and without matches
+    teams_with_matches = [t for t in teams if t.matches_played > 0]
+    teams_without_matches = [t for t in teams if t.matches_played == 0]
+    
+    # Sort teams with matches by performance (wins, sets diff, games diff)
+    teams_with_matches_sorted = sorted(teams_with_matches, key=lambda t: (
         t.wins,
         t.sets_for - t.sets_against,
-        t.games_for - t.games_against,
-        t.matches_played,
-        t.created_at  # Tiebreaker: earlier registration = higher rank
+        t.games_for - t.games_against
     ), reverse=True)
+    
+    # Sort teams without matches by registration order (earliest first = higher rank)
+    teams_without_matches_sorted = sorted(teams_without_matches, key=lambda t: t.created_at)
+    
+    # Combine: teams with matches first, then teams without matches
+    teams_sorted = teams_with_matches_sorted + teams_without_matches_sorted
     
     # Assign sequential display ranks
     for idx, team in enumerate(teams_sorted, start=1):
@@ -1487,15 +1494,22 @@ def ladder_women():
         payment_received=True
     ).all()
 
-    # Recalculate display ranks based on standings (not stored ranks which have gaps)
-    # Sort by: wins, sets diff, games diff, matches played, then registration order (created_at)
-    teams_sorted = sorted(teams, key=lambda t: (
+    # Separate teams into two groups: with matches and without matches
+    teams_with_matches = [t for t in teams if t.matches_played > 0]
+    teams_without_matches = [t for t in teams if t.matches_played == 0]
+    
+    # Sort teams with matches by performance (wins, sets diff, games diff)
+    teams_with_matches_sorted = sorted(teams_with_matches, key=lambda t: (
         t.wins,
         t.sets_for - t.sets_against,
-        t.games_for - t.games_against,
-        t.matches_played,
-        t.created_at  # Tiebreaker: earlier registration = higher rank
+        t.games_for - t.games_against
     ), reverse=True)
+    
+    # Sort teams without matches by registration order (earliest first = higher rank)
+    teams_without_matches_sorted = sorted(teams_without_matches, key=lambda t: t.created_at)
+    
+    # Combine: teams with matches first, then teams without matches
+    teams_sorted = teams_with_matches_sorted + teams_without_matches_sorted
     
     # Assign sequential display ranks
     for idx, team in enumerate(teams_sorted, start=1):
