@@ -1418,12 +1418,13 @@ def ladder_men():
     ).all()
 
     # Recalculate display ranks based on standings (not stored ranks which have gaps)
+    # Sort by: wins, sets diff, games diff, matches played, then registration order (created_at)
     teams_sorted = sorted(teams, key=lambda t: (
         t.wins,
         t.sets_for - t.sets_against,
         t.games_for - t.games_against,
         t.matches_played,
-        t.team_name
+        t.created_at  # Tiebreaker: earlier registration = higher rank
     ), reverse=True)
     
     # Assign sequential display ranks
@@ -1487,12 +1488,13 @@ def ladder_women():
     ).all()
 
     # Recalculate display ranks based on standings (not stored ranks which have gaps)
+    # Sort by: wins, sets diff, games diff, matches played, then registration order (created_at)
     teams_sorted = sorted(teams, key=lambda t: (
         t.wins,
         t.sets_for - t.sets_against,
         t.games_for - t.games_against,
         t.matches_played,
-        t.team_name
+        t.created_at  # Tiebreaker: earlier registration = higher rank
     ), reverse=True)
     
     # Assign sequential display ranks
