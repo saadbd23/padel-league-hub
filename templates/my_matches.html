@@ -500,7 +500,7 @@
               <!-- Dispute Score Form (hidden by default) -->
               <div id="dispute-score-form-{{ m.id }}" class="hidden space-y-3 p-4 bg-red-50 rounded-lg border-2 border-red-200">
                 <div class="text-sm font-bold text-red-900 mb-2">Submit Your Score</div>
-                <form id="dispute-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, {{ team.access_token | tojson }}, {{ team.team_name | tojson }}, {{ opp.team_name | tojson }}, true)">
+                <form id="dispute-form-{{ m.id }}" class="space-y-3" data-match-id="{{ m.id }}" data-token="{{ team.access_token }}" data-team-name="{{ team.team_name }}" data-opp-name="{{ opp.team_name }}" data-is-dispute="true" onsubmit="previewScoreForm(event)">
                   <!-- Header Row -->
                   <div class="grid grid-cols-3 gap-2 items-center mb-2">
                     <div class="text-xs font-bold text-gray-700">Set</div>
@@ -553,7 +553,7 @@
 
             <!-- Score Form -->
             {% if not m.verified and not ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
-            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, {{ team.access_token | tojson }}, {{ team.team_name | tojson }}, {{ opp.team_name | tojson }})">
+            <form id="score-form-{{ m.id }}" class="space-y-3" data-match-id="{{ m.id }}" data-token="{{ team.access_token }}" data-team-name="{{ team.team_name }}" data-opp-name="{{ opp.team_name }}" onsubmit="previewScoreForm(event)">
               <!-- Header Row -->
               <div class="grid grid-cols-3 gap-2 items-center mb-2">
                 <div class="text-xs font-bold text-gray-700">Set</div>
@@ -565,27 +565,27 @@
               <div class="grid grid-cols-3 gap-2 items-center">
                 <label class="text-xs font-semibold text-gray-700">Set 1 *</label>
                 <input type="number" name="set1_team" required min="0" max="99" placeholder="6"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
                 <input type="number" name="set1_opp" required min="0" max="99" placeholder="4"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
               </div>
 
               <!-- Set 2 Row -->
               <div class="grid grid-cols-3 gap-2 items-center">
                 <label class="text-xs font-semibold text-gray-700">Set 2 *</label>
                 <input type="number" name="set2_team" required min="0" max="99" placeholder="6"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
                 <input type="number" name="set2_opp" required min="0" max="99" placeholder="3"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
               </div>
 
               <!-- Set 3 Row -->
               <div class="grid grid-cols-3 gap-2 items-center">
                 <label class="text-xs font-semibold text-gray-700">Set 3</label>
                 <input type="number" name="set3_team" min="0" max="99" placeholder="10"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
                 <input type="number" name="set3_opp" min="0" max="99" placeholder="8"
-                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center">
+                       class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent text-sm text-center auto-focus-input">
               </div>
 
               <div class="text-xs text-gray-600 bg-white p-2 rounded">
@@ -891,12 +891,17 @@ function calculateWinner(scoreString, myTeamName, oppTeamName) {
   }
 }
 
-// Preview score before submission - show confirmation modal
-function previewScore(event, matchId, token, myTeamName, oppTeamName, isDispute = false) {
+// Preview score from form submission
+function previewScoreForm(event) {
   event.preventDefault();
   
   const form = event.target;
   const formData = new FormData(form);
+  const matchId = parseInt(form.dataset.matchId);
+  const token = form.dataset.token;
+  const myTeamName = form.dataset.teamName;
+  const oppTeamName = form.dataset.oppName;
+  const isDispute = form.dataset.isDispute === 'true';
   
   // Get individual set scores - use different names if from dispute form
   const set1Team = isDispute ? formData.get('dispute_set1_team') : formData.get('set1_team');
@@ -906,9 +911,14 @@ function previewScore(event, matchId, token, myTeamName, oppTeamName, isDispute 
   const set3Team = isDispute ? formData.get('dispute_set3_team') : formData.get('set3_team');
   const set3Opp = isDispute ? formData.get('dispute_set3_opp') : formData.get('set3_opp');
   
+  // Validate that required scores are entered
   if (!set1Team || !set1Opp || !set2Team || !set2Opp) {
     alert('Please enter scores for Set 1 and Set 2');
     return;
+  }
+  
+  // Call the real previewScore function
+  return previewScore(event, matchId, token, myTeamName, oppTeamName, isDispute);
   }
   
   // Build score string in format "6-4, 6-3" or "6-4, 6-3, 10-8"
