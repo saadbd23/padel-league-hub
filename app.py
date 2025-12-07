@@ -3956,6 +3956,9 @@ def submit_score(token):
             match.score_submission_b = normalized_score
             match.score_submitted_by_b = True
 
+        # IMPORTANT: Commit the first submission so it persists to database
+        db.session.commit()
+
         # Check if opponent also submitted
         if match.score_submitted_by_a and match.score_submitted_by_b:
             # Both teams submitted, check if they match
