@@ -500,7 +500,7 @@
               <!-- Dispute Score Form (hidden by default) -->
               <div id="dispute-score-form-{{ m.id }}" class="hidden space-y-3 p-4 bg-red-50 rounded-lg border-2 border-red-200">
                 <div class="text-sm font-bold text-red-900 mb-2">Submit Your Score</div>
-                <form id="dispute-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, '{{ team.access_token }}', '{{ team.team_name }}', '{{ opp.team_name }}', true)">
+                <form id="dispute-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, {{ team.access_token | tojson }}, {{ team.team_name | tojson }}, {{ opp.team_name | tojson }}, true)">
                   <!-- Header Row -->
                   <div class="grid grid-cols-3 gap-2 items-center mb-2">
                     <div class="text-xs font-bold text-gray-700">Set</div>
@@ -553,7 +553,7 @@
 
             <!-- Score Form -->
             {% if not m.verified and not ((detail.is_team_a and m.score_submitted_by_b) or (not detail.is_team_a and m.score_submitted_by_a)) %}
-            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, '{{ team.access_token }}', '{{ team.team_name }}', '{{ opp.team_name }}')">
+            <form id="score-form-{{ m.id }}" class="space-y-3" onsubmit="previewScore(event, {{ m.id }}, {{ team.access_token | tojson }}, {{ team.team_name | tojson }}, {{ opp.team_name | tojson }})">
               <!-- Header Row -->
               <div class="grid grid-cols-3 gap-2 items-center mb-2">
                 <div class="text-xs font-bold text-gray-700">Set</div>
