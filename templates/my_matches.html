@@ -917,10 +917,6 @@ function previewScoreForm(event) {
     return;
   }
   
-  // Call the real previewScore function
-  return previewScore(event, matchId, token, myTeamName, oppTeamName, isDispute);
-  }
-  
   // Build score string in format "6-4, 6-3" or "6-4, 6-3, 10-8"
   const set1 = `${set1Team}-${set1Opp}`;
   const set2 = `${set2Team}-${set2Opp}`;
