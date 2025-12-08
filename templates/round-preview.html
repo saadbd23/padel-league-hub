@@ -30,21 +30,12 @@
     <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
       <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Current Standings</h3>
       <div class="space-y-2">
-        {% set all_teams_dict = {} %}
-        {% for item in preview_data %}
-          {% if item.team_a and item.team_a.id not in all_teams_dict %}
-            {% set _ = all_teams_dict.update({item.team_a.id: item.team_a}) %}
-          {% endif %}
-          {% if item.team_b and item.team_b.id not in all_teams_dict %}
-            {% set _ = all_teams_dict.update({item.team_b.id: item.team_b}) %}
-          {% endif %}
-        {% endfor %}
-        
-        {% set sorted_teams = all_teams_dict.values() | list | sort(attribute='points', reverse=True) | sort(attribute='sets_diff', reverse=True) | sort(attribute='games_diff', reverse=True) | sort(attribute='wins', reverse=True) %}
-        
-        {% for team in sorted_teams %}
+        {% for team in ranked_teams %}
           <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg hover:bg-indigo-50 transition-colors">
-            <span class="font-medium text-gray-900">{{ team.team_name }}</span>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-indigo-600 w-6 text-center">#{{ loop.index }}</span>
+              <span class="font-medium text-gray-900">{{ team.team_name }}</span>
+            </div>
             <span class="text-gray-600">{{ team.wins }}W-{{ team.losses }}L ({{ team.points }} pts)</span>
           </div>
         {% endfor %}

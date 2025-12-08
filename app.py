@@ -7078,41 +7078,49 @@ def round_preview(round_number):
         flash(f"No preview found for Round {round_number}. Generate the round first.", "error")
         return redirect(url_for("admin_panel"))
     
+    # Get all teams involved and rank them
+    all_teams_set = set()
+    for match in draft_matches:
+        if match.team_a_id:
+            all_teams_set.add(match.team_a_id)
+        if match.team_b_id:
+            all_teams_set.add(match.team_b_id)
+    
+    all_teams = [Team.query.get(tid) for tid in all_teams_set if Team.query.get(tid)]
+    # Sort teams by ranking (same logic as leaderboard)
+    ranked_teams = sorted(all_teams, key=lambda t: (-t.points, -t.sets_diff, -t.games_diff, -t.wins, t.team_name))
+    team_rank_map = {team.id: idx + 1 for idx, team in enumerate(ranked_teams)}
+    
     # Build preview data with team info and pairing reasons
     preview_data = []
-    for idx, match in enumerate(draft_matches, 1):
+    for match in draft_matches:
         team_a = Team.query.get(match.team_a_id)
         team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
         
-        # Extract only the relevant pairing decision for this match from the log
-        pairing_reason = "Swiss pairing algorithm"
-        if match.pairing_log:
-            # Look for the pairing decision line for this specific match
-            log_lines = match.pairing_log.split('\n')
-            for line in log_lines:
-                # Look for pairing decision line like "[Pairing #1]" followed by team names
-                if f"[Pairing #{idx}]" in line:
-                    # Extract just the decision and reason for this pairing
-                    pairing_reason = line.strip()
-                    # Also get the next line if it contains the reason
-                    idx_in_log = log_lines.index(line)
-                    if idx_in_log + 1 < len(log_lines) and log_lines[idx_in_log + 1].startswith("Reason:"):
-                        pairing_reason += " " + log_lines[idx_in_log + 1].strip()
-                    break
+        # Create a simple, meaningful reason
+        if team_b is None:
+            pairing_reason = "Bye week (automatic win)"
+        else:
+            pairing_reason = "Matched by Swiss pairing algorithm"
         
         preview_data.append({
             'match': match,
             'team_a': team_a,
             'team_b': team_b,
+            'team_a_rank': team_rank_map.get(match.team_a_id, 0) if team_a else 0,
             'is_bye': team_b is None,
             'reason': pairing_reason
         })
+    
+    # Sort pairings by team_a rank (highest rank first)
+    preview_data.sort(key=lambda x: x['team_a_rank'])
     
     return render_template(
         "round-preview.html",
         round_number=round_number,
         preview_data=preview_data,
-        match_count=len(draft_matches)
+        match_count=len(draft_matches),
+        ranked_teams=ranked_teams
     )
 
 
