@@ -3491,18 +3491,19 @@ def my_matches(token):
             'is_rescheduled': is_rescheduled
         })
 
-    # Sort: rescheduled matches first (by round ascending), then all matches by round descending
-    rescheduled = [m for m in match_details if m['is_rescheduled']]
-    active = [m for m in match_details if not m['is_rescheduled']]
+    # Sort matches: Active/scheduled first (by round descending), then completed by round
+    # This ensures current round appears at top, followed by completed matches
+    scheduled = [m for m in match_details if m['match'].status != 'completed']
+    completed = [m for m in match_details if m['match'].status == 'completed']
     
-    # Sort rescheduled by round (oldest first, ascending)
-    rescheduled.sort(key=lambda x: x['match'].round if x['match'].round else 999)
+    # Sort scheduled by round descending (current round first)
+    scheduled.sort(key=lambda x: x['match'].round if x['match'].round else 0, reverse=True)
     
-    # Sort active by round (newest first, descending)
-    active.sort(key=lambda x: x['match'].round if x['match'].round else 0, reverse=True)
+    # Sort completed by round descending (newest completed first)
+    completed.sort(key=lambda x: x['match'].round if x['match'].round else 0, reverse=True)
     
-    # Rescheduled matches appear first
-    sorted_match_details = rescheduled + active
+    # Combine: Scheduled first, then completed
+    sorted_match_details = scheduled + completed
 
     return render_template(
         "my_matches.html",
