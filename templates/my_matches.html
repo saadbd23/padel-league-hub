@@ -75,8 +75,7 @@
 
         <!-- Match Header -->
         <div class="bg-gradient-to-r 
-                    {% if detail.is_rescheduled %}from-red-600 to-red-700
-                    {% elif m.status == 'scheduled' %}from-blue-500 to-blue-600
+                    {% if m.status == 'scheduled' %}from-blue-500 to-blue-600
                     {% elif m.status == 'completed' %}from-green-500 to-green-600
                     {% elif m.status == 'bye' %}from-gray-500 to-gray-600
                     {% else %}from-yellow-500 to-yellow-600{% endif %}
@@ -91,8 +90,8 @@
                   {% endif %}
                 </span>
                 {% if detail.is_rescheduled %}
-                <span class="inline-block px-2 py-1 bg-white/30 rounded-full text-xs font-bold border border-white/50">
-                  🔄 RESCHEDULED
+                <span class="inline-block px-2 py-1 bg-orange-400 text-orange-900 rounded-full text-xs font-bold">
+                  🔄 <span class="font-bold text-orange-900">RESCHEDULED</span>
                 </span>
                 {% endif %}
               </div>
@@ -110,9 +109,7 @@
                            {% elif m.status == 'completed' %}{% if m.winner_id == team.id %}bg-green-500{% else %}bg-red-500{% endif %}
                            {% elif m.status == 'bye' %}bg-white/20
                            {% else %}bg-white/25{% endif %}">
-                {% if detail.is_rescheduled %}
-                  RESCHEDULED
-                {% elif m.status == 'completed' %}
+                {% if m.status == 'completed' %}
                   {% if m.winner_id == team.id %}WIN{% else %}LOSS{% endif %}
                 {% else %}
                   {{ m.status|upper }}

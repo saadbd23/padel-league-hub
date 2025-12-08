@@ -26,6 +26,31 @@
       </div>
     </div>
 
+    <!-- Current Standings (shown once at top) -->
+    <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Current Standings</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% set shown_teams = [] %}
+        {% for item in preview_data %}
+          {% if item.team_a and item.team_a.id not in shown_teams %}
+            <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg">
+              <span class="font-medium text-gray-900">{{ item.team_a.team_name }}</span>
+              <span class="text-gray-600">{{ item.team_a.wins }}W-{{ item.team_a.losses }}L ({{ item.team_a.points }} pts)</span>
+            </div>
+            {% if shown_teams.append(item.team_a.id) %}{% endif %}
+          {% endif %}
+          {% if item.team_b and item.team_b.id not in shown_teams %}
+            <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg">
+              <span class="font-medium text-gray-900">{{ item.team_b.team_name }}</span>
+              <span class="text-gray-600">{{ item.team_b.wins }}W-{{ item.team_b.losses }}L ({{ item.team_b.points }} pts)</span>
+            </div>
+            {% if shown_teams.append(item.team_b.id) %}{% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <h3 class="text-lg font-bold text-gray-900 mb-4">⚔️ Pairings</h3>
     <div class="space-y-4 mb-8">
       {% for item in preview_data %}
         <div class="bg-gradient-to-r {% if item.is_bye %}from-gray-50 to-gray-100 border-gray-300{% else %}from-purple-50 to-indigo-50 border-purple-300{% endif %} rounded-lg p-4 border-2 shadow-sm">
