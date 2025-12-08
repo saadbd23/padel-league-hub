@@ -7148,21 +7148,18 @@ def confirm_round(round_number):
                 base_url = os.environ.get('APP_BASE_URL', 'https://goeclectic.xyz')
                 matches_link = f"{base_url}/my-matches/{team.access_token}"
                 
-                email_body = f"""
-Hello {team.team_name},
+                email_body = f"""Hello {team.team_name},
 
 Round {round_number} has been generated! Here are your matchups:
 
 {match_details}
-
 Deadline: Submit your match result by Sunday 23:59
 
-View your matches and manage bookings here: {matches_link}
+📍 View and manage your matches here: {matches_link}
 
 Best of luck!
 
-BD Padel League Admin
-"""
+BD Padel League Admin"""
                 # Send to player 1
                 if team.player1_email:
                     send_email_notification(
