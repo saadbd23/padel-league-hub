@@ -29,23 +29,24 @@
     <!-- Current Standings (shown once at top) -->
     <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
       <h3 class="text-lg font-bold text-gray-900 mb-4">📊 Current Standings</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {% set shown_teams = [] %}
+      <div class="space-y-2">
+        {% set all_teams_dict = {} %}
         {% for item in preview_data %}
-          {% if item.team_a and item.team_a.id not in shown_teams %}
-            <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg">
-              <span class="font-medium text-gray-900">{{ item.team_a.team_name }}</span>
-              <span class="text-gray-600">{{ item.team_a.wins }}W-{{ item.team_a.losses }}L ({{ item.team_a.points }} pts)</span>
-            </div>
-            {% if shown_teams.append(item.team_a.id) %}{% endif %}
+          {% if item.team_a and item.team_a.id not in all_teams_dict %}
+            {% set _ = all_teams_dict.update({item.team_a.id: item.team_a}) %}
           {% endif %}
-          {% if item.team_b and item.team_b.id not in shown_teams %}
-            <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg">
-              <span class="font-medium text-gray-900">{{ item.team_b.team_name }}</span>
-              <span class="text-gray-600">{{ item.team_b.wins }}W-{{ item.team_b.losses }}L ({{ item.team_b.points }} pts)</span>
-            </div>
-            {% if shown_teams.append(item.team_b.id) %}{% endif %}
+          {% if item.team_b and item.team_b.id not in all_teams_dict %}
+            {% set _ = all_teams_dict.update({item.team_b.id: item.team_b}) %}
           {% endif %}
+        {% endfor %}
+        
+        {% set sorted_teams = all_teams_dict.values() | list | sort(attribute='points', reverse=True) | sort(attribute='sets_diff', reverse=True) | sort(attribute='games_diff', reverse=True) | sort(attribute='wins', reverse=True) %}
+        
+        {% for team in sorted_teams %}
+          <div class="flex items-center justify-between text-sm bg-white p-3 rounded-lg hover:bg-indigo-50 transition-colors">
+            <span class="font-medium text-gray-900">{{ team.team_name }}</span>
+            <span class="text-gray-600">{{ team.wins }}W-{{ team.losses }}L ({{ team.points }} pts)</span>
+          </div>
         {% endfor %}
       </div>
     </div>
@@ -69,19 +70,6 @@
                   {% endif %}
                 </span>
               </div>
-              
-              {% if not item.is_bye %}
-                <div class="mt-2 flex gap-4 text-sm text-gray-600">
-                  <div>
-                    <span class="font-medium">{{ item.team_a.team_name }}:</span>
-                    {{ item.team_a.wins }}W-{{ item.team_a.losses }}L ({{ item.team_a.points }} pts)
-                  </div>
-                  <div>
-                    <span class="font-medium">{{ item.team_b.team_name }}:</span>
-                    {{ item.team_b.wins }}W-{{ item.team_b.losses }}L ({{ item.team_b.points }} pts)
-                  </div>
-                </div>
-              {% endif %}
             </div>
             
             {% if item.is_bye %}

@@ -7080,12 +7080,25 @@ def round_preview(round_number):
     
     # Build preview data with team info and pairing reasons
     preview_data = []
-    for match in draft_matches:
+    for idx, match in enumerate(draft_matches, 1):
         team_a = Team.query.get(match.team_a_id)
         team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
         
-        # Parse pairing log for reason
-        pairing_reason = match.pairing_log if match.pairing_log else "Swiss pairing algorithm"
+        # Extract only the relevant pairing decision for this match from the log
+        pairing_reason = "Swiss pairing algorithm"
+        if match.pairing_log:
+            # Look for the pairing decision line for this specific match
+            log_lines = match.pairing_log.split('\n')
+            for line in log_lines:
+                # Look for pairing decision line like "[Pairing #1]" followed by team names
+                if f"[Pairing #{idx}]" in line:
+                    # Extract just the decision and reason for this pairing
+                    pairing_reason = line.strip()
+                    # Also get the next line if it contains the reason
+                    idx_in_log = log_lines.index(line)
+                    if idx_in_log + 1 < len(log_lines) and log_lines[idx_in_log + 1].startswith("Reason:"):
+                        pairing_reason += " " + log_lines[idx_in_log + 1].strip()
+                    break
         
         preview_data.append({
             'match': match,
