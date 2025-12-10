@@ -41,14 +41,10 @@
     {% endwith %}
 
     <div class="mb-6">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-3 border-2 border-blue-300">
           <div class="text-sm font-semibold text-blue-800">Pending</div>
           <div class="text-2xl font-bold text-blue-900">{{ pending_scores|length }}</div>
-        </div>
-        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg px-4 py-3 border-2 border-yellow-300">
-          <div class="text-sm font-semibold text-yellow-800">Verification</div>
-          <div class="text-2xl font-bold text-yellow-900">{{ pending_verification|length }}</div>
         </div>
         <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-lg px-4 py-3 border-2 border-red-300">
           <div class="text-sm font-semibold text-red-800">Disputed</div>
@@ -251,27 +247,6 @@
       </div>
       {% endif %}
 
-      {% if pending_verification|length > 0 %}
-      <div class="border-2 border-yellow-300 rounded-xl p-4 bg-yellow-50">
-        <h3 class="text-xl font-bold text-yellow-900 mb-4 flex items-center gap-2">
-          <span class="text-2xl">🔄</span>
-          Pending Verification ({{ pending_verification|length }})
-        </h3>
-        <div class="text-sm text-gray-600 mb-3">Both teams submitted scores - waiting for automatic verification</div>
-
-        <div class="space-y-2">
-          {% for item in pending_verification %}
-          <div class="bg-white rounded-lg p-3 border border-yellow-200 text-sm">
-            <span class="font-semibold">{{ item.team_a.team_name }}</span> vs 
-            <span class="font-semibold">{{ item.team_b.team_name }}</span>
-            <span class="text-gray-500 ml-2">
-              (Submitted {{ item.match.created_at.strftime('%b %d') if item.match.created_at else '' }})
-            </span>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
 
       {% if pending_scores|length > 0 %}
       <div class="border-2 border-blue-300 rounded-xl p-4 bg-blue-50">

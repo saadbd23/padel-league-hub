@@ -2320,37 +2320,9 @@ BD Padel Ladder Team
             opponent_team = LadderTeam.query.get(match.team_b_id if is_team_a else match.team_a_id)
 
             if match.team_a_submitted and match.team_b_submitted:
-                # Both teams submitted - opponent needs to confirm or reject
-                match.status = 'pending_score_confirmation'
-                db.session.commit()
-
-                submission_message = f"""
-Score Confirmation Needed
-
-{team.team_name} has submitted a score for your match.
-
-Match Score Reported:
-- Set 1: {match.team_a_score_set1}-{match.team_b_score_set1}
-- Set 2: {match.team_a_score_set2}-{match.team_b_score_set2}"""
-                if match.team_a_score_set3 is not None:
-                    submission_message += f"\n- Set 3: {match.team_a_score_set3}-{match.team_b_score_set3}"
-                
-                submission_message += f"""
-
-Please CONFIRM if this is correct, or REJECT and submit your own score.
-
-Manage your team: {request.url_root}ladder/my-team/{opponent_team.access_token}
-
-BD Padel Ladder Team
-"""
-
-                if opponent_team.contact_preference_email:
-                    if opponent_team.player1_email:
-                        send_email_notification(opponent_team.player1_email, f"Score Confirmation Needed - {opponent_team.team_name}", submission_message)
-                    if opponent_team.player2_email and opponent_team.player2_email != opponent_team.player1_email:
-                        send_email_notification(opponent_team.player2_email, f"Score Confirmation Needed - {opponent_team.team_name}", submission_message)
-
-                flash("Your score has been submitted. Waiting for opponent to confirm.", "success")
+                # Both teams submitted - auto-verify the match
+                verify_match_scores(match)
+                flash("Your score has been submitted and the match is now complete!", "success")
             else:
                 match.status = 'pending_opponent_score'
                 db.session.commit()
@@ -5353,7 +5325,6 @@ def admin_ladder_matches(ladder_type):
     ).all()
 
     pending_scores = []
-    pending_verification = []
     disputed = []
     no_shows = []
     completed = []
@@ -5375,8 +5346,6 @@ def admin_ladder_matches(ladder_type):
         elif match.verified or match.status == 'completed':
             if len(completed) < 20:
                 completed.append(match_data)
-        elif match.team_a_submitted and match.team_b_submitted:
-            pending_verification.append(match_data)
         elif match.status == 'pending':
             pending_scores.append(match_data)
 
@@ -5385,7 +5354,6 @@ def admin_ladder_matches(ladder_type):
         ladder_type=ladder_type,
         division_title=division_title,
         pending_scores=pending_scores,
-        pending_verification=pending_verification,
         disputed=disputed,
         no_shows=no_shows,
         completed=completed
