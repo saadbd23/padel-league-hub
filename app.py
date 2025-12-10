@@ -2952,6 +2952,10 @@ BD Padel Ladder System
         if match.verified:
             completed_matches.append(match_detail)
         else:
+            # Skip matches from completed challenges (duplicate/stale matches)
+            if challenge and challenge.status == 'completed':
+                continue
+            
             # Deduplicate: only add the most recent match for each opponent pair
             opponent_key = opponent_id
             if opponent_key not in seen_opponents:
