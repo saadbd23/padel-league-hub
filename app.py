@@ -2913,6 +2913,7 @@ BD Padel Ladder System
     # Separate pending and completed matches
     pending_matches = []
     completed_matches = []
+    seen_opponents = {}  # Track opponent pairs to avoid duplicates
 
     for match in matches:
         opponent_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
@@ -2940,10 +2941,14 @@ BD Padel Ladder System
         if match.verified:
             completed_matches.append(match_detail)
         else:
-            # Check if no-show report is pending admin review
-            if match.status == 'no_show_reported':
-                match_detail['no_show_pending_review'] = True
-            pending_matches.append(match_detail)
+            # Deduplicate: only add the most recent match for each opponent pair
+            opponent_key = opponent_id
+            if opponent_key not in seen_opponents:
+                seen_opponents[opponent_key] = True
+                # Check if no-show report is pending admin review
+                if match.status == 'no_show_reported':
+                    match_detail['no_show_pending_review'] = True
+                pending_matches.append(match_detail)
 
     # Calculate holiday mode grace period info using helper function
     holiday_info = calculate_holiday_status(team, settings)
