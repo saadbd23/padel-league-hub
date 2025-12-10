@@ -224,16 +224,18 @@
             <div id="booking-status-{{ m.id }}" class="mb-4">
               {% if m.booking_confirmed %}
               <div class="p-3 bg-green-100 rounded border-l-4 border-green-500">
-                <div class="flex items-start">
-                  <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                  </svg>
-                  <div class="flex-1">
-                    <div class="text-sm font-semibold text-green-800">✓ Confirmed by both teams</div>
-                    <div class="text-sm text-green-700 mt-1 whitespace-pre-line">{{ m.booking_details }}</div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div class="flex items-start flex-1">
+                    <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="flex-1">
+                      <div class="text-sm font-semibold text-green-800">✓ Confirmed by both teams</div>
+                      <div class="text-sm text-green-700 mt-1 whitespace-pre-line">{{ m.booking_details }}</div>
+                    </div>
                   </div>
                   <button type="button" onclick="toggleChangeBooking({{ m.id }})"
-                          class="ml-3 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                          class="w-full sm:w-auto px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors flex-shrink-0">
                     Change
                   </button>
                 </div>
@@ -241,7 +243,7 @@
               {% elif m.booking_details %}
               <div class="p-3 bg-yellow-100 rounded border-l-4 border-yellow-500">
                 <div class="text-sm font-semibold text-yellow-800">⏳ Waiting for confirmation</div>
-                <div class="text-sm text-yellow-700 mt-1 whitespace-pre-line">{{ m.booking_details }}</div>
+                <div class="text-sm text-yellow-700 mt-1 whitespace-pre-line">{{ m.booking_details.split('Waiting for')[0].strip() }}</div>
               </div>
               {% else %}
               <div class="p-3 bg-gray-100 rounded border-l-4 border-gray-400">
@@ -1239,8 +1241,67 @@ function submitReschedule(event, matchId, token) {
   });
 }
 
+// Set booking date constraints based on round
+function setBookingDateConstraints() {
+  document.querySelectorAll('input[type="date"][data-round-number]').forEach(input => {
+    const roundNum = input.getAttribute('data-round-number');
+    if (!roundNum) return;
+    
+    // Parse round dates from the page (they should be in the match card)
+    const matchCard = input.closest('.bg-white');
+    if (!matchCard) return;
+    
+    const roundText = matchCard.querySelector('[data-round-number]')?.textContent || '';
+    const dateRangeMatch = matchCard.textContent.match(/\(([^)]*)\)/);
+    
+    if (dateRangeMatch) {
+      const dateRangeStr = dateRangeMatch[1];
+      // Parse dates like "Nov 24 - Nov 26" or "12/1 - 12/7"
+      const dates = dateRangeStr.split('-').map(d => d.trim());
+      if (dates.length === 2) {
+        try {
+          // Set min to first date, max to last date
+          const minDate = new Date(dates[0]);
+          const maxDate = new Date(dates[1]);
+          
+          if (!isNaN(minDate) && !isNaN(maxDate)) {
+            input.setAttribute('min', minDate.toISOString().split('T')[0]);
+            input.setAttribute('max', maxDate.toISOString().split('T')[0]);
+          }
+        } catch (e) { /* skip if can't parse */ }
+      }
+    }
+  });
+}
+
+// Set reschedule date constraints (Mon-Wed of next week)
+function setRescheduleDateConstraints() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Calculate next Monday
+  const currentDay = today.getDay();
+  let daysToMonday = (1 - currentDay + 7) % 7;
+  if (daysToMonday === 0) daysToMonday = 7;
+  
+  const nextMonday = new Date(today);
+  nextMonday.setDate(today.getDate() + daysToMonday);
+  
+  const nextWednesday = new Date(nextMonday);
+  nextWednesday.setDate(nextMonday.getDate() + 2);
+  
+  document.querySelectorAll('form[onsubmit*="submitReschedule"] input[type="date"]').forEach(input => {
+    input.setAttribute('min', nextMonday.toISOString().split('T')[0]);
+    input.setAttribute('max', nextWednesday.toISOString().split('T')[0]);
+  });
+}
+
 // Load previous substitutes on page load
 document.addEventListener('DOMContentLoaded', async () => {
+  // Set date constraints
+  setBookingDateConstraints();
+  setRescheduleDateConstraints();
+  
   const token = document.querySelector('form[onsubmit*="submitSubstitute"]')?.getAttribute('onsubmit').match(/'([^']+)'/)?.[1];
   if (token) {
     try {
