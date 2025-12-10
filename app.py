@@ -2872,7 +2872,7 @@ BD Padel Ladder System
     for challenge in challenges_sent:
         # Skip if the match for this challenge is in progress (scores have been submitted)
         match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
-        if match and (match.score_submitted_by_a or match.score_submitted_by_b):
+        if match and (match.team_a_submitted or match.team_b_submitted):
             continue  # Match is in progress, don't show challenge as active
         
         opponent = LadderTeam.query.get(challenge.challenged_team_id)
@@ -2888,7 +2888,7 @@ BD Padel Ladder System
     for challenge in challenges_received:
         # Skip if the match for this challenge is in progress (scores have been submitted)
         match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
-        if match and (match.score_submitted_by_a or match.score_submitted_by_b):
+        if match and (match.team_a_submitted or match.team_b_submitted):
             continue  # Match is in progress, don't show challenge as active
         
         opponent = LadderTeam.query.get(challenge.challenger_team_id)
