@@ -2856,6 +2856,7 @@ BD Padel Ladder System
             return redirect(url_for('ladder_my_team', token=token))
 
     # Query active challenges (sent and received)
+    # Exclude challenges with matches that have scores submitted (matches in progress)
     challenges_sent = LadderChallenge.query.filter(
         LadderChallenge.challenger_team_id == team.id,
         LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
@@ -2869,6 +2870,11 @@ BD Padel Ladder System
     # Get opponent team info for challenges
     challenge_details_sent = []
     for challenge in challenges_sent:
+        # Skip if the match for this challenge is in progress (scores have been submitted)
+        match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
+        if match and (match.score_submitted_by_a or match.score_submitted_by_b):
+            continue  # Match is in progress, don't show challenge as active
+        
         opponent = LadderTeam.query.get(challenge.challenged_team_id)
         if opponent:
             challenge_details_sent.append({
@@ -2880,6 +2886,11 @@ BD Padel Ladder System
     challenge_details_received = []
     now = datetime.now()
     for challenge in challenges_received:
+        # Skip if the match for this challenge is in progress (scores have been submitted)
+        match = LadderMatch.query.filter_by(challenge_id=challenge.id).first()
+        if match and (match.score_submitted_by_a or match.score_submitted_by_b):
+            continue  # Match is in progress, don't show challenge as active
+        
         opponent = LadderTeam.query.get(challenge.challenger_team_id)
         if opponent:
             # Only calculate deadline info for pending_acceptance challenges
