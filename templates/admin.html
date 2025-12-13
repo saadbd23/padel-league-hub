@@ -535,7 +535,7 @@
               <td class="px-6 py-4 text-center">
                 <div class="text-sm font-semibold text-gray-900">{{ t.wins }}W - {{ t.losses }}L</div>
                 <div class="text-xs text-gray-600">Sets: {{ t.sets_for }}-{{ t.sets_against }}</div>
-                <div class="text-xs text-blue-600 mt-1">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/2</div>
+                <div class="text-xs text-blue-600 mt-1">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/3</div>
               </td>
               <td class="px-6 py-4 text-center">
                 {% if t.confirmed %}
@@ -603,7 +603,7 @@
               <span class="font-semibold text-gray-700">Record:</span>
               <div class="text-gray-900">{{ t.wins }}W - {{ t.losses }}L</div>
               <div class="text-xs text-gray-600">Sets: {{ t.sets_for }}-{{ t.sets_against }}</div>
-              <div class="text-xs text-blue-600">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/2</div>
+              <div class="text-xs text-blue-600">Subs: {{ t.subs_used }}/2 | Reschedules: {{ t.reschedules_used }}/3</div>
             </div>
           </div>
           <div class="flex flex-col gap-2">
@@ -827,7 +827,7 @@
             <div class="text-sm text-gray-600">Proposed time: {{ r.proposed_time }}</div>
             {% if requester_team %}
             <div class="text-xs {% if requester_team.reschedules_used >= 1 %}text-orange-600 font-semibold{% else %}text-blue-600{% endif %} mt-1">
-              Team reschedules: {{ requester_team.reschedules_used }}/2 used
+              Team reschedules: {{ requester_team.reschedules_used }}/3 used
             </div>
             {% endif %}
             {% if match %}
