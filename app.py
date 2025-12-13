@@ -4093,11 +4093,11 @@ def submit_reschedule(token):
         if match.team_a_id != team.id and match.team_b_id != team.id:
             return {"success": False, "message": "Unauthorized"}, 403
 
-        # Check reschedule limit (max 2 per team)
-        if team.reschedules_used >= 2:
+        # Check reschedule limit (max 3 per team)
+        if team.reschedules_used >= 3:
             return {
                 "success": False,
-                "message": "Your team has already used all 2 reschedules. No more subs allowed in league stage."
+                "message": "Your team has already used all 3 reschedules. No more subs allowed in league stage."
             }, 400
 
         # Check if we've reached the round reschedule limit
