@@ -4750,7 +4750,12 @@ def admin_panel():
         
         booking_date = "Yet to be scheduled"
         booking_confirmed_status = "awaiting"
-        if match.match_datetime:
+        
+        # Check admin-set booking date first, then fall back to match_datetime
+        if match.booking_date_admin:
+            booking_date = match.booking_date_admin
+            booking_confirmed_status = "confirmed"
+        elif match.match_datetime:
             booking_date = match.match_datetime.strftime("%a, %b %d")
             booking_confirmed_status = "confirmed" if match.booking_confirmed else "awaiting"
         
