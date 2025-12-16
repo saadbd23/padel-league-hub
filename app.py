@@ -4753,7 +4753,14 @@ def admin_panel():
         
         # Check admin-set booking date first, then fall back to match_datetime
         if match.booking_date_admin:
-            booking_date = match.booking_date_admin
+            # Parse admin booking date and format consistently: "Wed, Dec 02"
+            try:
+                from datetime import datetime
+                date_part = match.booking_date_admin.split(" at ")[0]  # Extract "2025-12-16" part
+                admin_date = datetime.strptime(date_part, "%Y-%m-%d")
+                booking_date = admin_date.strftime("%a, %b %d")
+            except:
+                booking_date = match.booking_date_admin
             booking_confirmed_status = "confirmed"
         elif match.match_datetime:
             booking_date = match.match_datetime.strftime("%a, %b %d")
