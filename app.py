@@ -8181,10 +8181,14 @@ def set_booking_date(match_id):
     """Admin sets match booking date (no restrictions). Notifies both teams via email."""
     match = Match.query.get_or_404(match_id)
     booking_date = request.form.get("booking_date", "").strip()
+    booking_time = request.form.get("booking_time", "").strip()
     
-    if not booking_date:
-        flash("Booking date cannot be empty.", "error")
+    if not booking_date or not booking_time:
+        flash("Both date and time are required.", "error")
         return redirect(url_for("admin_panel"))
+    
+    # Format as "YYYY-MM-DD at HH:MM"
+    booking_date_formatted = f"{booking_date} at {booking_time}"
     
     # Get both teams
     team_a = Team.query.get(match.team_a_id)
@@ -8195,7 +8199,7 @@ def set_booking_date(match_id):
         return redirect(url_for("admin_panel"))
     
     # Store the admin-set booking date
-    match.booking_date_admin = booking_date
+    match.booking_date_admin = booking_date_formatted
     db.session.commit()
     
     # Send email notification to both teams
@@ -8210,7 +8214,7 @@ Match Details:
 - Team A: {team_a.team_name}
 - Team B: {team_b.team_name}
 - Round: {match.round}
-- Booking Date: {booking_date}
+- Booking Date: {booking_date_formatted}
 
 Please confirm your availability and prepare for the match.
 
@@ -8231,7 +8235,7 @@ Match Details:
 - Team A: {team_a.team_name}
 - Team B: {team_b.team_name}
 - Round: {match.round}
-- Booking Date: {booking_date}
+- Booking Date: {booking_date_formatted}
 
 Please confirm your availability and prepare for the match.
 
@@ -8243,7 +8247,7 @@ Padel League Hub"""
     if team_b.player2_email and team_b.player2_email != team_b.player1_email:
         send_email_notification(team_b.player2_email, subject, body_b)
     
-    flash(f"Booking date set to '{booking_date}'. Notification emails sent to both teams.", "success")
+    flash(f"Booking date set to '{booking_date_formatted}'. Notification emails sent to both teams.", "success")
     return redirect(url_for("admin_panel"))
 
 @app.route("/admin/override-match/<int:match_id>", methods=["POST"])

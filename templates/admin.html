@@ -752,16 +752,30 @@
               <!-- Set Booking Date Override -->
               <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <form method="POST" action="{{ url_for('set_booking_date', match_id=m.id) }}" class="space-y-2">
-                  <label class="block text-xs font-semibold text-gray-700">Set Match Booking Date (Admin Only - No Restrictions)</label>
-                  <div class="flex gap-2">
-                    <input type="text" name="booking_date" placeholder="e.g., Saturday 7PM or Dec 20, 2025 at 6:00 PM" 
-                           class="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                           value="{{ m.booking_date_admin or '' }}">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
-                      Set Date
-                    </button>
+                  <label class="block text-xs font-semibold text-gray-700 mb-2">Set Match Booking Date (Admin Only - No Restrictions)</label>
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+                      <input type="date" name="booking_date" required
+                             class="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                             value="{{ m.booking_date_admin.split(' at ')[0] if m.booking_date_admin else '' }}">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Time</label>
+                      <select name="booking_time" required class="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                        <option value="">Select time</option>
+                        {% for hour in range(6, 23) %}
+                          {% for minute in ['00', '30'] %}
+                            <option value="{{ '%02d:%s' | format(hour, minute) }}" {% if m.booking_date_admin and m.booking_date_admin.split(' at ')[1]|default('') == '%02d:%s' | format(hour, minute) %}selected{% endif %}>{{ '%02d:%s' | format(hour, minute) }}</option>
+                          {% endfor %}
+                        {% endfor %}
+                      </select>
+                    </div>
                   </div>
-                  <div class="text-xs text-blue-600">ℹ️ Teams will be notified via email when booking date is set</div>
+                  <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+                    Set Booking Date
+                  </button>
+                  <div class="text-xs text-blue-600 mt-2">ℹ️ Teams will be notified via email when booking date is set</div>
                 </form>
               </div>
 
@@ -804,10 +818,15 @@
             {% endif %}
 
             <!-- Booking Details for Regular Matches -->
-            {% if m.booking_details and m.status != 'bye' %}
+            {% if (m.booking_details or m.booking_date_admin) and m.status != 'bye' %}
             <div class="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
               <div class="text-xs font-semibold text-blue-800 mb-1">Court Booking Details:</div>
+              {% if m.booking_date_admin %}
+              <div class="text-xs text-blue-700 mb-1"><strong>Admin-Set Booking Date:</strong> {{ m.booking_date_admin }}</div>
+              {% endif %}
+              {% if m.booking_details %}
               <div class="text-xs text-blue-700">{{ m.booking_details|replace('\n', '<br>')|safe }}</div>
+              {% endif %}
             </div>
             {% endif %}
           </div>
