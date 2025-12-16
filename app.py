@@ -4822,10 +4822,23 @@ def admin_panel():
     
     # Sort matches within each round by booking date
     def get_sort_key(item):
+        from datetime import datetime
+        
+        # Check admin booking date first
+        if item['match'].booking_date_admin:
+            try:
+                date_part = item['match'].booking_date_admin.split(" at ")[0]
+                date_obj = datetime.strptime(date_part, "%Y-%m-%d")
+                return (0, date_obj)
+            except:
+                pass
+        
+        # Fall back to match_datetime
         if item['match'].match_datetime:
             return (0, item['match'].match_datetime)
-        else:
-            return (1, '')
+        
+        # Unscheduled matches go at the end
+        return (1, '')
     
     for round_num in rounds_dict:
         rounds_dict[round_num].sort(key=get_sort_key)
