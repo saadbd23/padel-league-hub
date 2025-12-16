@@ -8179,6 +8179,8 @@ Padel League Hub"""
 @require_admin_auth
 def set_booking_date(match_id):
     """Admin sets match booking date (no restrictions). Notifies both teams via email."""
+    from utils import send_email_notification
+    
     match = Match.query.get_or_404(match_id)
     booking_date = request.form.get("booking_date", "").strip()
     booking_time = request.form.get("booking_time", "").strip()
