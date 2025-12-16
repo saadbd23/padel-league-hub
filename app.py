@@ -8175,6 +8175,77 @@ Padel League Hub"""
     flash(f"Substitute request denied for Match {substitute.match_id}. Notification emails sent to all parties.")
     return redirect(url_for("admin_panel"))
 
+@app.route("/admin/set-booking-date/<int:match_id>", methods=["POST"])
+@require_admin_auth
+def set_booking_date(match_id):
+    """Admin sets match booking date (no restrictions). Notifies both teams via email."""
+    match = Match.query.get_or_404(match_id)
+    booking_date = request.form.get("booking_date", "").strip()
+    
+    if not booking_date:
+        flash("Booking date cannot be empty.", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Get both teams
+    team_a = Team.query.get(match.team_a_id)
+    team_b = Team.query.get(match.team_b_id)
+    
+    if not team_a or not team_b:
+        flash("Teams not found.", "error")
+        return redirect(url_for("admin_panel"))
+    
+    # Store the admin-set booking date
+    match.booking_date_admin = booking_date
+    db.session.commit()
+    
+    # Send email notification to both teams
+    subject = f"Match Booking Date Set - {team_a.team_name} vs {team_b.team_name}"
+    
+    # Email to Team A
+    body_a = f"""Hello {team_a.player1_name},
+
+Your match booking date has been set by the admin!
+
+Match Details:
+- Team A: {team_a.team_name}
+- Team B: {team_b.team_name}
+- Round: {match.round}
+- Booking Date: {booking_date}
+
+Please confirm your availability and prepare for the match.
+
+Thank you!
+Padel League Hub"""
+    
+    if team_a.player1_email:
+        send_email_notification(team_a.player1_email, subject, body_a)
+    if team_a.player2_email and team_a.player2_email != team_a.player1_email:
+        send_email_notification(team_a.player2_email, subject, body_a)
+    
+    # Email to Team B
+    body_b = f"""Hello {team_b.player1_name},
+
+Your match booking date has been set by the admin!
+
+Match Details:
+- Team A: {team_a.team_name}
+- Team B: {team_b.team_name}
+- Round: {match.round}
+- Booking Date: {booking_date}
+
+Please confirm your availability and prepare for the match.
+
+Thank you!
+Padel League Hub"""
+    
+    if team_b.player1_email:
+        send_email_notification(team_b.player1_email, subject, body_b)
+    if team_b.player2_email and team_b.player2_email != team_b.player1_email:
+        send_email_notification(team_b.player2_email, subject, body_b)
+    
+    flash(f"Booking date set to '{booking_date}'. Notification emails sent to both teams.", "success")
+    return redirect(url_for("admin_panel"))
+
 @app.route("/admin/override-match/<int:match_id>", methods=["POST"])
 @require_admin_auth
 def override_match(match_id):
