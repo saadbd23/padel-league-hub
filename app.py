@@ -4733,9 +4733,26 @@ def admin_panel():
     # Filter today's matches - only show matches that have been booked (confirmed or pending)
     todays_matches = []
     for match in matches:
-        if match.match_datetime and match.match_datetime.date() == today_date:
-            # Only include matches that have booking_details (meaning teams have submitted a booking)
-            if match.booking_details:
+        is_today = False
+        
+        # Check admin-set booking date first
+        if match.booking_date_admin:
+            try:
+                from datetime import datetime as dt
+                date_part = match.booking_date_admin.split(" at ")[0]
+                admin_date = dt.strptime(date_part, "%Y-%m-%d").date()
+                if admin_date == today_date:
+                    is_today = True
+            except:
+                pass
+        
+        # Check regular match_datetime if not already matched as today
+        if not is_today and match.match_datetime and match.match_datetime.date() == today_date:
+            is_today = True
+        
+        # Add match if it's today and has booking details
+        if is_today:
+            if match.booking_details or match.booking_date_admin:
                 todays_matches.append(match)
 
     # Build Round Summary - grouped by round number, sorted by booking date within each round
