@@ -124,20 +124,12 @@ def generate_round_pairings(round_number):
             for skip_msg in skipped_candidates:
                 log_lines.append(skip_msg)
 
-        # If no fresh opponent found, pair with anyone available (fallback)
+        # If no fresh opponent found, DO NOT pair (skip this team for this round)
+        # This ensures we never create repeat matchups, even as a fallback
         if opponent is None:
-            log_lines.append(f"  ⚠️  WARNING: No fresh opponents available - using fallback (repeat matchup)")
-            for j in range(i + 1, len(teams)):
-                candidate = teams[j]
-                if candidate.id not in paired:
-                    opponent = candidate
-                    candidate_rank = j + 1
-                    candidate_record = f"{candidate.wins}-{candidate.losses}-{candidate.draws}"
-                    log_lines.append(
-                        f"  ⚡ FALLBACK: Matched with #{candidate_rank} {candidate.team_name} ({candidate_record}, {candidate.points} pts)"
-                    )
-                    log_lines.append(f"     Reason: Repeat matchup necessary (all fresh opponents unavailable)")
-                    break
+            log_lines.append(f"  ❌ NO FRESH OPPONENT AVAILABLE - Team cannot be paired this round")
+            log_lines.append(f"     Reason: All available teams have already played this team")
+            log_lines.append(f"     Action: Team will receive BYE or remain unpaired to preserve Swiss rules")
 
         # Create the match if we found an opponent
         if opponent:
