@@ -54,14 +54,18 @@ def generate_round_pairings(round_number):
         )
 
     # 2. Build a set of previous matchups to avoid repeats
+    # IMPORTANT: Exclude walkovers - teams that had a walkover didn't actually compete
     previous_matches = Match.query.filter(Match.round < round_number).all()
     already_played = set()
     for match in previous_matches:
+        # Skip walkovers - they don't count as previous matchups
+        if match.status == 'walkover':
+            continue
         # Store both directions to check either team combination
         already_played.add((min(match.team_a_id, match.team_b_id), 
                           max(match.team_a_id, match.team_b_id)))
 
-    log_lines.append(f"\n--- PREVIOUS MATCHUPS ---")
+    log_lines.append(f"\n--- PREVIOUS MATCHUPS (excluding walkovers) ---")
     log_lines.append(f"Total previous matchups to avoid: {len(already_played)}")
 
     # 3. Track which teams have been paired
