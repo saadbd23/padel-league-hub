@@ -4754,6 +4754,23 @@ def admin_panel():
         if is_today:
             if match.booking_details or match.booking_date_admin:
                 todays_matches.append(match)
+    
+    # Sort today's matches by booking time (handle both admin dates and regular datetimes)
+    def sort_todays_matches(m):
+        if m.booking_date_admin:
+            try:
+                from datetime import datetime as dt
+                date_part = m.booking_date_admin.split(" at ")[0]
+                time_part = m.booking_date_admin.split(" at ")[1] if " at " in m.booking_date_admin else "00:00"
+                return dt.strptime(f"{date_part} {time_part}", "%Y-%m-%d %H:%M")
+            except:
+                return datetime.max
+        elif m.match_datetime:
+            return m.match_datetime
+        else:
+            return datetime.max
+    
+    todays_matches.sort(key=sort_todays_matches)
 
     # Build Round Summary - grouped by round number, sorted by booking date within each round
     rounds_dict = {}
