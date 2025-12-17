@@ -87,7 +87,13 @@
                 <tr class="hover:bg-purple-50 transition-colors">
                   <td class="px-4 py-3 whitespace-nowrap">
                     <div class="text-sm font-semibold text-gray-900">
-                      {{ m.match_datetime.strftime('%I:%M %p') if m.match_datetime else 'TBD' }}
+                      {% if m.match_datetime %}
+                        {{ m.match_datetime.strftime('%I:%M %p') }}
+                      {% elif m.booking_date_admin %}
+                        {{ m.booking_date_admin.split(' at ')[1] if ' at ' in m.booking_date_admin else 'TBD' }}
+                      {% else %}
+                        TBD
+                      {% endif %}
                     </div>
                   </td>
                   <td class="px-4 py-3">
@@ -171,7 +177,13 @@
               <div class="flex items-start justify-between mb-3">
                 <div>
                   <div class="text-lg font-bold text-purple-700">
-                    {{ m.match_datetime.strftime('%I:%M %p') if m.match_datetime else 'TBD' }}
+                    {% if m.match_datetime %}
+                      {{ m.match_datetime.strftime('%I:%M %p') }}
+                    {% elif m.booking_date_admin %}
+                      {{ m.booking_date_admin.split(' at ')[1] if ' at ' in m.booking_date_admin else 'TBD' }}
+                    {% else %}
+                      TBD
+                    {% endif %}
                   </div>
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 mt-1">
                     Round {{ m.round }}
