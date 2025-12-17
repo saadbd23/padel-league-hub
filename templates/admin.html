@@ -79,7 +79,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              {% for m in todays_matches|sort(attribute='match_datetime') %}
+              {% for m in todays_matches %}
                 {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
                 {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
                 {% set has_substitute = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
@@ -162,7 +162,7 @@
 
         <!-- Mobile Card View -->
         <div class="md:hidden space-y-4">
-          {% for m in todays_matches|sort(attribute='match_datetime') %}
+          {% for m in todays_matches %}
             {% set team_a = teams|selectattr('id', 'equalto', m.team_a_id)|first %}
             {% set team_b = teams|selectattr('id', 'equalto', m.team_b_id)|first if m.team_b_id else None %}
             {% set has_substitute = substitutes_history|selectattr('match_id', 'equalto', m.id)|selectattr('status', 'equalto', 'approved')|list|length > 0 %}
