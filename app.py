@@ -3541,8 +3541,13 @@ def submit_booking(token):
         if match.round:
             round_start_date = get_round_start_date(match.round)
             if round_start_date:
-                from datetime import timedelta
-                round_end_date = round_start_date + timedelta(days=6)  # Sunday
+                from datetime import timedelta, date
+                # Special handling for Round 5: extend end date to Dec 27
+                if match.round == 5:
+                    round_end_date = date(2025, 12, 27)
+                else:
+                    round_end_date = round_start_date + timedelta(days=6)  # Sunday
+                
                 booking_date_obj = datetime.strptime(booking_date, "%Y-%m-%d").date()
 
                 if booking_date_obj < round_start_date or booking_date_obj > round_end_date:
