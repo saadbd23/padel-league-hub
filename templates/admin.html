@@ -288,14 +288,14 @@
                       {{ round_data.completed_matches }}/{{ round_data.total_matches }} Complete
                     </div>
                   </div>
-                  <svg class="w-5 h-5 text-gray-600 transition-transform duration-300 collapse-icon" id="{{ round_id }}-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-gray-600 transition-transform duration-300 collapse-icon {% if loop.last %}rotate-180{% endif %}" id="{{ round_id }}-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                   </svg>
                 </div>
               </div>
 
               <!-- Round Content (Table) -->
-              <div id="{{ round_id }}-content" class="collapsible-content bg-white">
+              <div id="{{ round_id }}-content" class="collapsible-content bg-white {% if loop.last %}expanded{% endif %}">
                 <!-- Desktop Table View -->
                 <div class="hidden md:block overflow-x-auto">
                   <table class="w-full text-sm">
