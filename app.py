@@ -5068,6 +5068,10 @@ def admin_ladder_rankings(ladder_type):
             'games_diff': team.games_for - team.games_against,
         })
 
+    # Calculate display ranks to ensure they are 1..N and matches public view
+    for idx, team_data in enumerate(teams_with_status, start=1):
+        team_data['display_rank'] = idx
+
     return render_template(
         "admin_ladder_rankings.html",
         teams=teams_with_status,
