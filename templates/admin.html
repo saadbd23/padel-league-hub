@@ -278,7 +278,7 @@
         <div class="space-y-2">
           {% for round_data in round_summary %}
             {% set round_id = 'round_' ~ round_data.round_number %}
-            {% set is_latest = loop.last %}
+            {% set is_latest = loop.first %}
             <div class="border-2 border-purple-200 rounded-lg overflow-hidden">
               <!-- Round Header (Accordion Toggle) -->
               <div class="bg-gradient-to-r from-purple-100 to-indigo-100 px-4 py-3 cursor-pointer hover:from-purple-200 hover:to-indigo-200 transition-colors" onclick="toggleSection('{{ round_id }}')">
