@@ -7100,9 +7100,32 @@ def generate_round():
             flash("Cannot generate Swiss rounds while in playoff phase", "error")
             return redirect(url_for("admin_panel"))
         
-        # Generate the pairings
-        from utils import generate_round_pairings
-        matches = generate_round_pairings(round_number)
+        # TRANSITION TO PLAYOFFS LOGIC
+        if round_number > settings.swiss_rounds_count:
+            # Determine playoff phase based on round number relative to swiss rounds
+            # swiss_rounds_count + 1 = Quarterfinals
+            # swiss_rounds_count + 2 = Semifinals
+            # swiss_rounds_count + 3 = Finals
+            if round_number == settings.swiss_rounds_count + 1:
+                phase_type = "quarterfinal"
+            elif round_number == settings.swiss_rounds_count + 2:
+                phase_type = "semifinal"
+            elif round_number == settings.swiss_rounds_count + 3:
+                phase_type = "final"
+            else:
+                flash(f"Round {round_number} exceeds the scheduled league rounds.", "error")
+                return redirect(url_for("admin_panel"))
+
+            from utils import generate_playoff_bracket
+            matches = generate_playoff_bracket(round_number, phase_type)
+            
+            if not matches:
+                flash(f"Could not generate {phase_type} matches. Ensure playoffs are approved and teams are qualified.", "error")
+                return redirect(url_for("admin_panel"))
+        else:
+            # Generate the Swiss pairings
+            from utils import generate_round_pairings
+            matches = generate_round_pairings(round_number)
         
         if not matches:
             flash("No matches generated - check team count", "error")

@@ -468,11 +468,21 @@
     </div>
     <form method="POST" action="/admin/generate-round" class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
       <div class="flex-1">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Round Number</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          {% if next_round > settings.swiss_rounds_count %}
+            Round Number (Playoffs: {% if next_round == settings.swiss_rounds_count + 1 %}Quarter-Finals{% elif next_round == settings.swiss_rounds_count + 2 %}Semi-Finals{% else %}Finals{% endif %})
+          {% else %}
+            Round Number
+          {% endif %}
+        </label>
         <input type="number" name="round_number" required min="1" value="{{ next_round }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 outline-none" placeholder="Enter round number">
       </div>
       <button type="submit" class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto">
-        Generate Round
+        {% if next_round > settings.swiss_rounds_count %}
+          Generate Playoff Round
+        {% else %}
+          Generate Round
+        {% endif %}
       </button>
     </form>
 
