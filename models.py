@@ -138,6 +138,9 @@ class Match(db.Model):
     
     # Draft status for round preview workflow
     is_draft = db.Column(db.Boolean, default=False)  # True = preview mode, False = live match
+    
+    # Round deadline - all matches in a round share this deadline
+    round_deadline = db.Column(db.DateTime, nullable=True)  # Deadline for completing the round
 
     # Player participation tracking (for individual stats)
     # Stores player IDs who actually played in this match

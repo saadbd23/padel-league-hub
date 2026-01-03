@@ -345,79 +345,84 @@ def check_deadline_violations():
     }
 
     # ========================================
-    # 1. Check MAKEUP MATCH deadlines (Wednesday 23:59)
+    # 1. Check MAKEUP MATCH deadlines (round_deadline + 3 days)
     # ========================================
     pending_reschedules = get_pending_reschedules()
 
     for reschedule in pending_reschedules:
-        # Parse the proposed time
-        if reschedule.proposed_time and " at " in reschedule.proposed_time:
-            date_str = reschedule.proposed_time.split(" at ")[0]
-            try:
-                proposed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        # Get the match to determine its round deadline
+        match = Match.query.get(reschedule.match_id)
+        if not match or match.status in ("completed", "walkover"):
+            continue
+        
+        # Calculate makeup deadline based on round_deadline or fallback to legacy Wednesday
+        if match.round_deadline:
+            # Makeup deadline = round_deadline + 3 days
+            makeup_deadline = datetime.combine(
+                match.round_deadline.date() + timedelta(days=3), 
+                datetime.max.time()
+            )
+        else:
+            # Fallback: Parse from proposed time and use legacy Wednesday logic
+            if reschedule.proposed_time and " at " in reschedule.proposed_time:
+                date_str = reschedule.proposed_time.split(" at ")[0]
+                try:
+                    proposed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    proposed_weekday = proposed_date.weekday()
+                    if proposed_weekday in [0, 1, 2]:  # Mon, Tue, Wed
+                        days_to_wednesday = 2 - proposed_weekday
+                        wednesday_of_week = proposed_date + timedelta(days=days_to_wednesday)
+                        makeup_deadline = datetime.combine(wednesday_of_week, datetime.max.time())
+                    else:
+                        continue  # Can't determine deadline, skip
+                except ValueError:
+                    continue  # Invalid date format, skip
+            else:
+                continue  # No proposed time, skip
+        
+        # Check if makeup deadline has passed
+        if now > makeup_deadline:
+            # Apply walkover - opponent wins
+            opponent_id = match.team_b_id if match.team_a_id == reschedule.requester_team_id else match.team_a_id
+            opponent_team = Team.query.get(opponent_id)
+            requester_team = Team.query.get(reschedule.requester_team_id)
 
-                # Check if it's a Monday/Tuesday/Wednesday date
-                proposed_weekday = proposed_date.weekday()
-                if proposed_weekday in [0, 1, 2]:  # Mon, Tue, Wed
-                    # Find the Wednesday of that week
-                    days_to_wednesday = 2 - proposed_weekday
-                    wednesday_of_week = proposed_date + timedelta(days=days_to_wednesday)
+            if opponent_team and requester_team:
+                # Award walkover win (typical score: 6-0, 6-0)
+                match.status = "completed"
+                match.verified = True
+                match.winner_id = opponent_id
 
-                    # Wednesday deadline is 23:59
-                    wednesday_deadline = datetime.combine(wednesday_of_week, datetime.max.time())
+                # Set scores from perspectives
+                if match.team_a_id == opponent_id:
+                    match.score_a = "6-0, 6-0"
+                    match.score_b = "0-6, 0-6"
+                    match.sets_a = 2
+                    match.sets_b = 0
+                    match.games_a = 12
+                    match.games_b = 0
+                else:
+                    match.score_a = "0-6, 0-6"
+                    match.score_b = "6-0, 6-0"
+                    match.sets_a = 0
+                    match.sets_b = 2
+                    match.games_a = 0
+                    match.games_b = 12
 
-                    # Check if deadline has passed
-                    if now > wednesday_deadline:
-                        # Get the match
-                        match = Match.query.get(reschedule.match_id)
-                        if match and match.status not in ("completed", "walkover"):
-                            # Apply walkover - opponent wins
-                            opponent_id = match.team_b_id if match.team_a_id == reschedule.requester_team_id else match.team_a_id
-                            opponent_team = Team.query.get(opponent_id)
-                            requester_team = Team.query.get(reschedule.requester_team_id)
+                # Update team stats
+                update_team_stats_from_match(match)
 
-                            if opponent_team and requester_team:
-                                # Award walkover win (typical score: 6-0, 6-0)
-                                match.status = "completed"
-                                match.verified = True
-                                match.winner_id = opponent_id
+                # Mark reschedule as expired
+                reschedule.status = "expired_walkover"
 
-                                # Set scores from perspectives
-                                if match.team_a_id == opponent_id:
-                                    # Opponent is Team A, they win 6-0, 6-0
-                                    match.score_a = "6-0, 6-0"
-                                    match.score_b = "0-6, 0-6"
-                                    match.sets_a = 2
-                                    match.sets_b = 0
-                                    match.games_a = 12
-                                    match.games_b = 0
-                                else:
-                                    # Opponent is Team B, they win 6-0, 6-0
-                                    match.score_a = "0-6, 0-6"
-                                    match.score_b = "6-0, 6-0"
-                                    match.sets_a = 0
-                                    match.sets_b = 2
-                                    match.games_a = 0
-                                    match.games_b = 12
-
-                                # Update team stats
-                                update_team_stats_from_match(match)
-
-                                # Mark reschedule as expired
-                                reschedule.status = "expired_walkover"
-
-                                walkovers_applied['makeup'].append({
-                                    'match_id': match.id,
-                                    'round': match.round,
-                                    'requester_team': requester_team.team_name,
-                                    'opponent_team': opponent_team.team_name,
-                                    'deadline': wednesday_deadline.strftime("%A, %B %d at %H:%M"),
-                                    'type': 'makeup'
-                                })
-
-            except ValueError:
-                # Invalid date format, skip
-                continue
+                walkovers_applied['makeup'].append({
+                    'match_id': match.id,
+                    'round': match.round,
+                    'requester_team': requester_team.team_name,
+                    'opponent_team': opponent_team.team_name,
+                    'deadline': makeup_deadline.strftime("%A, %B %d at %H:%M"),
+                    'type': 'makeup'
+                })
 
     # ========================================
     # 2. Check REGULAR MATCH deadlines (Sunday 23:59)
@@ -437,47 +442,54 @@ def check_deadline_violations():
         if not match.round:
             continue
 
-        # Calculate the Sunday deadline for this round
-        # Assuming rounds start on Monday, we need to find the Sunday of that week
-        round_start_date = get_round_start_date(match.round)
-        if round_start_date:
-            # Find the Sunday of that week (6 days after Monday)
-            sunday_of_week = round_start_date + timedelta(days=6)
-            sunday_deadline = datetime.combine(sunday_of_week, datetime.max.time())
+        # Use round_deadline from match if set, otherwise fall back to calculated Sunday
+        if match.round_deadline:
+            # Use the explicitly set round deadline
+            round_deadline = datetime.combine(match.round_deadline.date(), datetime.max.time())
+        else:
+            # Calculate the Sunday deadline for this round (fallback)
+            # Assuming rounds start on Monday, we need to find the Sunday of that week
+            round_start_date = get_round_start_date(match.round)
+            if round_start_date:
+                # Find the Sunday of that week (6 days after Monday)
+                sunday_of_week = round_start_date + timedelta(days=6)
+                round_deadline = datetime.combine(sunday_of_week, datetime.max.time())
+            else:
+                continue  # Can't determine deadline, skip
+        
+        # Check if deadline has passed
+        if now > round_deadline:
+            # Apply walkover - both teams lose (or could be draw, your choice)
+            # For now, let's apply walkover to Team B (Team A wins by default)
+            # In real scenario, admin should manually review these
 
-            # Check if deadline has passed
-            if now > sunday_deadline:
-                # Apply walkover - both teams lose (or could be draw, your choice)
-                # For now, let's apply walkover to Team B (Team A wins by default)
-                # In real scenario, admin should manually review these
+            team_a = Team.query.get(match.team_a_id)
+            team_b = Team.query.get(match.team_b_id)
 
-                team_a = Team.query.get(match.team_a_id)
-                team_b = Team.query.get(match.team_b_id)
+            if team_a and team_b:
+                # Award walkover to Team A (arbitrary choice - admin can override)
+                match.status = "completed"
+                match.verified = True
+                match.winner_id = match.team_a_id
 
-                if team_a and team_b:
-                    # Award walkover to Team A (arbitrary choice - admin can override)
-                    match.status = "completed"
-                    match.verified = True
-                    match.winner_id = match.team_a_id
+                match.score_a = "6-0, 6-0"
+                match.score_b = "0-6, 0-6"
+                match.sets_a = 2
+                match.sets_b = 0
+                match.games_a = 12
+                match.games_b = 0
 
-                    match.score_a = "6-0, 6-0"
-                    match.score_b = "0-6, 0-6"
-                    match.sets_a = 2
-                    match.sets_b = 0
-                    match.games_a = 12
-                    match.games_b = 0
+                # Update team stats
+                update_team_stats_from_match(match)
 
-                    # Update team stats
-                    update_team_stats_from_match(match)
-
-                    walkovers_applied['regular'].append({
-                        'match_id': match.id,
-                        'round': match.round,
-                        'team_a': team_a.team_name,
-                        'team_b': team_b.team_name,
-                        'deadline': sunday_deadline.strftime("%A, %B %d at %H:%M"),
-                        'type': 'regular'
-                    })
+                walkovers_applied['regular'].append({
+                    'match_id': match.id,
+                    'round': match.round,
+                    'team_a': team_a.team_name,
+                    'team_b': team_b.team_name,
+                    'deadline': round_deadline.strftime("%A, %B %d at %H:%M"),
+                    'type': 'regular'
+                })
 
     if walkovers_applied['regular'] or walkovers_applied['makeup']:
         db.session.commit()
@@ -4115,38 +4127,44 @@ def submit_reschedule(token):
                 "message": f"Maximum reschedule limit reached for this round ({max_per_round} reschedules). Please wait for admin to process pending requests or contact admin for special approval."
             }, 400
 
-        # Validate reschedule request is before Sunday 23:59 cutoff of current round
+        # Validate reschedule request based on round deadline
         from datetime import datetime, timedelta
         today = datetime.now().date()
-        current_weekday = today.weekday()  # 0 = Monday, 6 = Sunday
-
-        # Calculate next Monday (start of following week)
-        if current_weekday == 0:  # If today is Monday, next Monday is 7 days away
-            days_until_next_monday = 7
-        else:
-            # Calculate days until next Monday
-            days_until_next_monday = (7 - current_weekday) % 7
-            if days_until_next_monday == 0:
-                days_until_next_monday = 7
-
-        next_monday = today + timedelta(days=days_until_next_monday)
-
-        # Calculate next Sunday (end of current round - deadline is Sunday 23:59)
-        next_sunday = next_monday + timedelta(days=6)
-
         selected_date = datetime.strptime(date, "%Y-%m-%d").date()
-        if selected_date < next_monday or selected_date > next_sunday:
+        
+        # Determine the round deadline - use match.round_deadline if set, otherwise calculate
+        if match.round_deadline:
+            round_deadline_date = match.round_deadline.date()
+            # Reschedule request cutoff: 2 days before round deadline
+            reschedule_cutoff = round_deadline_date - timedelta(days=2)
+            # Makeup match deadline: 3 days after round deadline
+            makeup_deadline = round_deadline_date + timedelta(days=3)
+        else:
+            # Fallback to legacy week-based logic
+            current_weekday = today.weekday()  # 0 = Monday, 6 = Sunday
+            if current_weekday == 0:
+                days_until_next_monday = 7
+            else:
+                days_until_next_monday = (7 - current_weekday) % 7
+                if days_until_next_monday == 0:
+                    days_until_next_monday = 7
+            next_monday = today + timedelta(days=days_until_next_monday)
+            round_deadline_date = next_monday + timedelta(days=6)  # Sunday
+            reschedule_cutoff = round_deadline_date - timedelta(days=2)
+            makeup_deadline = round_deadline_date + timedelta(days=3)
+        
+        # Validate reschedule request is before cutoff
+        if today > reschedule_cutoff:
             return {
                 "success": False,
-                "message": f"Reschedule date must be Monday-Sunday of next week only ({next_monday.strftime('%Y-%m-%d')} to {next_sunday.strftime('%Y-%m-%d')})"
+                "message": f"Reschedule requests must be submitted by {reschedule_cutoff.strftime('%B %d, %Y')} (2 days before round deadline)"
             }, 400
-
-        # Additional validation: Selected day must be Mon, Tue, Wed, Thu, Fri, Sat, or Sun
-        selected_weekday = selected_date.weekday()  # 0 = Monday through 6 = Sunday
-        if selected_weekday not in [0, 1, 2, 3, 4, 5, 6]:
+        
+        # Validate selected date is between now and makeup deadline
+        if selected_date < today or selected_date > makeup_deadline:
             return {
                 "success": False,
-                "message": "Match can only be rescheduled to Monday-Sunday of next week. Sunday 23:59 is the absolute deadline."
+                "message": f"Reschedule date must be between {today.strftime('%Y-%m-%d')} and {makeup_deadline.strftime('%Y-%m-%d')} (makeup deadline)"
             }, 400
 
         # Check if this is a valid round for reschedule (1 round limitation)
@@ -4180,13 +4198,8 @@ def submit_reschedule(token):
         db.session.add(req)
         db.session.commit()
 
-        # Calculate Wednesday deadline for notification
-        selected_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-        selected_weekday = selected_date_obj.weekday()
-        days_to_wednesday = 2 - selected_weekday
-        wednesday_deadline = selected_date_obj + timedelta(days=days_to_wednesday)
-
-        deadline_text = f"⚠️ MAKEUP MATCH DEADLINE: Wednesday {wednesday_deadline.strftime('%B %d')} 23:59"
+        # Use the dynamically calculated makeup deadline for notification
+        deadline_text = f"⚠️ MAKEUP MATCH DEADLINE: {makeup_deadline.strftime('%A, %B %d')} 23:59"
 
         # Send email notifications to both teams
         from utils import send_email_notification
@@ -4205,7 +4218,7 @@ Match Details:
 - Round: {match.round}
 - Current Match Date: {match.match_datetime.strftime('%a, %b %d, %Y %I:%M %p') if match.match_datetime else 'Not scheduled'}
 - Proposed Date/Time: {proposed_time_formatted}
-- Makeup Match Deadline: Wednesday {wednesday_deadline.strftime('%B %d')} 23:59
+- Makeup Match Deadline: {makeup_deadline.strftime('%A, %B %d')} 23:59
 
 Team Reschedules Used: {team.reschedules_used}/2
 
@@ -4888,11 +4901,18 @@ def admin_panel():
         matches_in_round = rounds_dict[round_num]
         completed_count = len([m for m in matches_in_round if m['match'].status in ('completed', 'walkover')])
         
+        # Get round deadline from first match in round (all matches share same deadline)
+        round_deadline = None
+        if matches_in_round:
+            first_match = matches_in_round[0]['match']
+            round_deadline = first_match.round_deadline
+        
         round_summary.append({
             'round_number': round_num,
             'matches': matches_in_round,
             'total_matches': len(matches_in_round),
-            'completed_matches': completed_count
+            'completed_matches': completed_count,
+            'deadline': round_deadline
         })
 
     # Free Agents tab data with matching contact info check
@@ -4931,6 +4951,10 @@ def admin_panel():
             'team_b': team_b,
             'winner': winner
         })
+
+    # Default deadline for new round (1 week from now)
+    from datetime import datetime, timedelta
+    default_deadline = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
     # Americano tournaments data (similar to admin_americano_tournaments route)
     tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
@@ -5001,6 +5025,7 @@ def admin_panel():
         ladder_free_agents_with_matches=ladder_free_agents_with_matches,
         tournament_data=tournament_data,
         pending_draft_round=pending_draft_round,
+        default_deadline=default_deadline,
     )
 
 
@@ -7076,6 +7101,19 @@ def generate_round():
     """Generate Swiss-format round pairings as DRAFT for preview"""
     try:
         round_number = request.form.get("round_number", type=int)
+        round_deadline_str = request.form.get("round_deadline")
+        
+        # Parse deadline string to datetime, normalized to end-of-day (23:59:59)
+        from datetime import datetime, time as dt_time
+        round_deadline = None
+        if round_deadline_str:
+            try:
+                deadline_date = datetime.strptime(round_deadline_str, "%Y-%m-%d").date()
+                # Normalize to end-of-day (23:59:59)
+                round_deadline = datetime.combine(deadline_date, dt_time(23, 59, 59))
+            except ValueError:
+                flash("Invalid deadline date format", "error")
+                return redirect(url_for("admin_panel"))
         
         if not round_number or round_number < 1:
             flash("Invalid round number", "error")
@@ -7131,9 +7169,11 @@ def generate_round():
             flash("No matches generated - check team count", "error")
             return redirect(url_for("admin_panel"))
         
-        # Mark all generated matches as DRAFT
+        # Mark all generated matches as DRAFT and set deadline
         for match in matches:
             match.is_draft = True
+            if round_deadline:
+                match.round_deadline = round_deadline
         db.session.commit()
         
         # Redirect to preview page instead of sending emails
@@ -7143,6 +7183,53 @@ def generate_round():
     except Exception as e:
         logging.error(f"Error generating round: {str(e)}")
         flash(f"Error generating round: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/extend-round-deadline", methods=["POST"])
+@require_admin_auth
+def extend_round_deadline():
+    """Extend the deadline for a round"""
+    try:
+        round_number = request.form.get("round_number", type=int)
+        new_deadline_str = request.form.get("new_deadline")
+        
+        if not round_number or not new_deadline_str:
+            flash("Round number and new deadline are required", "error")
+            return redirect(url_for("admin_panel"))
+        
+        from datetime import datetime, time as dt_time
+        try:
+            deadline_date = datetime.strptime(new_deadline_str, "%Y-%m-%d").date()
+            # Normalize to end-of-day (23:59:59)
+            new_deadline = datetime.combine(deadline_date, dt_time(23, 59, 59))
+        except ValueError:
+            flash("Invalid deadline date format", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Update ACTIVE matches in this round (not completed/walkover) and draft matches
+        matches = Match.query.filter(
+            Match.round == round_number,
+            db.or_(
+                Match.status.notin_(['completed', 'walkover']),
+                Match.is_draft == True,
+                Match.status == None  # Include drafts with no status
+            )
+        ).all()
+        if not matches:
+            flash(f"No active matches found for Round {round_number}. All matches may already be completed.", "info")
+            return redirect(url_for("admin_panel"))
+        
+        for match in matches:
+            match.round_deadline = new_deadline
+        db.session.commit()
+        
+        flash(f"Round {round_number} deadline extended to {deadline_date.strftime('%B %d, %Y')} for {len(matches)} active match(es)", "success")
+        return redirect(url_for("admin_panel"))
+        
+    except Exception as e:
+        logging.error(f"Error extending deadline: {str(e)}")
+        flash(f"Error extending deadline: {str(e)}", "error")
         return redirect(url_for("admin_panel"))
 
 
@@ -7248,12 +7335,17 @@ def confirm_round(round_number):
                 base_url = os.environ.get('APP_BASE_URL', 'https://goeclectic.xyz')
                 matches_link = f"{base_url}/my-matches/{team.access_token}"
                 
+                # Get deadline from any match in this round (all matches share same deadline)
+                deadline_text = "Sunday 23:59"  # Default
+                if team_matches and team_matches[0].round_deadline:
+                    deadline_text = team_matches[0].round_deadline.strftime('%A, %B %d at %H:%M')
+                
                 email_body = f"""Hello {team.team_name},
 
 Round {round_number} has been generated! Here are your matchups:
 
 {match_details}
-Deadline: Submit your match result by Sunday 23:59
+Deadline: Submit your match result by {deadline_text}
 
 📍 View and manage your matches here: {matches_link}
 
