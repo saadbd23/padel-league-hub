@@ -4117,6 +4117,13 @@ def submit_reschedule(token):
                 "message": "Your team has already used all 3 reschedules. No more subs allowed in league stage."
             }, 400
 
+        # NEW: Disable reschedules for knockout rounds (Round 6+)
+        if match.round >= 6:
+            return {
+                "success": False,
+                "message": "Rescheduling is not permitted during knockout rounds (Round 6+)."
+            }, 400
+
         # Check if we've reached the round reschedule limit
         pending_reschedules = get_pending_reschedules()
         max_per_round = get_max_reschedules_per_round()
@@ -4321,6 +4328,13 @@ def submit_substitute(token):
         # Verify team is part of this match
         if match.team_a_id != team.id and match.team_b_id != team.id:
             return {"success": False, "message": "Unauthorized"}, 403
+
+        # NEW: Disable substitutions for knockout rounds (Round 6+)
+        if match.round >= 6:
+            return {
+                "success": False,
+                "message": "Substitution requests are not permitted during knockout rounds (Round 6+)."
+            }, 400
 
         # Check substitute limit (max 2 per team in league stage)
         if team.subs_used >= 2:

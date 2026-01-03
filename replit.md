@@ -44,6 +44,7 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Extend Deadline Feature**: Admin can extend deadlines for any round via modal in Round Summary section. Only affects active/draft matches (not completed/walkover).
 - **Dynamic Email Notifications**: Round confirmation and reschedule emails now display dynamically calculated deadlines based on `round_deadline`.
 - **Deadline Violation Checks**: Both regular and makeup deadline checks updated to use `round_deadline` when available.
+- **Knockout Round Restrictions**: Disabled Substitution and Reschedule requests for teams once knockout rounds (Round 6+) begin. Added backend validation and UI feedback on team pages.
 
 ## Previous Changes (December 2, 2025)
 - **League Score Entry UI Improvement**: Changed score submission form from text input (e.g., "6-4") to separate number boxes for each team per set. Clear headers show team names. Format: Team A vs Team B scores for Set 1, Set 2, Set 3 (optional).

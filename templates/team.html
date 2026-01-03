@@ -68,6 +68,8 @@
               {{ m.score_b }}
             {% endif %}
           </div>
+          {% elif m.round >= 6 %}
+          <div class="text-xs text-gray-500 italic">Knockout Round: Reschedules/Subs disabled</div>
           {% endif %}
         </div>
       </div>
