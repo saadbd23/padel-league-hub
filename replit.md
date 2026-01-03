@@ -38,7 +38,14 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (December 2, 2025)
+## Recent Changes (January 3, 2026)
+- **Flexible Round Deadlines**: Added `round_deadline` DateTime field to Match model. Admins can set custom deadlines when generating rounds via date picker in admin panel.
+- **Deadline Cascading Logic**: Reschedule request cutoff = round_deadline - 2 days; Makeup match deadline = round_deadline + 3 days. All deadline checks now prioritize `round_deadline` with fallback to legacy week-based calculations.
+- **Extend Deadline Feature**: Admin can extend deadlines for any round via modal in Round Summary section. Only affects active/draft matches (not completed/walkover).
+- **Dynamic Email Notifications**: Round confirmation and reschedule emails now display dynamically calculated deadlines based on `round_deadline`.
+- **Deadline Violation Checks**: Both regular and makeup deadline checks updated to use `round_deadline` when available.
+
+## Previous Changes (December 2, 2025)
 - **League Score Entry UI Improvement**: Changed score submission form from text input (e.g., "6-4") to separate number boxes for each team per set. Clear headers show team names. Format: Team A vs Team B scores for Set 1, Set 2, Set 3 (optional).
 - **Score Preview & Confirmation Popup**: Teams now see a preview modal showing the exact scores they entered and the calculated winner before final submission. Options to Edit or Confirm.
 - **Cancel Pending Challenges**: Challengers can now cancel (withdraw) their pending challenges from the "Challenges Sent" section. Challenged teams receive notification and become unlocked.
