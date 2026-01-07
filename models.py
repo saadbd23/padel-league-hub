@@ -148,6 +148,11 @@ class Match(db.Model):
     team_a_player2_id = db.Column(db.Integer, nullable=True)  # Team A player 2
     team_b_player1_id = db.Column(db.Integer, nullable=True)  # Team B player 1
     team_b_player2_id = db.Column(db.Integer, nullable=True)  # Team B player 2
+    
+    # Bracket metadata for knockout rounds
+    bracket_slot = db.Column(db.String(10), nullable=True)  # QF1, QF2, QF3, QF4, SF1, SF2, F1
+    seed_a = db.Column(db.Integer, nullable=True)  # Seed number for team A (1-8)
+    seed_b = db.Column(db.Integer, nullable=True)  # Seed number for team B (1-8)
 
 
 class Reschedule(db.Model):
