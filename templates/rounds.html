@@ -24,16 +24,10 @@
             align-items: center;
           }
           
-          .bracket-round {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-          }
-          
           .qf-column {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 32px;
           }
           
           .sf-column {
@@ -41,7 +35,7 @@
             flex-direction: column;
             justify-content: space-around;
             height: 100%;
-            gap: 120px;
+            gap: 160px;
           }
           
           .finals-column {
@@ -54,9 +48,8 @@
           .connector-qf-sf {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-around;
             height: 100%;
-            gap: 120px;
           }
           
           .connector-sf-f {
@@ -68,7 +61,7 @@
           
           .line-group {
             position: relative;
-            height: 152px;
+            height: 164px; /* Adjust to match QF card height + gap */
           }
           
           .line-top, .line-bottom {
@@ -80,11 +73,11 @@
           }
           
           .line-top {
-            top: 15px;
+            top: 50px; /* Center of first match in pair */
           }
           
           .line-bottom {
-            bottom: 15px;
+            bottom: 50px; /* Center of second match in pair */
           }
           
           .line-vertical {
@@ -92,8 +85,8 @@
             width: 2px;
             background: linear-gradient(180deg, #8B5CF6, #6366F1);
             right: 0;
-            top: 15px;
-            bottom: 15px;
+            top: 50px;
+            bottom: 50px;
           }
           
           .line-out {
@@ -108,7 +101,7 @@
           
           .sf-line-group {
             position: relative;
-            height: 272px;
+            height: 328px; /* Adjust to match SF cards vertical distance */
           }
           
           .sf-line-top {
@@ -117,7 +110,7 @@
             height: 2px;
             background: linear-gradient(90deg, #6366F1, #EAB308);
             right: 0;
-            top: 60px;
+            top: 84px;
           }
           
           .sf-line-bottom {
@@ -126,7 +119,7 @@
             height: 2px;
             background: linear-gradient(90deg, #6366F1, #EAB308);
             right: 0;
-            bottom: 60px;
+            bottom: 84px;
           }
           
           .sf-line-vertical {
@@ -134,8 +127,8 @@
             width: 2px;
             background: linear-gradient(180deg, #6366F1, #EAB308);
             right: 0;
-            top: 60px;
-            bottom: 60px;
+            top: 84px;
+            bottom: 84px;
           }
           
           .sf-line-out {
