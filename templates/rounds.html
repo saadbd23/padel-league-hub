@@ -19,7 +19,7 @@
         <style>
           .bracket-container {
             display: grid;
-            grid-template-columns: 1fr 80px 1fr 80px 1fr;
+            grid-template-columns: 1fr 60px 1fr 60px 1fr;
             gap: 0;
             align-items: center;
           }
@@ -27,7 +27,7 @@
           .qf-column {
             display: flex;
             flex-direction: column;
-            gap: 32px;
+            gap: 24px;
           }
           
           .sf-column {
@@ -35,7 +35,7 @@
             flex-direction: column;
             justify-content: space-around;
             height: 100%;
-            gap: 160px;
+            gap: 130px;
           }
           
           .finals-column {
@@ -59,83 +59,91 @@
             height: 100%;
           }
           
+          /* Precise calculation based on 130px match card height + 24px gap */
+          /* Center of card 1 to center of card 2 = 130 + 24 = 154px */
+          
           .line-group {
             position: relative;
-            height: 164px; /* Adjust to match QF card height + gap */
+            height: 154px;
+            display: flex;
+            align-items: center;
           }
           
           .line-top, .line-bottom {
             position: absolute;
-            width: 40px;
+            width: 30px;
             height: 2px;
-            background: linear-gradient(90deg, #8B5CF6, #6366F1);
+            background: #cbd5e1;
             right: 0;
           }
           
           .line-top {
-            top: 50px; /* Center of first match in pair */
+            top: 0;
           }
           
           .line-bottom {
-            bottom: 50px; /* Center of second match in pair */
+            bottom: 0;
           }
           
           .line-vertical {
             position: absolute;
             width: 2px;
-            background: linear-gradient(180deg, #8B5CF6, #6366F1);
+            background: #cbd5e1;
             right: 0;
-            top: 50px;
-            bottom: 50px;
+            top: 0;
+            bottom: 0;
           }
           
           .line-out {
             position: absolute;
-            width: 40px;
+            width: 30px;
             height: 2px;
-            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+            background: #cbd5e1;
             left: 0;
             top: 50%;
             transform: translateY(-50%);
           }
           
+          /* SF distance is double the QF step approx */
           .sf-line-group {
             position: relative;
-            height: 328px; /* Adjust to match SF cards vertical distance */
+            height: 308px;
+            display: flex;
+            align-items: center;
           }
           
           .sf-line-top {
             position: absolute;
-            width: 40px;
+            width: 30px;
             height: 2px;
-            background: linear-gradient(90deg, #6366F1, #EAB308);
+            background: #cbd5e1;
             right: 0;
-            top: 84px;
+            top: 0;
           }
           
           .sf-line-bottom {
             position: absolute;
-            width: 40px;
+            width: 30px;
             height: 2px;
-            background: linear-gradient(90deg, #6366F1, #EAB308);
+            background: #cbd5e1;
             right: 0;
-            bottom: 84px;
+            bottom: 0;
           }
           
           .sf-line-vertical {
             position: absolute;
             width: 2px;
-            background: linear-gradient(180deg, #6366F1, #EAB308);
+            background: #cbd5e1;
             right: 0;
-            top: 84px;
-            bottom: 84px;
+            top: 0;
+            bottom: 0;
           }
           
           .sf-line-out {
             position: absolute;
-            width: 40px;
+            width: 30px;
             height: 2px;
-            background: linear-gradient(90deg, #EAB308, #F59E0B);
+            background: #cbd5e1;
             left: 0;
             top: 50%;
             transform: translateY(-50%);
