@@ -4970,6 +4970,42 @@ def admin_panel():
     from datetime import datetime, timedelta
     default_deadline = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
+    # Knockout bracket status for admin panel
+    knockout_status = {
+        'has_knockout': False,
+        'qf_matches': [],
+        'sf_matches': [],
+        'final_match': None,
+        'qf_complete': False,
+        'sf_complete': False,
+        'final_complete': False,
+        'can_generate_sf': False,
+        'can_generate_final': False,
+        'champion': None
+    }
+    
+    # Get knockout matches
+    qf_matches = Match.query.filter_by(phase='quarterfinal').all()
+    sf_matches = Match.query.filter_by(phase='semifinal').all()
+    final_match = Match.query.filter_by(phase='final').first()
+    
+    if qf_matches:
+        knockout_status['has_knockout'] = True
+        knockout_status['qf_matches'] = qf_matches
+        knockout_status['qf_complete'] = all(m.winner_id for m in qf_matches)
+        knockout_status['can_generate_sf'] = knockout_status['qf_complete'] and len(sf_matches) == 0
+    
+    if sf_matches:
+        knockout_status['sf_matches'] = sf_matches
+        knockout_status['sf_complete'] = all(m.winner_id for m in sf_matches)
+        knockout_status['can_generate_final'] = knockout_status['sf_complete'] and final_match is None
+    
+    if final_match:
+        knockout_status['final_match'] = final_match
+        knockout_status['final_complete'] = final_match.winner_id is not None
+        if knockout_status['final_complete']:
+            knockout_status['champion'] = db.session.get(Team, final_match.winner_id)
+
     # Americano tournaments data (similar to admin_americano_tournaments route)
     tournaments = AmericanoTournament.query.order_by(AmericanoTournament.tournament_date.desc()).all()
     tournament_data = []
@@ -5040,6 +5076,7 @@ def admin_panel():
         tournament_data=tournament_data,
         pending_draft_round=pending_draft_round,
         default_deadline=default_deadline,
+        knockout_status=knockout_status,
     )
 
 
@@ -7107,6 +7144,84 @@ def reject_playoffs():
 
     flash("Playoff preview rejected. You can regenerate it when ready.", "info")
     return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/generate-next-knockout-round", methods=["POST"])
+@require_admin_auth
+def generate_next_knockout_round():
+    """Generate the next knockout round (SF after QF, Final after SF)"""
+    try:
+        phase = request.form.get("phase")  # "semifinal" or "final"
+        round_deadline_str = request.form.get("round_deadline")
+        
+        # Parse deadline string to datetime, normalized to end-of-day (23:59:59)
+        from datetime import datetime, time as dt_time
+        round_deadline = None
+        if round_deadline_str:
+            try:
+                deadline_date = datetime.strptime(round_deadline_str, "%Y-%m-%d").date()
+                round_deadline = datetime.combine(deadline_date, dt_time(23, 59, 59))
+            except ValueError:
+                flash("Invalid deadline date format", "error")
+                return redirect(url_for("admin_panel"))
+        
+        if phase not in ["semifinal", "final"]:
+            flash("Invalid knockout phase", "error")
+            return redirect(url_for("admin_panel"))
+        
+        settings = LeagueSettings.query.first()
+        if not settings:
+            flash("Settings not found", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Determine round number based on phase
+        if phase == "semifinal":
+            round_number = settings.swiss_rounds_count + 2  # Round 7 for 5 Swiss rounds
+        else:  # final
+            round_number = settings.swiss_rounds_count + 3  # Round 8 for 5 Swiss rounds
+        
+        # Check if matches already exist for this phase
+        existing_matches = Match.query.filter_by(phase=phase).first()
+        if existing_matches:
+            flash(f"{phase.title()} matches already exist!", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Validate prerequisites
+        if phase == "semifinal":
+            # Check all QF matches are complete
+            qf_matches = Match.query.filter_by(phase="quarterfinal").all()
+            if not qf_matches or not all(m.winner_id for m in qf_matches):
+                flash("Cannot generate Semi-Finals: Quarter-Finals are not complete", "error")
+                return redirect(url_for("admin_panel"))
+        elif phase == "final":
+            # Check all SF matches are complete
+            sf_matches = Match.query.filter_by(phase="semifinal").all()
+            if not sf_matches or not all(m.winner_id for m in sf_matches):
+                flash("Cannot generate Finals: Semi-Finals are not complete", "error")
+                return redirect(url_for("admin_panel"))
+        
+        # Generate the knockout round
+        from utils import generate_playoff_bracket
+        matches = generate_playoff_bracket(round_number, phase)
+        
+        if not matches:
+            flash(f"Could not generate {phase} matches", "error")
+            return redirect(url_for("admin_panel"))
+        
+        # Set deadline on all generated matches
+        if round_deadline:
+            for match in matches:
+                match.round_deadline = round_deadline
+            db.session.commit()
+        
+        phase_names = {"semifinal": "Semi-Finals", "final": "Finals"}
+        flash(f"✅ {phase_names.get(phase, phase.title())} generated with {len(matches)} match(es)!", "success")
+        return redirect(url_for("admin_panel"))
+        
+    except Exception as e:
+        logging.error(f"Error generating knockout round: {str(e)}")
+        flash(f"Error generating knockout round: {str(e)}", "error")
+        return redirect(url_for("admin_panel"))
 
 
 @app.route("/admin/generate-round", methods=["POST"])

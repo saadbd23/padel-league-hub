@@ -740,18 +740,20 @@ def generate_playoff_preview():
             'games_diff': team.games_diff
         })
 
-    # Generate bracket preview (matchups)
+    # Generate bracket preview (matchups) with proper bracket ordering:
+    # QF1+QF2 → SF1, QF3+QF4 → SF2, SF winners → Final
+    # This ensures seeds 1 and 2 are on opposite bracket halves
     if len(top_8) >= 8:
         preview['bracket_preview'] = [
-            {'match': 'QF1', 'seed1': 1, 'seed8': 8, 'team1': top_8[0][0].team_name, 'team8': top_8[7][0].team_name},
-            {'match': 'QF2', 'seed2': 2, 'seed7': 7, 'team2': top_8[1][0].team_name, 'team7': top_8[6][0].team_name},
-            {'match': 'QF3', 'seed3': 3, 'seed6': 6, 'team3': top_8[2][0].team_name, 'team6': top_8[5][0].team_name},
-            {'match': 'QF4', 'seed4': 4, 'seed5': 5, 'team4': top_8[3][0].team_name, 'team5': top_8[4][0].team_name},
+            {'match': 'QF1', 'seed_a': 1, 'seed_b': 8, 'team_a': top_8[0][0].team_name, 'team_b': top_8[7][0].team_name},
+            {'match': 'QF2', 'seed_a': 4, 'seed_b': 5, 'team_a': top_8[3][0].team_name, 'team_b': top_8[4][0].team_name},
+            {'match': 'QF3', 'seed_a': 2, 'seed_b': 7, 'team_a': top_8[1][0].team_name, 'team_b': top_8[6][0].team_name},
+            {'match': 'QF4', 'seed_a': 3, 'seed_b': 6, 'team_a': top_8[2][0].team_name, 'team_b': top_8[5][0].team_name},
         ]
     elif len(top_8) >= 4:
         preview['bracket_preview'] = [
-            {'match': 'SF1', 'seed1': 1, 'seed4': 4, 'team1': top_8[0][0].team_name, 'team4': top_8[3][0].team_name},
-            {'match': 'SF2', 'seed2': 2, 'seed3': 3, 'team2': top_8[1][0].team_name, 'team3': top_8[2][0].team_name},
+            {'match': 'SF1', 'seed_a': 1, 'seed_b': 4, 'team_a': top_8[0][0].team_name, 'team_b': top_8[3][0].team_name},
+            {'match': 'SF2', 'seed_a': 2, 'seed_b': 3, 'team_a': top_8[1][0].team_name, 'team_b': top_8[2][0].team_name},
         ]
 
     return preview
@@ -759,14 +761,20 @@ def generate_playoff_preview():
 
 def generate_playoff_bracket(round_number, phase_type):
     """
-    Generate playoff matches based on phase:
+    Generate playoff matches based on phase with proper bracket positioning:
 
-    - "quarterfinal": Top 8 teams, seeded 1v8, 2v7, 3v6, 4v5
-    - "semifinal": Winners from quarters (or Top 4 if no quarters)
-    - "third_place": Losers from semi-finals
-    - "final": Winners from semi-finals
+    Bracket Structure (standard 8-team single elimination):
+    - QF1: Seed 1 vs Seed 8  ─┐
+                              ├─ SF1 (winner meets in Final)
+    - QF2: Seed 4 vs Seed 5  ─┘
+    - QF3: Seed 2 vs Seed 7  ─┐
+                              ├─ SF2 (winner meets in Final)
+    - QF4: Seed 3 vs Seed 6  ─┘
 
-    Creates Match records with phase field set appropriately.
+    This ensures Seeds 1 and 2 are on opposite bracket halves
+    and can only meet in the Final if they keep winning.
+
+    Creates Match records with phase, bracket_slot, seed_a, seed_b fields.
     Returns: List of created matches
     """
     from models import LeagueSettings
@@ -790,18 +798,22 @@ def generate_playoff_bracket(round_number, phase_type):
         if len(team_ids) < 8:
             return []
 
-        # Create quarterfinal matches (1v8, 2v7, 3v6, 4v5)
+        # Create quarterfinal matches with proper bracket ordering
+        # Format: (team_a_id, team_b_id, bracket_slot, seed_a, seed_b, notes)
         matchups = [
-            (team_ids[0], team_ids[7], "QF1: Seed 1 vs Seed 8"),
-            (team_ids[1], team_ids[6], "QF2: Seed 2 vs Seed 7"),
-            (team_ids[2], team_ids[5], "QF3: Seed 3 vs Seed 6"),
-            (team_ids[3], team_ids[4], "QF4: Seed 4 vs Seed 5"),
+            (team_ids[0], team_ids[7], "QF1", 1, 8, "QF1: Seed 1 vs Seed 8"),
+            (team_ids[3], team_ids[4], "QF2", 4, 5, "QF2: Seed 4 vs Seed 5"),
+            (team_ids[1], team_ids[6], "QF3", 2, 7, "QF3: Seed 2 vs Seed 7"),
+            (team_ids[2], team_ids[5], "QF4", 3, 6, "QF4: Seed 3 vs Seed 6"),
         ]
 
-        for team_a_id, team_b_id, notes in matchups:
+        for team_a_id, team_b_id, slot, seed_a, seed_b, notes in matchups:
             match = Match(
                 round=round_number,
                 phase="quarterfinal",
+                bracket_slot=slot,
+                seed_a=seed_a,
+                seed_b=seed_b,
                 team_a_id=team_a_id,
                 team_b_id=team_b_id,
                 status="scheduled",
@@ -815,24 +827,32 @@ def generate_playoff_bracket(round_number, phase_type):
         quarters = Match.query.filter_by(phase="quarterfinal").all()
 
         if quarters and len(quarters) == 4:
-            # Get winners from quarters
-            qf_winners = []
-            for qf in sorted(quarters, key=lambda m: m.id):
-                if qf.winner_id:
-                    qf_winners.append(qf.winner_id)
-
-            if len(qf_winners) == 4:
-                # SF1: QF1 winner vs QF2 winner
-                # SF2: QF3 winner vs QF4 winner
+            # Get QF matches by bracket slot for proper SF pairing
+            qf_by_slot = {qf.bracket_slot: qf for qf in quarters}
+            
+            # Verify all QF matches are complete
+            all_complete = all(qf.winner_id for qf in quarters)
+            if not all_complete:
+                return []
+            
+            # SF1: QF1 winner vs QF2 winner (top bracket half)
+            # SF2: QF3 winner vs QF4 winner (bottom bracket half)
+            qf1 = qf_by_slot.get('QF1')
+            qf2 = qf_by_slot.get('QF2')
+            qf3 = qf_by_slot.get('QF3')
+            qf4 = qf_by_slot.get('QF4')
+            
+            if qf1 and qf2 and qf3 and qf4:
                 matchups = [
-                    (qf_winners[0], qf_winners[1], "SF1: QF1 Winner vs QF2 Winner"),
-                    (qf_winners[2], qf_winners[3], "SF2: QF3 Winner vs QF4 Winner"),
+                    (qf1.winner_id, qf2.winner_id, "SF1", "SF1: Winner QF1 vs Winner QF2"),
+                    (qf3.winner_id, qf4.winner_id, "SF2", "SF2: Winner QF3 vs Winner QF4"),
                 ]
 
-                for team_a_id, team_b_id, notes in matchups:
+                for team_a_id, team_b_id, slot, notes in matchups:
                     match = Match(
                         round=round_number,
                         phase="semifinal",
+                        bracket_slot=slot,
                         team_a_id=team_a_id,
                         team_b_id=team_b_id,
                         status="scheduled",
@@ -841,7 +861,7 @@ def generate_playoff_bracket(round_number, phase_type):
                     db.session.add(match)
                     matches_created.append(match)
         else:
-            # No quarters, use Top 4 directly
+            # No quarters, use Top 4 directly for semi-finals
             if settings.qualified_team_ids:
                 team_ids = json.loads(settings.qualified_team_ids)[:4]
             else:
@@ -850,14 +870,17 @@ def generate_playoff_bracket(round_number, phase_type):
 
             if len(team_ids) >= 4:
                 matchups = [
-                    (team_ids[0], team_ids[3], "SF1: Seed 1 vs Seed 4"),
-                    (team_ids[1], team_ids[2], "SF2: Seed 2 vs Seed 3"),
+                    (team_ids[0], team_ids[3], "SF1", 1, 4, "SF1: Seed 1 vs Seed 4"),
+                    (team_ids[1], team_ids[2], "SF2", 2, 3, "SF2: Seed 2 vs Seed 3"),
                 ]
 
-                for team_a_id, team_b_id, notes in matchups:
+                for team_a_id, team_b_id, slot, seed_a, seed_b, notes in matchups:
                     match = Match(
                         round=round_number,
                         phase="semifinal",
+                        bracket_slot=slot,
+                        seed_a=seed_a,
+                        seed_b=seed_b,
                         team_a_id=team_a_id,
                         team_b_id=team_b_id,
                         status="scheduled",
@@ -867,21 +890,24 @@ def generate_playoff_bracket(round_number, phase_type):
                     matches_created.append(match)
 
     elif phase_type == "third_place":
-        # Get losers from semifinals
+        # Get losers from semifinals by bracket slot
         semis = Match.query.filter_by(phase="semifinal").all()
-        sf_losers = []
-
-        for sf in semis:
-            if sf.winner_id and sf.team_a_id and sf.team_b_id:
-                loser_id = sf.team_b_id if sf.winner_id == sf.team_a_id else sf.team_a_id
-                sf_losers.append(loser_id)
-
-        if len(sf_losers) == 2:
+        sf_by_slot = {sf.bracket_slot: sf for sf in semis}
+        
+        sf1 = sf_by_slot.get('SF1')
+        sf2 = sf_by_slot.get('SF2')
+        
+        if sf1 and sf2 and sf1.winner_id and sf2.winner_id:
+            # Get losers
+            sf1_loser = sf1.team_b_id if sf1.winner_id == sf1.team_a_id else sf1.team_a_id
+            sf2_loser = sf2.team_b_id if sf2.winner_id == sf2.team_a_id else sf2.team_a_id
+            
             match = Match(
                 round=round_number,
                 phase="third_place",
-                team_a_id=sf_losers[0],
-                team_b_id=sf_losers[1],
+                bracket_slot="3RD",
+                team_a_id=sf1_loser,
+                team_b_id=sf2_loser,
                 status="scheduled",
                 notes="3rd Place Match"
             )
@@ -889,22 +915,22 @@ def generate_playoff_bracket(round_number, phase_type):
             matches_created.append(match)
 
     elif phase_type == "final":
-        # Get winners from semifinals
+        # Get winners from semifinals by bracket slot
         semis = Match.query.filter_by(phase="semifinal").all()
-        sf_winners = []
-
-        for sf in semis:
-            if sf.winner_id:
-                sf_winners.append(sf.winner_id)
-
-        if len(sf_winners) == 2:
+        sf_by_slot = {sf.bracket_slot: sf for sf in semis}
+        
+        sf1 = sf_by_slot.get('SF1')
+        sf2 = sf_by_slot.get('SF2')
+        
+        if sf1 and sf2 and sf1.winner_id and sf2.winner_id:
             match = Match(
                 round=round_number,
                 phase="final",
-                team_a_id=sf_winners[0],
-                team_b_id=sf_winners[1],
+                bracket_slot="FINAL",
+                team_a_id=sf1.winner_id,
+                team_b_id=sf2.winner_id,
                 status="scheduled",
-                notes="FINAL"
+                notes="CHAMPIONSHIP FINAL"
             )
             db.session.add(match)
             matches_created.append(match)
