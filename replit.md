@@ -38,7 +38,15 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (January 3, 2026)
+## Recent Changes (January 7, 2026)
+- **Visual Knockout Bracket**: Implemented CSS Grid-based bracket visualization showing QF → SF → Finals progression with connecting lines, seed badges, and winner highlighting.
+- **Bracket Schema Fields**: Added `bracket_slot`, `seed_a`, `seed_b` fields to Match model for proper bracket positioning and visual ordering.
+- **Proper Bracket Seeding**: Bracket ordering follows standard single-elimination format: QF1 (1v8), QF2 (4v5), QF3 (2v7), QF4 (3v6). This ensures seeds 1 and 2 are on opposite bracket halves and can only meet in Finals.
+- **Bracket Progression Flow**: QF1+QF2 winners → SF1, QF3+QF4 winners → SF2, SF winners → Finals.
+- **Admin Knockout Controls**: New "Knockout Bracket" section in admin panel shows bracket progress (QF/SF/Finals status) and smart "Generate Next Round" buttons that appear only when previous round is complete.
+- **Rounds Page Redesign**: Swiss rounds (1-5) displayed in collapsed accordion, knockout rounds (6+) shown in unified visual bracket view.
+
+## Previous Changes (January 3, 2026)
 - **Flexible Round Deadlines**: Added `round_deadline` DateTime field to Match model. Admins can set custom deadlines when generating rounds via date picker in admin panel.
 - **Deadline Cascading Logic**: Reschedule request cutoff = round_deadline - 2 days; Makeup match deadline = round_deadline + 3 days. All deadline checks now prioritize `round_deadline` with fallback to legacy week-based calculations.
 - **Extend Deadline Feature**: Admin can extend deadlines for any round via modal in Round Summary section. Only affects active/draft matches (not completed/walkover).
