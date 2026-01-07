@@ -8748,43 +8748,70 @@ def rounds():
     teams = Team.query.all()
     substitutes = Substitute.query.all()
 
-    # Group regular matches by round
-    rounds_dict = {}
+    # Group Swiss rounds (1-5) by round for accordion view
+    swiss_rounds_dict = {}
     round_completed_counts = {}
-    playoff_matches_list = []
+    
+    # Knockout bracket data structure
+    knockout_bracket = {
+        'quarterfinals': [],
+        'semifinals': [],
+        'final': None,
+        'has_matches': False
+    }
 
     for match in matches:
-        if match.round and match.round <= 100:  # Regular rounds (1-100)
-            if match.round not in rounds_dict:
-                rounds_dict[match.round] = []
+        if not match.round:
+            continue
+            
+        team_a = db.session.get(Team, match.team_a_id)
+        team_b = db.session.get(Team, match.team_b_id) if match.team_b_id else None
+        
+        match_data = {
+            'match': match,
+            'team_a': team_a,
+            'team_b': team_b
+        }
+        
+        # Swiss rounds (1-5) go to accordion
+        if match.round <= 5:
+            if match.round not in swiss_rounds_dict:
+                swiss_rounds_dict[match.round] = []
                 round_completed_counts[match.round] = 0
 
-            team_a = Team.query.get(match.team_a_id)
-            team_b = Team.query.get(match.team_b_id) if match.team_b_id else None
-
-            rounds_dict[match.round].append({
-                'match': match,
-                'team_a': team_a,
-                'team_b': team_b
-            })
+            swiss_rounds_dict[match.round].append(match_data)
             
             # Count completed matches (including walkovers)
             if match.status in ('completed', 'walkover'):
                 round_completed_counts[match.round] += 1
-        elif match.round and match.round > 100:  # Playoff rounds (101+)
-            playoff_matches_list.append(match)
-
-    # Create playoff bracket data if playoff matches exist
-    playoff_bracket = None
-    if playoff_matches_list:
-        playoff_bracket = get_playoff_bracket_data(playoff_matches_list)
-
+                
+        # Knockout rounds (6+) go to bracket
+        elif match.round >= 6:
+            knockout_bracket['has_matches'] = True
+            
+            if match.phase == 'quarterfinal' or match.round == 6:
+                knockout_bracket['quarterfinals'].append(match_data)
+            elif match.phase == 'semifinal' or match.round == 7:
+                knockout_bracket['semifinals'].append(match_data)
+            elif match.phase == 'final' or match.round == 8:
+                knockout_bracket['final'] = match_data
+    
+    # Sort knockout matches by bracket_slot for proper bracket order
+    def slot_sort_key(m):
+        slot = m['match'].bracket_slot or ''
+        # Extract number from slot (e.g., "QF1" -> 1, "SF2" -> 2)
+        import re
+        num = re.search(r'\d+', slot)
+        return int(num.group()) if num else 0
+    
+    knockout_bracket['quarterfinals'].sort(key=slot_sort_key)
+    knockout_bracket['semifinals'].sort(key=slot_sort_key)
 
     return render_template(
         "rounds.html",
-        rounds_dict=rounds_dict,
+        rounds_dict=swiss_rounds_dict,
         round_completed_counts=round_completed_counts,
-        playoff_matches=playoff_bracket,
+        knockout_bracket=knockout_bracket,
         teams=teams,
         substitutes=substitutes
     )
