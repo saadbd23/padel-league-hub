@@ -292,17 +292,23 @@ def require_admin_auth(f):
     return decorated_function
 
 
-def get_round_date_range(round_number):
-    """Calculate the Monday-Sunday date range for a given round number"""
-    if not round_number:
+def get_round_date_range(match):
+    """Calculate the date range for a given match, using round_deadline if available"""
+    if not match or not match.round:
         return None
 
     from datetime import datetime, timedelta
 
-    # Round 1 starts November 17, 2025 (Monday)
-    round_1_start = datetime(2025, 11, 17)
-    round_start = round_1_start + timedelta(weeks=round_number - 1)
-    round_end = round_start + timedelta(days=6)
+    if match.round_deadline:
+        # If we have a round deadline, the range is (deadline - 6 days) to deadline
+        round_end = match.round_deadline
+        round_start = round_end - timedelta(days=6)
+    else:
+        # Fallback to legacy hardcoded start date
+        # Round 1 starts November 17, 2025 (Monday)
+        round_1_start = datetime(2025, 11, 17)
+        round_start = round_1_start + timedelta(weeks=match.round - 1)
+        round_end = round_start + timedelta(days=6)
 
     # Format dates
     start_str = round_start.strftime("%b %d")
@@ -3483,7 +3489,7 @@ def my_matches(token):
         opponent = Team.query.get(opponent_id) if opponent_id else None
 
         # Add round date range
-        match.round_dates = get_round_date_range(match.round)
+        match.round_dates = get_round_date_range(match)
         
         # Check if match has been rescheduled
         is_rescheduled = Reschedule.query.filter_by(match_id=match.id).first() is not None
@@ -3551,19 +3557,28 @@ def submit_booking(token):
 
         # CRITICAL: Validate booking date is within round date range
         if match.round:
-            round_start_date = get_round_start_date(match.round)
-            if round_start_date:
-                from datetime import timedelta, date
-                # Special handling for Round 5: extend end date to Dec 27
-                if match.round == 5:
-                    round_end_date = date(2025, 12, 27)
+            if match.round_deadline:
+                # Range is (deadline - 6 days) to deadline
+                round_end_date = match.round_deadline.date()
+                from datetime import timedelta
+                round_start_date = round_end_date - timedelta(days=6)
+            else:
+                round_start_date = get_round_start_date(match.round)
+                if round_start_date:
+                    from datetime import timedelta, date
+                    # Special handling for Round 5: extend end date to Dec 27
+                    if match.round == 5:
+                        round_end_date = date(2025, 12, 27)
+                    else:
+                        round_end_date = round_start_date + timedelta(days=6)  # Sunday
                 else:
-                    round_end_date = round_start_date + timedelta(days=6)  # Sunday
-                
+                    round_end_date = None
+            
+            if round_start_date and round_end_date:
                 booking_date_obj = datetime.strptime(booking_date, "%Y-%m-%d").date()
 
                 if booking_date_obj < round_start_date or booking_date_obj > round_end_date:
-                    round_dates = get_round_date_range(match.round)
+                    round_dates = get_round_date_range(match)
                     return {
                         "success": False,
                         "message": f"Booking date must be within round dates ({round_dates}). For dates outside this range, please use the Reschedule Request feature."
