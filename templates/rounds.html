@@ -13,179 +13,186 @@
 
     <!-- Visual Bracket with Connecting Lines -->
     <div class="overflow-x-auto pb-4">
-      <div class="bracket-wrapper min-w-[900px]">
+      <div class="bracket-grid">
         
-        <!-- CSS for bracket with pseudo-element connectors -->
+        <!-- CSS for bracket using CSS Grid with fixed row heights -->
         <style>
-          .bracket-wrapper {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+          :root {
+            --match-height: 100px;
+            --match-width: 180px;
+            --pair-gap: 20px;
+            --arm-length: 30px;
+            --line-color: #64748b;
+            --line-width: 2px;
+          }
+          
+          /* Main bracket grid: 4 rows (one per QF match), 5 columns (QF, connector, SF, connector, Final) */
+          .bracket-grid {
+            display: grid;
+            grid-template-columns: var(--match-width) var(--arm-length) var(--match-width) var(--arm-length) var(--match-width);
+            grid-template-rows: repeat(4, calc(var(--match-height) + var(--pair-gap)));
             gap: 0;
-            padding: 20px 0;
-          }
-          
-          /* Bracket uses flexbox layout - QF pairs feed into SFs, SFs feed into Finals */
-          .bracket-round {
-            display: flex;
-            flex-direction: column;
+            padding: 40px 20px;
             justify-content: center;
           }
           
-          .bracket-round-header {
-            text-align: center;
-            margin-bottom: 16px;
-            height: 40px;
+          /* Column headers */
+          .bracket-headers {
+            display: contents;
           }
           
-          /* Match wrapper includes the card and its connector arm */
-          .bracket-match {
-            position: relative;
-            width: 200px;
-            margin-bottom: 16px;
-          }
-          
-          .bracket-match:last-child {
-            margin-bottom: 0;
-          }
-          
-          /* Connector arm extending right from match center */
-          .bracket-match::after {
-            content: '';
-            position: absolute;
-            right: -30px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 2px;
-            background: #94a3b8;
-          }
-          
-          /* Pair wrapper groups 2 matches and adds vertical connector */
-          .bracket-pair {
+          /* Match slot - centers the card vertically */
+          .match-slot {
             display: flex;
-            flex-direction: column;
-            position: relative;
-            margin-bottom: 30px;
-            padding-right: 30px;
-          }
-          
-          .bracket-pair:last-child {
-            margin-bottom: 0;
-          }
-          
-          /* Vertical line connecting the two match arms */
-          .bracket-pair::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #94a3b8;
-            /* Position at the midpoint vertically between first and last match centers */
-          }
-          
-          /* Horizontal arm from pair to next round */
-          .bracket-pair::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 2px;
-            background: #94a3b8;
-          }
-          
-          /* SF column needs spacing to align with QF pair outputs */
-          .sf-round {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            padding-left: 40px;
-          }
-          
-          .sf-pair {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            padding-right: 30px;
-          }
-          
-          .sf-pair::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #94a3b8;
-          }
-          
-          .sf-pair::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 2px;
-            background: #94a3b8;
-          }
-          
-          .sf-match {
-            position: relative;
-            width: 200px;
-          }
-          
-          /* Incoming line from QF pair */
-          .sf-match::before {
-            content: '';
-            position: absolute;
-            left: -40px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 2px;
-            background: #94a3b8;
-          }
-          
-          /* Outgoing line to Finals */
-          .sf-match::after {
-            content: '';
-            position: absolute;
-            right: -30px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 2px;
-            background: #94a3b8;
-          }
-          
-          /* Finals column */
-          .finals-round {
-            display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            padding-left: 40px;
-          }
-          
-          .finals-match {
             position: relative;
-            width: 200px;
+            padding: 0 5px;
           }
           
-          /* Incoming line from SF pair */
-          .finals-match::before {
+          /* QF matches - one per row */
+          .qf-slot-1 { grid-column: 1; grid-row: 1; }
+          .qf-slot-2 { grid-column: 1; grid-row: 2; }
+          .qf-slot-3 { grid-column: 1; grid-row: 3; }
+          .qf-slot-4 { grid-column: 1; grid-row: 4; }
+          
+          /* SF matches - span 2 rows each, centered between their QF pair */
+          .sf-slot-1 { grid-column: 3; grid-row: 1 / 3; }
+          .sf-slot-2 { grid-column: 3; grid-row: 3 / 5; }
+          
+          /* Finals match - spans all 4 rows, centered */
+          .final-slot { grid-column: 5; grid-row: 1 / 5; }
+          
+          /* Connector columns */
+          .conn-qf-sf { grid-column: 2; position: relative; }
+          .conn-sf-f { grid-column: 4; position: relative; }
+          
+          /* QF to SF connectors - horizontal line from QF to vertical bar */
+          .conn-qf-sf::after {
             content: '';
             position: absolute;
-            left: -40px;
+            left: 0;
             top: 50%;
+            width: 100%;
+            height: var(--line-width);
+            background: var(--line-color);
             transform: translateY(-50%);
-            width: 40px;
-            height: 2px;
-            background: #94a3b8;
+          }
+          
+          /* Vertical bar for QF pair 1 (rows 1-2) */
+          .conn-qf-sf.pair1-top::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          .conn-qf-sf.pair1-bottom::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          
+          /* Vertical bar for QF pair 2 (rows 3-4) */
+          .conn-qf-sf.pair2-top::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          .conn-qf-sf.pair2-bottom::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          
+          /* SF input line (from QF pair vertical bar) */
+          .sf-slot::before {
+            content: '';
+            position: absolute;
+            left: calc(-1 * var(--arm-length) - 5px);
+            top: 50%;
+            width: calc(var(--arm-length) + 5px);
+            height: var(--line-width);
+            background: var(--line-color);
+            transform: translateY(-50%);
+          }
+          
+          /* SF output line (to Finals) */
+          .sf-slot::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            width: calc(var(--arm-length) + 5px);
+            height: var(--line-width);
+            background: var(--line-color);
+            transform: translateY(-50%);
+          }
+          
+          /* SF to Finals vertical connector */
+          .conn-sf-f.sf-top::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: var(--line-width);
+            background: var(--line-color);
+            transform: translateY(-50%);
+          }
+          .conn-sf-f.sf-top::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          .conn-sf-f.sf-bottom::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: var(--line-width);
+            background: var(--line-color);
+            transform: translateY(-50%);
+          }
+          .conn-sf-f.sf-bottom::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 50%;
+            height: calc(50% + var(--pair-gap)/2 + var(--match-height)/2);
+            width: var(--line-width);
+            background: var(--line-color);
+          }
+          
+          /* Finals input line */
+          .final-slot::before {
+            content: '';
+            position: absolute;
+            left: calc(-1 * var(--arm-length) - 5px);
+            top: 50%;
+            width: calc(var(--arm-length) + 5px);
+            height: var(--line-width);
+            background: var(--line-color);
+            transform: translateY(-50%);
           }
           
           /* Match card styling */
@@ -195,6 +202,8 @@
             border-radius: 12px;
             padding: 10px;
             box-sizing: border-box;
+            width: 100%;
+            max-width: var(--match-width);
           }
           
           .match-card:hover {
@@ -277,253 +286,364 @@
             margin-top: 4px;
           }
           
+          /* Round headers above the grid */
+          .bracket-header-row {
+            display: grid;
+            grid-template-columns: var(--match-width) var(--arm-length) var(--match-width) var(--arm-length) var(--match-width);
+            gap: 0;
+            padding: 0 20px 10px;
+            justify-content: center;
+          }
+          
+          .bracket-header {
+            text-align: center;
+          }
+          
+          .bracket-header span {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          
+          .header-qf { background: linear-gradient(135deg, #8B5CF6, #7C3AED); }
+          .header-sf { background: linear-gradient(135deg, #6366F1, #4F46E5); }
+          .header-final { background: linear-gradient(135deg, #F59E0B, #D97706); }
+          
           @media (max-width: 768px) {
-            .bracket-wrapper {
+            .bracket-grid {
+              display: flex;
               flex-direction: column;
               align-items: center;
-              min-width: 100%;
+              gap: 16px;
+              padding: 20px 10px;
             }
             
-            .bracket-round, .sf-round, .finals-round {
-              width: 100%;
-              max-width: 280px;
-              margin-bottom: 24px;
-              padding-left: 0 !important;
-            }
-            
-            .bracket-match::after,
-            .bracket-pair::before,
-            .bracket-pair::after,
-            .sf-match::before,
-            .sf-match::after,
-            .sf-pair::before,
-            .sf-pair::after,
-            .finals-match::before {
+            .bracket-header-row {
               display: none;
             }
             
-            .bracket-pair, .sf-pair {
-              padding-right: 0;
+            .match-slot {
+              width: 100%;
+              max-width: 280px;
             }
             
-            .bracket-match, .sf-match, .finals-match {
-              width: 100%;
+            .match-slot::before,
+            .match-slot::after,
+            .conn-qf-sf,
+            .conn-sf-f {
+              display: none;
+            }
+            
+            .conn-qf-sf::before,
+            .conn-qf-sf::after,
+            .conn-sf-f::before,
+            .conn-sf-f::after {
+              display: none;
+            }
+            
+            .match-card {
+              max-width: 100%;
+            }
+            
+            /* Show round labels on mobile */
+            .mobile-round-label {
+              display: block;
+              text-align: center;
+              margin-bottom: 8px;
+              font-weight: 700;
+              font-size: 14px;
+              color: #6B7280;
+            }
+          }
+          
+          @media (min-width: 769px) {
+            .mobile-round-label {
+              display: none;
             }
           }
         </style>
         
-        <!-- Quarter-Finals Round -->
-        <div class="bracket-round">
-          <div class="bracket-round-header">
-            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-purple-600 text-white shadow-lg">
-              Quarter-Finals
-            </span>
-          </div>
-          
-          <!-- QF Pair 1: QF1 + QF2 feeds into SF1 -->
-          <div class="bracket-pair">
-            {% for match_data in knockout_bracket.quarterfinals[:2] %}
+        <!-- Header Row -->
+        <div class="bracket-header-row">
+          <div class="bracket-header"><span class="header-qf">Quarter-Finals</span></div>
+          <div></div>
+          <div class="bracket-header"><span class="header-sf">Semi-Finals</span></div>
+          <div></div>
+          <div class="bracket-header"><span class="header-final">🏆 Finals</span></div>
+        </div>
+        
+        <!-- QF1 - Row 1 -->
+        <div class="match-slot qf-slot-1">
+          <span class="mobile-round-label">Quarter-Final 1</span>
+          {% if knockout_bracket.quarterfinals|length > 0 %}
+            {% set match_data = knockout_bracket.quarterfinals[0] %}
             {% set match = match_data.match %}
             {% set team_a = match_data.team_a %}
             {% set team_b = match_data.team_b %}
-            <div class="bracket-match">
-              <div class="match-card">
-                <div class="match-label">{{ match.bracket_slot or 'QF' ~ loop.index }}</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
-                  {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
-                  {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' or match.status == 'walkover' %}
-                  <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
-                  <span class="text-gray-500">📅 Scheduled</span>
-                  {% endif %}
-                </div>
+            <div class="match-card">
+              <div class="match-label">QF1</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
               </div>
             </div>
-            {% endfor %}
-            {% if knockout_bracket.quarterfinals|length < 2 %}
-              {% for i in range(2 - knockout_bracket.quarterfinals|length) %}
-              <div class="bracket-match">
-                <div class="match-card opacity-50">
-                  <div class="match-label">QF{{ knockout_bracket.quarterfinals|length + loop.index }}</div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                </div>
-              </div>
-              {% endfor %}
-            {% endif %}
-          </div>
-          
-          <!-- QF Pair 2: QF3 + QF4 feeds into SF2 -->
-          <div class="bracket-pair">
-            {% for match_data in knockout_bracket.quarterfinals[2:4] %}
+          {% else %}
+            <div class="match-card opacity-50">
+              <div class="match-label">QF1</div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="conn-qf-sf pair1-top" style="grid-row: 1;"></div>
+        
+        <!-- QF2 - Row 2 -->
+        <div class="match-slot qf-slot-2">
+          <span class="mobile-round-label">Quarter-Final 2</span>
+          {% if knockout_bracket.quarterfinals|length > 1 %}
+            {% set match_data = knockout_bracket.quarterfinals[1] %}
             {% set match = match_data.match %}
             {% set team_a = match_data.team_a %}
             {% set team_b = match_data.team_b %}
-            <div class="bracket-match">
-              <div class="match-card">
-                <div class="match-label">{{ match.bracket_slot or 'QF' ~ (loop.index + 2) }}</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
-                  {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
-                  {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' or match.status == 'walkover' %}
-                  <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
-                  <span class="text-gray-500">📅 Scheduled</span>
-                  {% endif %}
-                </div>
+            <div class="match-card">
+              <div class="match-label">QF2</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
               </div>
             </div>
-            {% endfor %}
-            {% if knockout_bracket.quarterfinals|length < 4 and knockout_bracket.quarterfinals|length >= 2 %}
-              {% for i in range(4 - knockout_bracket.quarterfinals|length) %}
-              <div class="bracket-match">
-                <div class="match-card opacity-50">
-                  <div class="match-label">QF{{ 2 + loop.index }}</div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                </div>
-              </div>
-              {% endfor %}
-            {% elif knockout_bracket.quarterfinals|length < 2 %}
-              <div class="bracket-match">
-                <div class="match-card opacity-50">
-                  <div class="match-label">QF3</div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                </div>
-              </div>
-              <div class="bracket-match">
-                <div class="match-card opacity-50">
-                  <div class="match-label">QF4</div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
-                </div>
-              </div>
-            {% endif %}
-          </div>
+          {% else %}
+            <div class="match-card opacity-50">
+              <div class="match-label">QF2</div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+            </div>
+          {% endif %}
         </div>
+        <div class="conn-qf-sf pair1-bottom" style="grid-row: 2;"></div>
         
-        <!-- Semi-Finals Round -->
-        <div class="sf-round">
-          <div class="bracket-round-header">
-            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-indigo-600 text-white shadow-lg">
-              Semi-Finals
-            </span>
-          </div>
-          
-          <div class="sf-pair">
-            {% if knockout_bracket.semifinals|length > 0 %}
-              {% for match_data in knockout_bracket.semifinals %}
-              {% set match = match_data.match %}
-              {% set team_a = match_data.team_a %}
-              {% set team_b = match_data.team_b %}
-              <div class="sf-match">
-                <div class="match-card semifinal">
-                  <div class="match-label">{{ match.bracket_slot or 'SF' ~ loop.index }}</div>
-                  <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                    {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                    <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
-                    {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
-                  </div>
-                  <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                    {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                    <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
-                    {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
-                  </div>
-                  <div class="match-status">
-                    {% if match.status == 'completed' or match.status == 'walkover' %}
-                    <span class="text-green-600 font-semibold">✓ Complete</span>
-                    {% else %}
-                    <span class="text-gray-500">📅 Scheduled</span>
-                    {% endif %}
-                  </div>
-                </div>
+        <!-- SF1 - Rows 1-2 -->
+        <div class="match-slot sf-slot sf-slot-1">
+          <span class="mobile-round-label">Semi-Final 1</span>
+          {% if knockout_bracket.semifinals|length > 0 %}
+            {% set match_data = knockout_bracket.semifinals[0] %}
+            {% set match = match_data.match %}
+            {% set team_a = match_data.team_a %}
+            {% set team_b = match_data.team_b %}
+            <div class="match-card semifinal">
+              <div class="match-label">SF1</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
               </div>
-              {% endfor %}
-            {% else %}
-              <div class="sf-match">
-                <div class="match-card semifinal opacity-50">
-                  <div class="match-label">SF1</div>
-                  <div class="team-row"><span class="team-name text-gray-400">Winner QF1</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">Winner QF2</span></div>
-                  <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
-                </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
               </div>
-              <div class="sf-match">
-                <div class="match-card semifinal opacity-50">
-                  <div class="match-label">SF2</div>
-                  <div class="team-row"><span class="team-name text-gray-400">Winner QF3</span></div>
-                  <div class="team-row"><span class="team-name text-gray-400">Winner QF4</span></div>
-                  <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
-                </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
               </div>
-            {% endif %}
-          </div>
+            </div>
+          {% else %}
+            <div class="match-card semifinal opacity-50">
+              <div class="match-label">SF1</div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner QF1</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner QF2</span></div>
+              <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
+            </div>
+          {% endif %}
         </div>
+        <div class="conn-sf-f sf-top" style="grid-row: 1 / 3;"></div>
         
-        <!-- Finals Round -->
-        <div class="finals-round">
-          <div class="bracket-round-header">
-            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-yellow-500 to-amber-600 text-white shadow-lg">
-              🏆 Finals
-            </span>
-          </div>
-          
+        <!-- QF3 - Row 3 -->
+        <div class="match-slot qf-slot-3">
+          <span class="mobile-round-label">Quarter-Final 3</span>
+          {% if knockout_bracket.quarterfinals|length > 2 %}
+            {% set match_data = knockout_bracket.quarterfinals[2] %}
+            {% set match = match_data.match %}
+            {% set team_a = match_data.team_a %}
+            {% set team_b = match_data.team_b %}
+            <div class="match-card">
+              <div class="match-label">QF3</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            <div class="match-card opacity-50">
+              <div class="match-label">QF3</div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="conn-qf-sf pair2-top" style="grid-row: 3;"></div>
+        
+        <!-- QF4 - Row 4 -->
+        <div class="match-slot qf-slot-4">
+          <span class="mobile-round-label">Quarter-Final 4</span>
+          {% if knockout_bracket.quarterfinals|length > 3 %}
+            {% set match_data = knockout_bracket.quarterfinals[3] %}
+            {% set match = match_data.match %}
+            {% set team_a = match_data.team_a %}
+            {% set team_b = match_data.team_b %}
+            <div class="match-card">
+              <div class="match-label">QF4</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            <div class="match-card opacity-50">
+              <div class="match-label">QF4</div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">TBD</span></div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="conn-qf-sf pair2-bottom" style="grid-row: 4;"></div>
+        
+        <!-- SF2 - Rows 3-4 -->
+        <div class="match-slot sf-slot sf-slot-2">
+          <span class="mobile-round-label">Semi-Final 2</span>
+          {% if knockout_bracket.semifinals|length > 1 %}
+            {% set match_data = knockout_bracket.semifinals[1] %}
+            {% set match = match_data.match %}
+            {% set team_a = match_data.team_a %}
+            {% set team_b = match_data.team_b %}
+            <div class="match-card semifinal">
+              <div class="match-label">SF2</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' or match.status == 'walkover' %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}
+            <div class="match-card semifinal opacity-50">
+              <div class="match-label">SF2</div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner QF3</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner QF4</span></div>
+              <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="conn-sf-f sf-bottom" style="grid-row: 3 / 5;"></div>
+        
+        <!-- Finals - Rows 1-4 -->
+        <div class="match-slot final-slot">
+          <span class="mobile-round-label">🏆 Championship</span>
           {% if knockout_bracket.final %}
             {% set match = knockout_bracket.final.match %}
             {% set team_a = knockout_bracket.final.team_a %}
             {% set team_b = knockout_bracket.final.team_b %}
-            <div class="finals-match">
-              <div class="match-card final">
-                <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
-                  {% if match.score_a %}<span class="team-score" style="color: #D97706;">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
-                  {% if match.score_b %}<span class="team-score" style="color: #D97706;">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' and match.winner_id %}
-                    {% set winner = team_a if match.winner_id == team_a.id else team_b %}
-                    <div class="text-sm font-bold text-yellow-700">👑 CHAMPION</div>
-                    <div class="text-base font-bold text-gray-900">{{ winner.team_name if winner else 'TBD' }}</div>
-                  {% elif match.status == 'completed' %}
-                    <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
-                    <span class="text-gray-500">📅 Scheduled</span>
-                  {% endif %}
-                </div>
+            <div class="match-card final">
+              <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
+              <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
+                {% if match.seed_a %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_a }}</span>{% endif %}
+                <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                {% if match.score_a %}<span class="team-score" style="color: #D97706;">{{ match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
+                {% if match.seed_b %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_b }}</span>{% endif %}
+                <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                {% if match.score_b %}<span class="team-score" style="color: #D97706;">{{ match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if match.status == 'completed' and match.winner_id %}
+                  {% set winner = team_a if match.winner_id == team_a.id else team_b %}
+                  <div class="text-sm font-bold text-yellow-700">👑 CHAMPION</div>
+                  <div class="text-base font-bold text-gray-900">{{ winner.team_name if winner else 'TBD' }}</div>
+                {% elif match.status == 'completed' %}
+                  <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% else %}
+                  <span class="text-gray-500">📅 Scheduled</span>
+                {% endif %}
               </div>
             </div>
           {% else %}
-            <div class="finals-match">
-              <div class="match-card final opacity-50">
-                <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner SF1</span></div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner SF2</span></div>
-                <div class="match-status"><span class="text-gray-400">Awaiting SF</span></div>
-              </div>
+            <div class="match-card final opacity-50">
+              <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner SF1</span></div>
+              <div class="team-row"><span class="team-name text-gray-400">Winner SF2</span></div>
+              <div class="match-status"><span class="text-gray-400">Awaiting SF</span></div>
             </div>
           {% endif %}
         </div>

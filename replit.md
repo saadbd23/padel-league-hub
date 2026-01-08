@@ -38,10 +38,11 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (January 7, 2026)
-- **Redesigned Bracket Connectors**: Rebuilt knockout bracket using CSS pseudo-elements (::before/::after) for connector lines. Lines now automatically center on match card midpoints regardless of content height. Uses `.bracket-pair` containers with `.bracket-match` wrappers for proper alignment.
-- **Bracket CSS Architecture**: Three-column flexbox layout (QF → SF → Finals) with paired match groupings. QF pairs (1+2, 3+4) have vertical spines that merge to horizontal arms feeding into SF matches. SF pair similarly merges to Finals.
-- **Mobile Responsive Bracket**: Connector lines hidden on mobile (≤768px), columns stack vertically with proper spacing.
+## Recent Changes (January 8, 2026)
+- **Redesigned Bracket with CSS Grid**: Rebuilt knockout bracket using CSS Grid with fixed row heights for proper vertical alignment. SF matches are now correctly positioned at the vertical midpoint of their QF pairs.
+- **Grid-Based Bracket Architecture**: 4-row × 5-column grid layout (QF column, connector column, SF column, connector column, Finals column). QF matches occupy individual rows, SF slots span 2 rows each, Finals spans all 4 rows.
+- **Connector Pseudo-Elements**: Horizontal arms (::after) and vertical spines (::before) on connector columns draw lines from QF pairs to SF matches and from SF pair to Finals. All sizing uses CSS custom properties (--match-height, --pair-gap, --arm-length).
+- **Mobile Responsive Bracket**: Connector columns and pseudo-elements hidden on mobile (≤768px), matches stack vertically with mobile-round-labels visible.
 - **Visual Knockout Bracket**: Bracket visualization showing QF → SF → Finals progression with seed badges and winner highlighting.
 - **Bracket Schema Fields**: Added `bracket_slot`, `seed_a`, `seed_b` fields to Match model for proper bracket positioning and visual ordering.
 - **Proper Bracket Seeding**: Bracket ordering follows standard single-elimination format: QF1 (1v8), QF2 (4v5), QF3 (2v7), QF4 (3v6). This ensures seeds 1 and 2 are on opposite bracket halves and can only meet in Finals.
