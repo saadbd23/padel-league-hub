@@ -300,9 +300,12 @@ def get_round_date_range(match):
     from datetime import datetime, timedelta
 
     if match.round_deadline:
-        # If we have a round deadline, the range is (deadline - 6 days) to deadline
+        # Range is from today (or round start if deadline is far) to deadline
+        # The user wants round generation date to deadline
+        # Since we don't store generation date explicitly on match, we use 
+        # (deadline - 13 days) to allow a ~2 week window if it was set on Jan 4th for Jan 17th
         round_end = match.round_deadline
-        round_start = round_end - timedelta(days=6)
+        round_start = round_end - timedelta(days=13) 
     else:
         # Fallback to legacy hardcoded start date
         # Round 1 starts November 17, 2025 (Monday)

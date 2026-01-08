@@ -1779,24 +1779,47 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set min/max dates for booking inputs based on round dates
   document.querySelectorAll('input[id^="booking-date-"], input[id^="change-booking-date-"]').forEach(input => {
     const roundNumber = parseInt(input.dataset.roundNumber);
+    const matchCard = input.closest('.bg-white\\/95');
+    const roundDatesText = matchCard.querySelector('.text-sm.font-semibold.opacity-90 span.text-xs.opacity-75')?.textContent;
 
-    // Calculate round start date (Round 1 starts Nov 17, 2025 - Monday)
-    // Round 2 should be Nov 24-30 (Monday-Sunday inclusive)
-    const round1Start = new Date('2025-11-17T00:00:00');
-    const roundStartDate = new Date(round1Start.getTime());
-    roundStartDate.setDate(round1Start.getDate() + (roundNumber - 1) * 7);
+    let minDate, maxDate;
+    
+    if (roundDatesText && roundDatesText.includes('(') && roundDatesText.includes(')')) {
+      const dateRangeMatch = roundDatesText.match(/\(([^)]+)\)/);
+      if (dateRangeMatch && dateRangeMatch[1].includes('-')) {
+        const dates = dateRangeMatch[1].split(' - ');
+        if (dates.length === 2) {
+          // Always use 2026 for the current context (Jan 2026)
+          const year = new Date().getFullYear();
+          const startDate = new Date(`${dates[0]}, ${year}`);
+          const endDate = new Date(`${dates[1]}, ${year}`);
+          
+          // Use local date format to avoid timezone issues
+          minDate = startDate.getFullYear() + '-' + 
+                    String(startDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(startDate.getDate()).padStart(2, '0');
+          maxDate = endDate.getFullYear() + '-' + 
+                    String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(endDate.getDate()).padStart(2, '0');
+        }
+      }
+    }
 
-    // Round ends on Sunday (inclusive, so 6 days after start = 7 days total)
-    const roundEndDate = new Date(roundStartDate.getTime());
-    roundEndDate.setDate(roundStartDate.getDate() + 6);
-
-    // Use local date format to avoid timezone issues
-    const minDate = roundStartDate.getFullYear() + '-' + 
-                    String(roundStartDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                    String(roundStartDate.getDate()).padStart(2, '0');
-    const maxDate = roundEndDate.getFullYear() + '-' + 
-                    String(roundEndDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                    String(roundEndDate.getDate()).padStart(2, '0');
+    // Fallback if we couldn't parse from UI
+    if (!minDate || !maxDate) {
+      const round1Start = new Date('2025-11-17T00:00:00');
+      const roundStartDate = new Date(round1Start.getTime());
+      roundStartDate.setDate(round1Start.getDate() + (roundNumber - 1) * 7);
+      const roundEndDate = new Date(roundStartDate.getTime());
+      roundEndDate.setDate(roundStartDate.getDate() + 6);
+      
+      minDate = roundStartDate.getFullYear() + '-' + 
+                String(roundStartDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(roundStartDate.getDate()).padStart(2, '0');
+      maxDate = roundEndDate.getFullYear() + '-' + 
+                String(roundEndDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(roundEndDate.getDate()).padStart(2, '0');
+    }
 
     input.setAttribute('min', minDate);
     input.setAttribute('max', maxDate);
