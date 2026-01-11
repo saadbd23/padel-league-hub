@@ -9022,11 +9022,11 @@ def rounds():
     qf_winners = {m.bracket_slot: m.winner_id for m in all_knockout_matches if m.bracket_slot and m.bracket_slot.startswith('QF') and m.winner_id}
 
     if sf1:
-        if 'QF1' in qf_winners: sf1.team_a_id = qf_winners['QF1']
-        if 'QF2' in qf_winners: sf1.team_b_id = qf_winners['QF2']
+        sf1.team_a_id = qf_winners.get('QF1')
+        sf1.team_b_id = qf_winners.get('QF2')
     if sf2:
-        if 'QF3' in qf_winners: sf2.team_a_id = qf_winners['QF3']
-        if 'QF4' in qf_winners: sf2.team_b_id = qf_winners['QF4']
+        sf2.team_a_id = qf_winners.get('QF3')
+        sf2.team_b_id = qf_winners.get('QF4')
     
     db.session.commit()
 
