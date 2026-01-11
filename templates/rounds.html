@@ -314,23 +314,34 @@
               {% set match = match_data.match %}
               {% set team_a = match_data.team_a %}
               {% set team_b = match_data.team_b %}
+
+              {# Handle cases where teams are assigned but match_data logic missed it #}
+              {% if not team_a and match.team_a_id %}
+                {% set team_a = teams|selectattr('id', 'equalto', match.team_a_id)|first %}
+              {% endif %}
+              {% if not team_b and match.team_b_id %}
+                {% set team_b = teams|selectattr('id', 'equalto', match.team_b_id)|first %}
+              {% endif %}
+
               <div class="match-card semifinal">
                 <div class="match-label">SF1</div>
                 <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
                   {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                  <span class="team-name">{{ team_a.team_name if team_a else 'Winner QF1' }}</span>
                   {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
                 </div>
                 <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
                   {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                  <span class="team-name">{{ team_b.team_name if team_b else 'Winner QF2' }}</span>
                   {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
                 </div>
                 <div class="match-status">
                   {% if match.status == 'completed' or match.status == 'walkover' %}
                   <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
+                  {% elif team_a and team_b %}
                   <span class="text-gray-500">📅 Scheduled</span>
+                  {% else %}
+                  <span class="text-gray-400 italic text-xs">Awaiting QF</span>
                   {% endif %}
                 </div>
               </div>
@@ -349,23 +360,34 @@
               {% set match = match_data.match %}
               {% set team_a = match_data.team_a %}
               {% set team_b = match_data.team_b %}
+              
+              {# Handle cases where teams are assigned but match_data logic missed it #}
+              {% if not team_a and match.team_a_id %}
+                {% set team_a = teams|selectattr('id', 'equalto', match.team_a_id)|first %}
+              {% endif %}
+              {% if not team_b and match.team_b_id %}
+                {% set team_b = teams|selectattr('id', 'equalto', match.team_b_id)|first %}
+              {% endif %}
+
               <div class="match-card semifinal">
                 <div class="match-label">SF2</div>
                 <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
                   {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
+                  <span class="team-name">{{ team_a.team_name if team_a else 'Winner QF3' }}</span>
                   {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
                 </div>
                 <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
                   {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
+                  <span class="team-name">{{ team_b.team_name if team_b else 'Winner QF4' }}</span>
                   {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
                 </div>
                 <div class="match-status">
                   {% if match.status == 'completed' or match.status == 'walkover' %}
                   <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
+                  {% elif team_a and team_b %}
                   <span class="text-gray-500">📅 Scheduled</span>
+                  {% else %}
+                  <span class="text-gray-400 italic text-xs">Awaiting QF</span>
                   {% endif %}
                 </div>
               </div>

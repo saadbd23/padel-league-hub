@@ -3763,6 +3763,49 @@ See you on the court! 🎾
         print(f"[ERROR] Booking confirmation failed: {e}")
         return {"success": False, "message": str(e)}, 500
 
+def update_bracket_winners(match):
+    """
+    Automatically advance the winner of a knockout match to their next designated bracket slot.
+    QF1, QF2 -> SF1
+    QF3, QF4 -> SF2
+    SF1, SF2 -> F1
+    """
+    if not match.winner_id or match.phase == 'final' or match.round >= 8:
+        return
+
+    next_slot = None
+    is_team_a = True
+
+    if match.bracket_slot == 'QF1':
+        next_slot = 'SF1'
+        is_team_a = True
+    elif match.bracket_slot == 'QF2':
+        next_slot = 'SF1'
+        is_team_a = False
+    elif match.bracket_slot == 'QF3':
+        next_slot = 'SF2'
+        is_team_a = True
+    elif match.bracket_slot == 'QF4':
+        next_slot = 'SF2'
+        is_team_a = False
+    elif match.bracket_slot == 'SF1':
+        next_slot = 'F1'
+        is_team_a = True
+    elif match.bracket_slot == 'SF2':
+        next_slot = 'F1'
+        is_team_a = False
+
+    if next_slot:
+        # Find the match in the next round with this slot
+        next_match = Match.query.filter_by(bracket_slot=next_slot).first()
+        if next_match:
+            if is_team_a:
+                next_match.team_a_id = match.winner_id
+            else:
+                next_match.team_b_id = match.winner_id
+            db.session.commit()
+            print(f"[BRACKET] Advanced team {match.winner_id} to {next_slot} ({'Team A' if is_team_a else 'Team B'})")
+
 @app.route("/confirm-score/<token>", methods=["POST"])
 def confirm_score(token):
     """Handle score confirmation from team's secure page (no re-entry needed)"""
@@ -3839,6 +3882,10 @@ def confirm_score(token):
 
                 # Update team statistics
                 update_team_stats_from_match(match)
+
+                # NEW: Update knockout bracket winners
+                if match.round >= 6:
+                    update_bracket_winners(match)
 
                 db.session.commit()
 
@@ -4032,6 +4079,10 @@ def submit_score(token):
                 # Update all stats (team + player) using centralized function
                 from utils import verify_match_and_calculate_stats
                 verify_match_and_calculate_stats(match, team_a, team_b, db.session)
+
+                # NEW: Update knockout bracket winners
+                if match.round >= 6:
+                    update_bracket_winners(match)
 
                 db.session.commit()
 
