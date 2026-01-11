@@ -9005,21 +9005,31 @@ def rounds():
     knockout_bracket['quarterfinals'].sort(key=slot_sort_key)
     knockout_bracket['semifinals'].sort(key=slot_sort_key)
 
-    # Force update for already completed matches if they haven't advanced
-    if knockout_bracket['quarterfinals']:
-        for qf in knockout_bracket['quarterfinals']:
-            if qf['match'].status == 'completed' and qf['match'].winner_id:
-                # Use a separate session to avoid flush issues during view rendering
-                # but for simplicity in this turn we just call the helper
-                update_bracket_winners(qf['match'])
-    
     # Re-fetch or re-populate to ensure the advancement is reflected in the current view
     for sf_data in knockout_bracket['semifinals']:
         sf_match = sf_data['match']
-        if not sf_data['team_a'] and sf_match.team_a_id:
-            sf_data['team_a'] = all_teams_by_id.get(sf_match.team_a_id)
-        if not sf_data['team_b'] and sf_match.team_b_id:
-            sf_data['team_b'] = all_teams_by_id.get(sf_match.team_b_id)
+        # QF1, QF2 -> SF1
+        # QF3, QF4 -> SF2
+        if sf_match.bracket_slot == 'SF1':
+            qf1 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF1'), None)
+            qf2 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF2'), None)
+            if qf1 and qf1.winner_id:
+                sf_match.team_a_id = qf1.winner_id
+                sf_data['team_a'] = all_teams_by_id.get(qf1.winner_id)
+            if qf2 and qf2.winner_id:
+                sf_match.team_b_id = qf2.winner_id
+                sf_data['team_b'] = all_teams_by_id.get(qf2.winner_id)
+        elif sf_match.bracket_slot == 'SF2':
+            qf3 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF3'), None)
+            qf4 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF4'), None)
+            if qf3 and qf3.winner_id:
+                sf_match.team_a_id = qf3.winner_id
+                sf_data['team_a'] = all_teams_by_id.get(qf3.winner_id)
+            if qf4 and qf4.winner_id:
+                sf_match.team_b_id = qf4.winner_id
+                sf_data['team_b'] = all_teams_by_id.get(qf4.winner_id)
+
+    db.session.commit()
 
     return render_template(
         "rounds.html",
