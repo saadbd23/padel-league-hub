@@ -8944,6 +8944,10 @@ def rounds():
         'has_matches': False
     }
 
+    # First pass: identify all teams in knockout matches to ensure we can look them up
+    # even if they aren't explicitly in the match_data yet
+    all_teams_by_id = {t.id: t for t in teams}
+
     for match in matches:
         if not match.round:
             continue
@@ -8976,8 +8980,18 @@ def rounds():
             if match.phase == 'quarterfinal' or match.round == 6:
                 knockout_bracket['quarterfinals'].append(match_data)
             elif match.phase == 'semifinal' or match.round == 7:
+                # Ensure team_a and team_b are populated from IDs if they were advanced
+                if not match_data['team_a'] and match.team_a_id:
+                    match_data['team_a'] = all_teams_by_id.get(match.team_a_id)
+                if not match_data['team_b'] and match.team_b_id:
+                    match_data['team_b'] = all_teams_by_id.get(match.team_b_id)
                 knockout_bracket['semifinals'].append(match_data)
             elif match.phase == 'final' or match.round == 8:
+                # Ensure team_a and team_b are populated from IDs if they were advanced
+                if not match_data['team_a'] and match.team_a_id:
+                    match_data['team_a'] = all_teams_by_id.get(match.team_a_id)
+                if not match_data['team_b'] and match.team_b_id:
+                    match_data['team_b'] = all_teams_by_id.get(match.team_b_id)
                 knockout_bracket['final'] = match_data
     
     # Sort knockout matches by bracket_slot for proper bracket order
@@ -8990,6 +9004,22 @@ def rounds():
     
     knockout_bracket['quarterfinals'].sort(key=slot_sort_key)
     knockout_bracket['semifinals'].sort(key=slot_sort_key)
+
+    # Force update for already completed matches if they haven't advanced
+    if knockout_bracket['quarterfinals']:
+        for qf in knockout_bracket['quarterfinals']:
+            if qf['match'].status == 'completed' and qf['match'].winner_id:
+                # Use a separate session to avoid flush issues during view rendering
+                # but for simplicity in this turn we just call the helper
+                update_bracket_winners(qf['match'])
+    
+    # Re-fetch or re-populate to ensure the advancement is reflected in the current view
+    for sf_data in knockout_bracket['semifinals']:
+        sf_match = sf_data['match']
+        if not sf_data['team_a'] and sf_match.team_a_id:
+            sf_data['team_a'] = all_teams_by_id.get(sf_match.team_a_id)
+        if not sf_data['team_b'] and sf_match.team_b_id:
+            sf_data['team_b'] = all_teams_by_id.get(sf_match.team_b_id)
 
     return render_template(
         "rounds.html",
