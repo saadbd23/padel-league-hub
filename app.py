@@ -9005,31 +9005,36 @@ def rounds():
     knockout_bracket['quarterfinals'].sort(key=slot_sort_key)
     knockout_bracket['semifinals'].sort(key=slot_sort_key)
 
-    # Re-fetch or re-populate to ensure the advancement is reflected in the current view
-    for sf_data in knockout_bracket['semifinals']:
-        sf_match = sf_data['match']
-        # QF1, QF2 -> SF1
-        # QF3, QF4 -> SF2
-        if sf_match.bracket_slot == 'SF1':
-            qf1 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF1'), None)
-            qf2 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF2'), None)
-            if qf1 and qf1.winner_id:
-                sf_match.team_a_id = qf1.winner_id
-                sf_data['team_a'] = all_teams_by_id.get(qf1.winner_id)
-            if qf2 and qf2.winner_id:
-                sf_match.team_b_id = qf2.winner_id
-                sf_data['team_b'] = all_teams_by_id.get(qf2.winner_id)
-        elif sf_match.bracket_slot == 'SF2':
-            qf3 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF3'), None)
-            qf4 = next((m['match'] for m in knockout_bracket['quarterfinals'] if m['match'].bracket_slot == 'QF4'), None)
-            if qf3 and qf3.winner_id:
-                sf_match.team_a_id = qf3.winner_id
-                sf_data['team_a'] = all_teams_by_id.get(qf3.winner_id)
-            if qf4 and qf4.winner_id:
-                sf_match.team_b_id = qf4.winner_id
-                sf_data['team_b'] = all_teams_by_id.get(qf4.winner_id)
+    # RE-FETCH Semi-final matches directly from DB to ensure we have the latest state
+    # especially if we just advanced someone
+    db.session.expire_all()
+    
+    # Re-fetch all knockout matches to be absolutely sure
+    all_knockout_matches = Match.query.filter(Match.round >= 6).all()
+    match_map = {m.bracket_slot: m for m in all_knockout_matches if m.bracket_slot}
 
+    # Re-sync semi-finals based on quarter-final winners
+    # QF1, QF2 -> SF1
+    # QF3, QF4 -> SF2
+    sf1 = match_map.get('SF1')
+    sf2 = match_map.get('SF2')
+    
+    qf_winners = {m.bracket_slot: m.winner_id for m in all_knockout_matches if m.bracket_slot and m.bracket_slot.startswith('QF') and m.winner_id}
+
+    if sf1:
+        if 'QF1' in qf_winners: sf1.team_a_id = qf_winners['QF1']
+        if 'QF2' in qf_winners: sf1.team_b_id = qf_winners['QF2']
+    if sf2:
+        if 'QF3' in qf_winners: sf2.team_a_id = qf_winners['QF3']
+        if 'QF4' in qf_winners: sf2.team_b_id = qf_winners['QF4']
+    
     db.session.commit()
+
+    # Final pass to populate display names
+    for sf_data in knockout_bracket['semifinals']:
+        m = sf_data['match']
+        if m.team_a_id: sf_data['team_a'] = all_teams_by_id.get(m.team_a_id)
+        if m.team_b_id: sf_data['team_b'] = all_teams_by_id.get(m.team_b_id)
 
     return render_template(
         "rounds.html",
