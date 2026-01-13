@@ -38,7 +38,12 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (January 8, 2026)
+## Recent Changes (January 13, 2026)
+- **Read-Only Bracket Visualization**: Knockout bracket now calculates SF/Finals slots purely in-memory from QF/SF winners without modifying database. Prevents accidental Round 7/8 creation during page renders.
+- **Derived Slot Architecture**: `derived_sf_slots` and `derived_final_slot` dictionaries passed to template, allowing bracket to show progression before admin explicitly generates those rounds.
+- **Round Deadline Calendar Fix**: Match booking calendar now respects custom `round_deadline` field set by admin when generating rounds.
+
+## Previous Changes (January 8, 2026)
 - **Redesigned Bracket with CSS Grid**: Rebuilt knockout bracket using CSS Grid with fixed row heights for proper vertical alignment. SF matches are now correctly positioned at the vertical midpoint of their QF pairs.
 - **Grid-Based Bracket Architecture**: 4-row × 5-column grid layout (QF column, connector column, SF column, connector column, Finals column). QF matches occupy individual rows, SF slots span 2 rows each, Finals spans all 4 rows.
 - **Connector Pseudo-Elements**: Horizontal arms (::after) and vertical spines (::before) on connector columns draw lines from QF pairs to SF matches and from SF pair to Finals. All sizing uses CSS custom properties (--match-height, --pair-gap, --arm-length).

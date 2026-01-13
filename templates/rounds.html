@@ -309,96 +309,60 @@
           </div>
           <div class="bracket-matches">
             <!-- SF1 -->
+            {% set sf1_team_a = derived_sf_slots.SF1.team_a if derived_sf_slots else None %}
+            {% set sf1_team_b = derived_sf_slots.SF1.team_b if derived_sf_slots else None %}
+            {% set sf1_match = None %}
             {% if knockout_bracket.semifinals|length > 0 %}
-              {% set match_data = knockout_bracket.semifinals[0] %}
-              {% set match = match_data.match %}
-              {% set team_a = match_data.team_a %}
-              {% set team_b = match_data.team_b %}
-
-              {# Handle cases where teams are assigned but match_data logic missed it #}
-              {% if not team_a and match.team_a_id %}
-                {% set team_a = teams|selectattr('id', 'equalto', match.team_a_id)|first %}
-              {% endif %}
-              {% if not team_b and match.team_b_id %}
-                {% set team_b = teams|selectattr('id', 'equalto', match.team_b_id)|first %}
-              {% endif %}
-
-              <div class="match-card semifinal">
-                <div class="match-label">SF1</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'Winner QF1' }}</span>
-                  {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'Winner QF2' }}</span>
-                  {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' or match.status == 'walkover' %}
-                  <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% elif team_a and team_b %}
-                  <span class="text-gray-500">📅 Scheduled</span>
-                  {% else %}
-                  <span class="text-gray-400 italic text-xs">Awaiting QF</span>
-                  {% endif %}
-                </div>
-              </div>
-            {% else %}
-              <div class="match-card semifinal opacity-50">
-                <div class="match-label">SF1</div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner QF1</span></div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner QF2</span></div>
-                <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
-              </div>
+              {% set sf1_match = knockout_bracket.semifinals[0].match %}
             {% endif %}
+            <div class="match-card semifinal {% if not sf1_team_a and not sf1_team_b %}opacity-50{% endif %}">
+              <div class="match-label">SF1</div>
+              <div class="team-row {% if sf1_match and sf1_match.winner_id and sf1_team_a and sf1_match.winner_id == sf1_team_a.id %}winner{% endif %}">
+                <span class="team-name">{{ sf1_team_a.team_name if sf1_team_a else 'Winner QF1' }}</span>
+                {% if sf1_match and sf1_match.score_a %}<span class="team-score">{{ sf1_match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if sf1_match and sf1_match.winner_id and sf1_team_b and sf1_match.winner_id == sf1_team_b.id %}winner{% endif %}">
+                <span class="team-name">{{ sf1_team_b.team_name if sf1_team_b else 'Winner QF2' }}</span>
+                {% if sf1_match and sf1_match.score_b %}<span class="team-score">{{ sf1_match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if sf1_match and (sf1_match.status == 'completed' or sf1_match.status == 'walkover') %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% elif sf1_team_a and sf1_team_b %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% else %}
+                <span class="text-gray-400 italic text-xs">Awaiting QF</span>
+                {% endif %}
+              </div>
+            </div>
             
             <!-- SF2 -->
+            {% set sf2_team_a = derived_sf_slots.SF2.team_a if derived_sf_slots else None %}
+            {% set sf2_team_b = derived_sf_slots.SF2.team_b if derived_sf_slots else None %}
+            {% set sf2_match = None %}
             {% if knockout_bracket.semifinals|length > 1 %}
-              {% set match_data = knockout_bracket.semifinals[1] %}
-              {% set match = match_data.match %}
-              {% set team_a = match_data.team_a %}
-              {% set team_b = match_data.team_b %}
-              
-              {# Handle cases where teams are assigned but match_data logic missed it #}
-              {% if not team_a and match.team_a_id %}
-                {% set team_a = teams|selectattr('id', 'equalto', match.team_a_id)|first %}
-              {% endif %}
-              {% if not team_b and match.team_b_id %}
-                {% set team_b = teams|selectattr('id', 'equalto', match.team_b_id)|first %}
-              {% endif %}
-
-              <div class="match-card semifinal">
-                <div class="match-label">SF2</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'Winner QF3' }}</span>
-                  {% if match.score_a %}<span class="team-score">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'Winner QF4' }}</span>
-                  {% if match.score_b %}<span class="team-score">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' or match.status == 'walkover' %}
-                  <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% elif team_a and team_b %}
-                  <span class="text-gray-500">📅 Scheduled</span>
-                  {% else %}
-                  <span class="text-gray-400 italic text-xs">Awaiting QF</span>
-                  {% endif %}
-                </div>
-              </div>
-            {% else %}
-              <div class="match-card semifinal opacity-50">
-                <div class="match-label">SF2</div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner QF3</span></div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner QF4</span></div>
-                <div class="match-status"><span class="text-gray-400">Awaiting QF</span></div>
-              </div>
+              {% set sf2_match = knockout_bracket.semifinals[1].match %}
             {% endif %}
+            <div class="match-card semifinal {% if not sf2_team_a and not sf2_team_b %}opacity-50{% endif %}">
+              <div class="match-label">SF2</div>
+              <div class="team-row {% if sf2_match and sf2_match.winner_id and sf2_team_a and sf2_match.winner_id == sf2_team_a.id %}winner{% endif %}">
+                <span class="team-name">{{ sf2_team_a.team_name if sf2_team_a else 'Winner QF3' }}</span>
+                {% if sf2_match and sf2_match.score_a %}<span class="team-score">{{ sf2_match.score_a }}</span>{% endif %}
+              </div>
+              <div class="team-row {% if sf2_match and sf2_match.winner_id and sf2_team_b and sf2_match.winner_id == sf2_team_b.id %}winner{% endif %}">
+                <span class="team-name">{{ sf2_team_b.team_name if sf2_team_b else 'Winner QF4' }}</span>
+                {% if sf2_match and sf2_match.score_b %}<span class="team-score">{{ sf2_match.score_b }}</span>{% endif %}
+              </div>
+              <div class="match-status">
+                {% if sf2_match and (sf2_match.status == 'completed' or sf2_match.status == 'walkover') %}
+                <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% elif sf2_team_a and sf2_team_b %}
+                <span class="text-gray-500">📅 Scheduled</span>
+                {% else %}
+                <span class="text-gray-400 italic text-xs">Awaiting QF</span>
+                {% endif %}
+              </div>
+            </div>
           </div>
         </div>
         
@@ -408,42 +372,33 @@
             <span class="header-final">🏆 Finals</span>
           </div>
           <div class="bracket-matches">
-            {% if knockout_bracket.final %}
-              {% set match = knockout_bracket.final.match %}
-              {% set team_a = knockout_bracket.final.team_a %}
-              {% set team_b = knockout_bracket.final.team_b %}
-              <div class="match-card final">
-                <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
-                <div class="team-row {% if match.winner_id and team_a and match.winner_id == team_a.id %}winner{% endif %}">
-                  {% if match.seed_a %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_a }}</span>{% endif %}
-                  <span class="team-name">{{ team_a.team_name if team_a else 'TBD' }}</span>
-                  {% if match.score_a %}<span class="team-score" style="color: #D97706;">{{ match.score_a }}</span>{% endif %}
-                </div>
-                <div class="team-row {% if match.winner_id and team_b and match.winner_id == team_b.id %}winner{% endif %}">
-                  {% if match.seed_b %}<span class="seed-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">{{ match.seed_b }}</span>{% endif %}
-                  <span class="team-name">{{ team_b.team_name if team_b else 'TBD' }}</span>
-                  {% if match.score_b %}<span class="team-score" style="color: #D97706;">{{ match.score_b }}</span>{% endif %}
-                </div>
-                <div class="match-status">
-                  {% if match.status == 'completed' and match.winner_id %}
-                    {% set winner = team_a if match.winner_id == team_a.id else team_b %}
-                    <div class="text-sm font-bold text-yellow-700">👑 CHAMPION</div>
-                    <div class="text-base font-bold text-gray-900">{{ winner.team_name if winner else 'TBD' }}</div>
-                  {% elif match.status == 'completed' %}
-                    <span class="text-green-600 font-semibold">✓ Complete</span>
-                  {% else %}
-                    <span class="text-gray-500">📅 Scheduled</span>
-                  {% endif %}
-                </div>
+            {% set final_team_a = derived_final_slot.team_a if derived_final_slot else None %}
+            {% set final_team_b = derived_final_slot.team_b if derived_final_slot else None %}
+            {% set final_match = knockout_bracket.final.match if knockout_bracket.final else None %}
+            <div class="match-card final {% if not final_team_a and not final_team_b %}opacity-50{% endif %}">
+              <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
+              <div class="team-row {% if final_match and final_match.winner_id and final_team_a and final_match.winner_id == final_team_a.id %}winner{% endif %}">
+                <span class="team-name">{{ final_team_a.team_name if final_team_a else 'Winner SF1' }}</span>
+                {% if final_match and final_match.score_a %}<span class="team-score" style="color: #D97706;">{{ final_match.score_a }}</span>{% endif %}
               </div>
-            {% else %}
-              <div class="match-card final opacity-50">
-                <div class="match-label font-bold text-yellow-700">CHAMPIONSHIP</div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner SF1</span></div>
-                <div class="team-row"><span class="team-name text-gray-400">Winner SF2</span></div>
-                <div class="match-status"><span class="text-gray-400">Awaiting SF</span></div>
+              <div class="team-row {% if final_match and final_match.winner_id and final_team_b and final_match.winner_id == final_team_b.id %}winner{% endif %}">
+                <span class="team-name">{{ final_team_b.team_name if final_team_b else 'Winner SF2' }}</span>
+                {% if final_match and final_match.score_b %}<span class="team-score" style="color: #D97706;">{{ final_match.score_b }}</span>{% endif %}
               </div>
-            {% endif %}
+              <div class="match-status">
+                {% if final_match and final_match.status == 'completed' and final_match.winner_id %}
+                  {% set winner = final_team_a if final_match.winner_id == final_team_a.id else final_team_b %}
+                  <div class="text-sm font-bold text-yellow-700">👑 CHAMPION</div>
+                  <div class="text-base font-bold text-gray-900">{{ winner.team_name if winner else 'TBD' }}</div>
+                {% elif final_match and final_match.status == 'completed' %}
+                  <span class="text-green-600 font-semibold">✓ Complete</span>
+                {% elif final_team_a and final_team_b %}
+                  <span class="text-gray-500">📅 Scheduled</span>
+                {% else %}
+                  <span class="text-gray-400">Awaiting SF</span>
+                {% endif %}
+              </div>
+            </div>
           </div>
         </div>
       </div>
