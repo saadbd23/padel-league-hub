@@ -1154,15 +1154,22 @@ Penalty Details:
 - Penalty: {penalty_ranks} rank(s)
 - Date: {datetime.now().strftime('%B %d, %Y')}
 
-If you believe this penalty was applied in error, please contact the admin immediately.
+If you believe this penalty was applied in error or wish to dispute it, please contact the admin at goeclecticbd@gmail.com.
 
 - BD Padel League
 """
     
+    admin_email = "goeclecticbd@gmail.com"
+    subject = f"Rank Penalty Applied - {team.team_name}"
+    
+    # Send to players and CC admin
     if team.player1_email:
-        send_email_notification(team.player1_email, "Rank Penalty Applied", penalty_email_body)
-    if team.player2_email:
-        send_email_notification(team.player2_email, "Rank Penalty Applied", penalty_email_body)
+        send_email_notification(team.player1_email, subject, penalty_email_body)
+    if team.player2_email and team.player2_email != team.player1_email:
+        send_email_notification(team.player2_email, subject, penalty_email_body)
+    
+    # Send copy to admin
+    send_email_notification(admin_email, f"CC: {subject}", penalty_email_body)
     
     return {
         'team': team.team_name,

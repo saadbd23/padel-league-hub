@@ -1671,26 +1671,36 @@ def apply_rank_penalty(team, penalty_amount, reason):
 
     db.session.commit()
 
-    penalty_message = f"""
-Penalty Applied to {team.team_name}
+    penalty_message = f"""Hi {team.player1_name},
 
-Reason: {reason}
-Previous Rank: #{old_rank}
-New Rank: #{new_rank}
-Penalty: {penalty_amount} rank(s) down
-Date: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+LADDER PENALTY APPLIED
 
-This penalty was automatically applied by the ladder system. If you believe this is an error, please contact the league administrator.
+Your team "{team.team_name}" has received a rank penalty on the {team.ladder_type.title()} Ladder.
+
+Penalty Details:
+- Reason: {reason}
+- Previous Rank: #{old_rank}
+- New Rank: #{new_rank}
+- Penalty: {penalty_amount} rank(s) down
+- Date: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+
+This penalty was automatically applied by the ladder system. If you have any questions or wish to dispute this penalty, please contact the league administrator at goeclecticbd@gmail.com.
 
 Regards,
 BD Padel Ladder Team
 """
 
+    admin_email = "goeclecticbd@gmail.com"
+    subject = f"Ladder Penalty Applied - {team.team_name}"
+
     if team.contact_preference_email:
         if team.player1_email:
-            send_email_notification(team.player1_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
+            send_email_notification(team.player1_email, subject, penalty_message)
         if team.player2_email and team.player2_email != team.player1_email:
-            send_email_notification(team.player2_email, f"Ladder Penalty Applied - {team.team_name}", penalty_message)
+            send_email_notification(team.player2_email, subject, penalty_message)
+        
+        # CC Admin
+        send_email_notification(admin_email, f"CC: {subject}", penalty_message)
 
 
 def calculate_holiday_status(team, settings):
