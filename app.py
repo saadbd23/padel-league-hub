@@ -2998,28 +2998,29 @@ BD Padel Ladder System
         normal_min_rank = max(1, team.current_rank - max_rank_diff)
         normal_max_rank = team.current_rank - 1
         
-        normal_range_teams = LadderTeam.query.filter(
-            LadderTeam.ladder_type == team.ladder_type,
-            LadderTeam.gender == team.gender,
-            LadderTeam.current_rank >= normal_min_rank,
-            LadderTeam.current_rank <= normal_max_rank,
-            LadderTeam.id != team.id
-        ).order_by(LadderTeam.current_rank.asc()).all()
-        
         # Count how many teams in the normal range are on holiday mode (not locked/under challenge)
         holiday_count = 0
-        for t in normal_range_teams:
-            is_team_locked = LadderChallenge.query.filter(
-                db.or_(
-                    LadderChallenge.challenger_team_id == t.id,
-                    LadderChallenge.challenged_team_id == t.id
-                ),
-                LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
-            ).first() is not None
+        if normal_max_rank >= normal_min_rank:
+            normal_range_teams = LadderTeam.query.filter(
+                LadderTeam.ladder_type == team.ladder_type,
+                LadderTeam.gender == team.gender,
+                LadderTeam.current_rank >= normal_min_rank,
+                LadderTeam.current_rank <= normal_max_rank,
+                LadderTeam.id != team.id
+            ).all()
             
-            # Only count if on holiday mode AND not locked (teams under challenge don't count as missing)
-            if t.holiday_mode_active and not is_team_locked:
-                holiday_count += 1
+            for t in normal_range_teams:
+                is_team_locked = LadderChallenge.query.filter(
+                    db.or_(
+                        LadderChallenge.challenger_team_id == t.id,
+                        LadderChallenge.challenged_team_id == t.id
+                    ),
+                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+                ).first() is not None
+                
+                # Only count if on holiday mode AND not locked (teams under challenge don't count as missing)
+                if t.holiday_mode_active and not is_team_locked:
+                    holiday_count += 1
         
         # Expand the range if there are holiday mode teams
         min_challengeable_rank = max(1, team.current_rank - max_rank_diff - holiday_count)
@@ -3057,7 +3058,18 @@ BD Padel Ladder System
         gender=team.gender
     ).order_by(LadderTeam.current_rank.asc()).all()
     
-    team_display_rank = next((idx + 1 for idx, t in enumerate(all_teams_in_ladder) if t.id == team.id), None)
+    # Update the team object's rank if it's out of sync with its position
+    # This ensures consistency between the list view and the single team view
+    actual_rank = None
+    for idx, t in enumerate(all_teams_in_ladder):
+        if t.id == team.id:
+            actual_rank = idx + 1
+            if t.current_rank != actual_rank:
+                t.current_rank = actual_rank
+                db.session.commit()
+            break
+            
+    team_display_rank = actual_rank
     
     return render_template("ladder/my_team.html",
                          team=team,
