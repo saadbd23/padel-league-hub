@@ -2989,15 +2989,25 @@ BD Padel Ladder System
         status_color = 'green'
         status_message = 'Available'
 
-    # Calculate display rank (sequential position in ladder for this team's type/gender)
-    # IMPORTANT: Must filter by payment_received=True to match public ladder page rankings
-    all_teams_in_ladder = LadderTeam.query.filter_by(
+    # Calculate display rank using EXACT same logic as public ladder page
+    # CRITICAL: Must match ladder_men/ladder_women routes for consistent ranking
+    all_teams_raw = LadderTeam.query.filter_by(
         ladder_type=team.ladder_type,
         gender=team.gender,
         payment_received=True
-    ).order_by(LadderTeam.current_rank.asc()).all()
+    ).all()
     
-    # Map team IDs to their actual sequential rank (1..N) based on current sort
+    # Calculate initial rank based on registration order (same as public ladder)
+    teams_by_creation = sorted(all_teams_raw, key=lambda t: t.created_at)
+    initial_ranks = {t.id: idx for idx, t in enumerate(teams_by_creation, start=1)}
+    
+    # Sort by current_rank with creation order as tiebreaker (same as public ladder)
+    all_teams_in_ladder = sorted(
+        all_teams_raw, 
+        key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999)
+    )
+    
+    # Map team IDs to their actual sequential rank (1..N) based on sorted order
     team_id_to_seq_rank = {t.id: idx + 1 for idx, t in enumerate(all_teams_in_ladder)}
     team_display_rank = team_id_to_seq_rank.get(team.id)
 
