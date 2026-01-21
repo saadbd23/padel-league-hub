@@ -274,12 +274,19 @@
 
         <div class="space-y-2">
           {% for item in expired %}
-          <div class="bg-white rounded-lg p-3 border border-gray-200 text-sm">
-            <span class="font-semibold">{{ item.challenger.team_name }}</span> challenged 
-            <span class="font-semibold">{{ item.challenged.team_name }}</span>
-            <span class="text-gray-500 ml-2">
-              (Expired {{ item.challenge.acceptance_deadline.strftime('%b %d') if item.challenge.acceptance_deadline else '' }})
-            </span>
+          <div class="bg-white rounded-lg p-3 border border-gray-200 text-sm flex items-center justify-between">
+            <div>
+              <span class="font-semibold">{{ item.challenger.team_name }}</span> challenged 
+              <span class="font-semibold">{{ item.challenged.team_name }}</span>
+              <span class="text-gray-500 ml-2">
+                (Expired {{ item.challenge.acceptance_deadline.strftime('%b %d') if item.challenge.acceptance_deadline else '' }})
+              </span>
+            </div>
+            <form method="POST" action="{{ url_for('admin_reactivate_challenge', challenge_id=item.challenge.id) }}">
+              <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors" onclick="return confirm('Reactivate this expired challenge?')">
+                Reactivate
+              </button>
+            </form>
           </div>
           {% endfor %}
         </div>

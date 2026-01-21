@@ -5522,6 +5522,25 @@ BD Padel Ladder Team
         if challenged_team.player2_email and challenged_team.player2_email != challenged_team.player1_email:
             send_email_notification(challenged_team.player2_email, "Challenge Cancelled", challenged_message)
     
+    flash("Challenge cancelled successfully. Teams are now unlocked.", "success")
+    return redirect(request.referrer or url_for('admin_ladder_challenges', ladder_type=challenge.ladder_type))
+
+
+@app.route("/admin/ladder/challenge/reactivate/<int:challenge_id>", methods=["POST"])
+@require_admin_auth
+def admin_reactivate_challenge(challenge_id):
+    """Admin reactivates an expired challenge by extending its deadline."""
+    from datetime import datetime, timedelta
+    
+    challenge = LadderChallenge.query.get_or_404(challenge_id)
+    
+    # Reset status and give a fresh 48-hour window
+    challenge.status = 'pending_acceptance'
+    challenge.acceptance_deadline = datetime.now() + timedelta(hours=48)
+    
+    db.session.commit()
+    flash("Challenge reactivated successfully for 48 hours.", "success")
+    return redirect(request.referrer or url_for('admin_ladder_challenges', ladder_type=challenge.ladder_type))
     flash("Challenge cancelled successfully. Both teams are now unlocked.", "success")
     return redirect(request.referrer or url_for('admin_panel'))
 
