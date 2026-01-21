@@ -5541,8 +5541,6 @@ def admin_reactivate_challenge(challenge_id):
     db.session.commit()
     flash("Challenge reactivated successfully for 48 hours.", "success")
     return redirect(request.referrer or url_for('admin_ladder_challenges', ladder_type=challenge.ladder_type))
-    flash("Challenge cancelled successfully. Both teams are now unlocked.", "success")
-    return redirect(request.referrer or url_for('admin_panel'))
 
 
 @app.route("/admin/ladder/matches/<ladder_type>")
