@@ -854,13 +854,14 @@
       <div class="space-y-4">
         {% for item in challengeable_teams %}
         {% set challengeable = item.team %}
-        {% set rank_diff = team.current_rank - challengeable.current_rank %}
+        {% set display_rank = item.display_rank if item.display_rank else challengeable.current_rank %}
+        {% set rank_diff = team_display_rank - display_rank %}
         {% set max_diff = settings.max_challenge_rank_difference if settings else 3 %}
         <div class="border-2 rounded-lg p-6 transition {% if item.is_locked or item.is_holiday %}border-gray-300 bg-gray-50 opacity-75{% else %}border-purple-200 bg-purple-50 hover:bg-purple-100{% endif %}">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
-                <div class="text-2xl font-bold {% if item.is_locked or item.is_holiday %}text-gray-400{% else %}text-purple-600{% endif %}">#{{ challengeable.current_rank }}</div>
+                <div class="text-2xl font-bold {% if item.is_locked or item.is_holiday %}text-gray-400{% else %}text-purple-600{% endif %}">#{{ display_rank }}</div>
                 <div>
                   <h3 class="text-lg md:text-xl font-bold text-gray-900 truncate">{{ challengeable.team_name }}</h3>
                   <div class="text-xs md:text-sm text-gray-600 truncate">

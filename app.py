@@ -2989,88 +2989,59 @@ BD Padel Ladder System
         status_color = 'green'
         status_message = 'Available'
 
-    # Get teams that can be challenged (3 ranks above, expandable if teams are on holiday)
-    challengeable_teams = []
-    if not is_locked and not team.holiday_mode_active:
-        max_rank_diff = settings.max_challenge_rank_difference if settings else 3
-        
-        # First pass: get all teams in the normal range to count holiday mode teams
-        normal_min_rank = max(1, team.current_rank - max_rank_diff)
-        normal_max_rank = team.current_rank - 1
-        
-        # Count how many teams in the normal range are on holiday mode (not locked/under challenge)
-        holiday_count = 0
-        if normal_max_rank >= normal_min_rank:
-            normal_range_teams = LadderTeam.query.filter(
-                LadderTeam.ladder_type == team.ladder_type,
-                LadderTeam.gender == team.gender,
-                LadderTeam.current_rank >= normal_min_rank,
-                LadderTeam.current_rank <= normal_max_rank,
-                LadderTeam.id != team.id
-            ).all()
-            
-            for t in normal_range_teams:
-                is_team_locked = LadderChallenge.query.filter(
-                    db.or_(
-                        LadderChallenge.challenger_team_id == t.id,
-                        LadderChallenge.challenged_team_id == t.id
-                    ),
-                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
-                ).first() is not None
-                
-                # Only count if on holiday mode AND not locked (teams under challenge don't count as missing)
-                if t.holiday_mode_active and not is_team_locked:
-                    holiday_count += 1
-        
-        # Expand the range if there are holiday mode teams
-        min_challengeable_rank = max(1, team.current_rank - max_rank_diff - holiday_count)
-        max_challengeable_rank = team.current_rank - 1
-        
-        if max_challengeable_rank >= min_challengeable_rank:
-            potential_teams = LadderTeam.query.filter(
-                LadderTeam.ladder_type == team.ladder_type,
-                LadderTeam.gender == team.gender,
-                LadderTeam.current_rank >= min_challengeable_rank,
-                LadderTeam.current_rank <= max_challengeable_rank,
-                LadderTeam.id != team.id
-            ).order_by(LadderTeam.current_rank.asc()).all()
-
-            # Show all teams but mark locked/holiday ones as disabled
-            for potential_team in potential_teams:
-                # Check if potential team is already in an active challenge (with ANY opponent)
-                is_team_locked = LadderChallenge.query.filter(
-                    db.or_(
-                        LadderChallenge.challenger_team_id == potential_team.id,
-                        LadderChallenge.challenged_team_id == potential_team.id
-                    ),
-                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
-                ).first() is not None
-
-                challengeable_teams.append({
-                    'team': potential_team,
-                    'is_locked': is_team_locked,
-                    'is_holiday': potential_team.holiday_mode_active
-                })
-
     # Calculate display rank (sequential position in ladder for this team's type/gender)
     all_teams_in_ladder = LadderTeam.query.filter_by(
         ladder_type=team.ladder_type,
         gender=team.gender
     ).order_by(LadderTeam.current_rank.asc()).all()
     
-    # Update the team object's rank if it's out of sync with its position
-    # This ensures consistency between the list view and the single team view
-    actual_rank = None
-    for idx, t in enumerate(all_teams_in_ladder):
-        if t.id == team.id:
-            actual_rank = idx + 1
-            if t.current_rank != actual_rank:
-                t.current_rank = actual_rank
-                db.session.commit()
-            break
+    # Map team IDs to their actual sequential rank (1..N) based on current sort
+    team_id_to_seq_rank = {t.id: idx + 1 for idx, t in enumerate(all_teams_in_ladder)}
+    team_display_rank = team_id_to_seq_rank.get(team.id)
+
+    # Sync the team object's rank if it's out of sync
+    if team_display_rank and team.current_rank != team_display_rank:
+        team.current_rank = team_display_rank
+        db.session.commit()
+
+    # Get teams that can be challenged (3 ranks above, expandable if teams are on holiday)
+    challengeable_teams = []
+    if not is_locked and not team.holiday_mode_active:
+        max_rank_diff = settings.max_challenge_rank_difference if settings else 3
+        
+        if team_display_rank:
+            # Find up to 3 available slots above me
+            target_teams_data = []
+            curr_target_idx = team_display_rank - 2  # -1 for 0-indexed, then -1 for team above
             
-    team_display_rank = actual_rank
-    
+            # We'll look further up if we hit holiday teams
+            while len(target_teams_data) < max_rank_diff and curr_target_idx >= 0:
+                potential_t = all_teams_in_ladder[curr_target_idx]
+                
+                is_t_locked = LadderChallenge.query.filter(
+                    db.or_(
+                        LadderChallenge.challenger_team_id == potential_t.id,
+                        LadderChallenge.challenged_team_id == potential_t.id
+                    ),
+                    LadderChallenge.status.in_(['pending_acceptance', 'accepted'])
+                ).first() is not None
+                
+                if potential_t.holiday_mode_active and not is_t_locked:
+                    # Skip this rank, look one higher
+                    curr_target_idx -= 1
+                    continue
+                
+                # This rank is valid (either available or locked but visible)
+                target_teams_data.append({
+                    'team': potential_t,
+                    'is_locked': is_t_locked,
+                    'is_holiday': potential_t.holiday_mode_active,
+                    'display_rank': curr_target_idx + 1
+                })
+                curr_target_idx -= 1
+
+            challengeable_teams = target_teams_data
+
     return render_template("ladder/my_team.html",
                          team=team,
                          team_display_rank=team_display_rank,
