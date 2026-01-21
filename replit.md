@@ -39,10 +39,12 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
 ## Recent Changes (January 21, 2026)
-- **Fixed Ladder Challenge Eligibility Ranking Bug**: Resolved issue where teams were seeing incorrect ranks for challengeable opponents. Root cause was discrepancy between sequential position in ladder (1..N) vs stored rank numbers.
-- **Sequential Rank-Based Challenge Logic**: Challenge eligibility now uses index-based lookups from the sorted ladder list instead of querying by stored rank values. This ensures displayed ranks match actual ladder positions.
+- **Fixed Ladder Ranking Consistency Site-Wide**: Resolved issue where ladder rankings displayed inconsistently across different pages (Team BI showing as #3 on public page but different elsewhere).
+- **Display Rank Calculation**: All ladder pages (public men/women/mixed, admin, team page) now calculate sequential `display_rank` (1..N) from sorted team order for consistent rendering. No DB writes on read-only page views.
+- **Sequential Rank-Based Challenge Logic**: Challenge eligibility uses index-based lookups from the sorted ladder list instead of querying by stored rank values. This ensures displayed ranks match actual ladder positions.
 - **Display Rank Field**: Added `display_rank` field to challengeable teams dict to show the correct sequential rank in the UI.
 - **Holiday Team Skip Logic**: When a holiday team is encountered in the challenge range, the algorithm now skips it and looks one rank higher, properly expanding the search range.
+- **Separation of Display vs Storage**: Templates now use `display_rank` for rendering everywhere, while `current_rank` in DB is only modified by match outcomes and admin rank adjustments.
 
 ## Previous Changes (January 13, 2026)
 - **Read-Only Bracket Visualization**: Knockout bracket now calculates SF/Finals slots purely in-memory from QF/SF winners without modifying database. Prevents accidental Round 7/8 creation during page renders.

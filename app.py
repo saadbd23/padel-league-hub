@@ -1446,7 +1446,7 @@ def ladder_men():
     # If current_rank is None, assign based on registration order
     teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
     
-    # Assign display ranks (these are the current ranks)
+    # Assign display ranks (sequential 1..N for consistent display)
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
@@ -1510,7 +1510,7 @@ def ladder_women():
     # If current_rank is None, assign based on registration order
     teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
     
-    # Assign display ranks (these are the current ranks)
+    # Assign display ranks (sequential 1..N for consistent display)
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
@@ -1574,7 +1574,7 @@ def ladder_mixed():
     # If current_rank is None, assign based on registration order
     teams_sorted = sorted(teams, key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999))
     
-    # Assign display ranks (these are the current ranks)
+    # Assign display ranks (sequential 1..N for consistent display)
     for idx, team in enumerate(teams_sorted, start=1):
         team.display_rank = idx
     
@@ -2998,11 +2998,6 @@ BD Padel Ladder System
     # Map team IDs to their actual sequential rank (1..N) based on current sort
     team_id_to_seq_rank = {t.id: idx + 1 for idx, t in enumerate(all_teams_in_ladder)}
     team_display_rank = team_id_to_seq_rank.get(team.id)
-
-    # Sync the team object's rank if it's out of sync
-    if team_display_rank and team.current_rank != team_display_rank:
-        team.current_rank = team_display_rank
-        db.session.commit()
 
     # Get teams that can be challenged (3 ranks above, expandable if teams are on holiday)
     challengeable_teams = []
@@ -5187,7 +5182,7 @@ def admin_ladder_rankings(ladder_type):
         division_title = "Mixed Division"
 
     teams_with_status = []
-    for team in teams:
+    for idx, team in enumerate(teams, start=1):
         status = 'available'
         status_color = 'green'
         status_text = 'Available'
@@ -5204,11 +5199,8 @@ def admin_ladder_rankings(ladder_type):
             'status_text': status_text,
             'sets_diff': team.sets_for - team.sets_against,
             'games_diff': team.games_for - team.games_against,
+            'display_rank': idx,
         })
-
-    # Calculate display ranks to ensure they are 1..N and matches public view
-    for idx, team_data in enumerate(teams_with_status, start=1):
-        team_data['display_rank'] = idx
 
     return render_template(
         "admin_ladder_rankings.html",
