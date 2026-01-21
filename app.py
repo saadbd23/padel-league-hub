@@ -2990,9 +2990,11 @@ BD Padel Ladder System
         status_message = 'Available'
 
     # Calculate display rank (sequential position in ladder for this team's type/gender)
+    # IMPORTANT: Must filter by payment_received=True to match public ladder page rankings
     all_teams_in_ladder = LadderTeam.query.filter_by(
         ladder_type=team.ladder_type,
-        gender=team.gender
+        gender=team.gender,
+        payment_received=True
     ).order_by(LadderTeam.current_rank.asc()).all()
     
     # Map team IDs to their actual sequential rank (1..N) based on current sort
