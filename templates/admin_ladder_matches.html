@@ -86,11 +86,11 @@
               <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-4 py-4">
                   <div class="text-sm font-semibold text-gray-900">{{ item.team_a.team_name }}</div>
-                  <div class="text-xs text-gray-600">Rank #{{ item.team_a.current_rank }}</div>
+                  <div class="text-xs text-gray-600">Rank #{{ item.team_a.display_rank if item.team_a.display_rank else item.team_a.current_rank }}</div>
                 </td>
                 <td class="px-4 py-4">
                   <div class="text-sm font-semibold text-gray-900">{{ item.team_b.team_name }}</div>
-                  <div class="text-xs text-gray-600">Rank #{{ item.team_b.current_rank }}</div>
+                  <div class="text-xs text-gray-600">Rank #{{ item.team_b.display_rank if item.team_b.display_rank else item.team_b.current_rank }}</div>
                 </td>
                 <td class="px-4 py-4 text-center">
                   <div class="text-sm font-semibold text-gray-900">
@@ -136,11 +136,11 @@
             <div class="space-y-2">
               <div class="text-sm">
                 <span class="font-semibold text-gray-700">Team A:</span>
-                <div class="text-gray-900 ml-2">{{ item.team_a.team_name }} (Rank #{{ item.team_a.current_rank }})</div>
+                <div class="text-gray-900 ml-2">{{ item.team_a.team_name }} (Rank #{{ item.team_a.display_rank if item.team_a.display_rank else item.team_a.current_rank }})</div>
               </div>
               <div class="text-sm">
                 <span class="font-semibold text-gray-700">Team B:</span>
-                <div class="text-gray-900 ml-2">{{ item.team_b.team_name }} (Rank #{{ item.team_b.current_rank }})</div>
+                <div class="text-gray-900 ml-2">{{ item.team_b.team_name }} (Rank #{{ item.team_b.display_rank if item.team_b.display_rank else item.team_b.current_rank }})</div>
               </div>
               <div class="text-sm">
                 <span class="font-semibold text-gray-700">Team A Score:</span>
@@ -294,11 +294,11 @@
               <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-4 py-4">
                   <div class="text-sm font-semibold text-gray-900">{{ item.team_a.team_name }}</div>
-                  <div class="text-xs text-gray-600">Rank #{{ item.team_a.current_rank }}</div>
+                  <div class="text-xs text-gray-600">Rank #{{ item.team_a.display_rank if item.team_a.display_rank else item.team_a.current_rank }}</div>
                 </td>
                 <td class="px-4 py-4">
                   <div class="text-sm font-semibold text-gray-900">{{ item.team_b.team_name }}</div>
-                  <div class="text-xs text-gray-600">Rank #{{ item.team_b.current_rank }}</div>
+                  <div class="text-xs text-gray-600">Rank #{{ item.team_b.display_rank if item.team_b.display_rank else item.team_b.current_rank }}</div>
                 </td>
                 <td class="px-4 py-4 text-center">
                   <div class="text-sm font-semibold text-gray-900">

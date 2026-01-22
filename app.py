@@ -2991,8 +2991,8 @@ BD Padel Ladder System
 
     # Calculate display rank using EXACT same logic as public ladder page
     # CRITICAL: Must match ladder_men/ladder_women routes for consistent ranking
+    # Public ladder uses: gender + payment_received (no ladder_type filter)
     all_teams_raw = LadderTeam.query.filter_by(
-        ladder_type=team.ladder_type,
         gender=team.gender,
         payment_received=True
     ).all()
@@ -5547,6 +5547,23 @@ def admin_ladder_matches(ladder_type):
     else:
         division_title = "Mixed Division"
 
+    # Calculate display ranks using SAME logic as public ladder
+    all_teams_raw = LadderTeam.query.filter_by(
+        gender=ladder_type,
+        payment_received=True
+    ).all()
+    
+    teams_by_creation = sorted(all_teams_raw, key=lambda t: t.created_at)
+    initial_ranks = {t.id: idx for idx, t in enumerate(teams_by_creation, start=1)}
+    
+    all_teams_sorted = sorted(
+        all_teams_raw, 
+        key=lambda t: t.current_rank if t.current_rank is not None else initial_ranks.get(t.id, 999)
+    )
+    
+    # Create mapping from team_id to display_rank
+    team_display_ranks = {t.id: idx + 1 for idx, t in enumerate(all_teams_sorted)}
+
     all_matches = LadderMatch.query.filter_by(ladder_type=ladder_type).order_by(
         LadderMatch.created_at.desc()
     ).all()
@@ -5559,6 +5576,12 @@ def admin_ladder_matches(ladder_type):
     for match in all_matches:
         team_a = LadderTeam.query.get(match.team_a_id)
         team_b = LadderTeam.query.get(match.team_b_id)
+        
+        # Add display_rank to team objects for template use
+        if team_a:
+            team_a.display_rank = team_display_ranks.get(team_a.id, team_a.current_rank)
+        if team_b:
+            team_b.display_rank = team_display_ranks.get(team_b.id, team_b.current_rank)
 
         match_data = {
             'match': match,
