@@ -38,11 +38,12 @@ A single PostgreSQL database is managed via `models.py` and includes models for:
 - **Score Management**: Winning team submission, dual-team verification, and dispute resolution.
 - **Team Deactivation**: Admin can toggle team status to inactive, automatically excluding them from pairing in future rounds while preserving their historical match stats.
 
-## Recent Changes (January 21, 2026)
+## Recent Changes (January 22, 2026)
 - **Fixed Ladder Ranking Consistency Site-Wide**: Resolved issue where ladder rankings displayed inconsistently across different pages (Team BI showing as #3 on public page but #4 on team dashboard).
 - **Root Cause**: Teams with identical `current_rank` values in database (e.g., Team BI and Grinders both had rank 4) were sorted differently: public ladder used Python sort with creation-order tiebreaker, team page used SQL ORDER BY which gives arbitrary order for tied values.
-- **Solution**: Team page now uses EXACT same sorting logic as public ladder: (1) fetch all paid teams, (2) calculate initial ranks from creation order, (3) sort by current_rank with creation order as tiebreaker.
-- **Display Rank Calculation**: All ladder pages (public men/women/mixed, admin, team page) now calculate sequential `display_rank` (1..N) from sorted team order for consistent rendering. No DB writes on read-only page views.
+- **Solution**: All pages now use EXACT same sorting logic as public ladder: (1) filter by gender + payment_received=True, (2) calculate initial ranks from creation order, (3) sort by current_rank with creation order as tiebreaker.
+- **View Matches Page Fix**: Admin ladder matches "Recently Completed" table now displays correct team ranks using display_rank calculation, matching public ladder rankings.
+- **Display Rank Calculation**: All ladder pages (public men/women/mixed, admin matches, team page) now calculate sequential `display_rank` (1..N) from sorted team order for consistent rendering. No DB writes on read-only page views.
 - **Sequential Rank-Based Challenge Logic**: Challenge eligibility uses index-based lookups from the sorted ladder list instead of querying by stored rank values. This ensures displayed ranks match actual ladder positions.
 - **Display Rank Field**: Added `display_rank` field to challengeable teams dict to show the correct sequential rank in the UI.
 - **Holiday Team Skip Logic**: When a holiday team is encountered in the challenge range, the algorithm now skips it and looks one rank higher, properly expanding the search range.
