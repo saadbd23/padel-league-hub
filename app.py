@@ -6236,6 +6236,75 @@ While on holiday mode, you cannot be challenged by other teams and your rank is 
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
 
 
+@app.route("/admin/ladder/pair-free-agents", methods=["POST"])
+@require_admin_auth
+def admin_pair_free_agents_ladder():
+    team_name = request.form.get('team_name')
+    p1_id = request.form.get('player1_id')
+    p2_id = request.form.get('player2_id')
+
+    if not all([team_name, p1_id, p2_id]):
+        flash("All fields are required.", "error")
+        return redirect(url_for('admin_panel', tab='freeagents'))
+
+    if p1_id == p2_id:
+        flash("You cannot select the same player twice.", "error")
+        return redirect(url_for('admin_panel', tab='freeagents'))
+
+    player1 = LadderFreeAgent.query.get(p1_id)
+    player2 = LadderFreeAgent.query.get(p2_id)
+
+    if not player1 or not player2:
+        flash("One or both players not found.", "error")
+        return redirect(url_for('admin_panel', tab='freeagents'))
+
+    if player1.gender != player2.gender:
+        flash("Both players must be of the same gender.", "error")
+        return redirect(url_for('admin_panel', tab='freeagents'))
+
+    try:
+        # Determine ladder type and gender
+        gender = player1.gender
+        ladder_type = 'men' if gender == 'men' else 'women'
+
+        # Get next rank
+        last_team = LadderTeam.query.filter_by(gender=gender, payment_received=True).order_by(LadderTeam.current_rank.desc()).first()
+        next_rank = (last_team.current_rank + 1) if last_team and last_team.current_rank else 1
+
+        # Create new ladder team
+        import secrets
+        new_team = LadderTeam(
+            team_name=team_name,
+            player1_name=player1.name,
+            player1_phone=player1.phone,
+            player1_email=player1.email,
+            player2_name=player2.name,
+            player2_phone=player2.phone,
+            player2_email=player2.email,
+            gender=gender,
+            ladder_type=ladder_type,
+            current_rank=next_rank,
+            payment_received=True,
+            is_verified=True,
+            access_token=secrets.token_urlsafe(16)
+        )
+
+        # Mark agents as paired
+        player1.paired = True
+        player2.paired = True
+
+        db.session.add(new_team)
+        db.session.commit()
+
+        flash(f"Successfully created team '{team_name}' in the {gender.capitalize()}'s ladder at rank #{next_rank}!", "success")
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error pairing free agents: {str(e)}")
+        flash(f"Error creating team: {str(e)}", "error")
+
+    return redirect(url_for('admin_panel', tab='freeagents'))
+
+
 @app.route("/admin/settings", methods=["GET", "POST"])
 @require_admin_auth
 def admin_settings():
