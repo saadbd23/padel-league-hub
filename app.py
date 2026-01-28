@@ -6236,6 +6236,37 @@ While on holiday mode, you cannot be challenged by other teams and your rank is 
         return redirect(url_for('admin_ladder_rankings', ladder_type=ladder_type))
 
 
+@app.route("/admin/ladder/mark-paid/<int:team_id>", methods=["POST"])
+@require_admin_auth
+def admin_mark_ladder_team_paid(team_id):
+    team = LadderTeam.query.get_or_404(team_id)
+    if team.payment_received:
+        flash("Team is already marked as paid.", "info")
+        return redirect(url_for('admin_panel', tab='ladder'))
+
+    try:
+        # Find max rank in the appropriate gender ladder and add team at bottom
+        max_rank_team = LadderTeam.query.filter_by(
+            gender=team.gender,
+            payment_received=True
+        ).order_by(LadderTeam.current_rank.desc()).first()
+
+        next_rank = (max_rank_team.current_rank + 1) if max_rank_team and max_rank_team.current_rank else 1
+
+        team.payment_received = True
+        team.current_rank = next_rank
+        team.updated_at = datetime.now()
+
+        db.session.commit()
+        flash(f"Team '{team.team_name}' marked as paid and entered ladder at rank #{next_rank}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error marking team as paid: {str(e)}")
+        flash(f"Error updating team: {str(e)}", "error")
+
+    return redirect(url_for('admin_panel', tab='ladder'))
+
+
 @app.route("/admin/ladder/pair-free-agents", methods=["POST"])
 @require_admin_auth
 def admin_pair_free_agents_ladder():
@@ -6267,14 +6298,15 @@ def admin_pair_free_agents_ladder():
         gender = player1.gender
         ladder_type = 'men' if gender == 'men' else 'women'
 
-        # Get next rank
-        last_team = LadderTeam.query.filter_by(gender=gender, payment_received=True).order_by(LadderTeam.current_rank.desc()).first()
-        next_rank = (last_team.current_rank + 1) if last_team and last_team.current_rank else 1
-
-        # Create new ladder team
+        # Generate unique access token
         import secrets
+        access_token = secrets.token_urlsafe(32)
+
+        # Create new ladder team (pending payment)
+        from datetime import datetime
         new_team = LadderTeam(
             team_name=team_name,
+            team_name_canonical=normalize_team_name(team_name),
             player1_name=player1.name,
             player1_phone=player1.phone,
             player1_email=player1.email,
@@ -6283,10 +6315,12 @@ def admin_pair_free_agents_ladder():
             player2_email=player2.email,
             gender=gender,
             ladder_type=ladder_type,
-            current_rank=next_rank,
-            payment_received=True,
+            current_rank=None, # None indicates pending payment/not on ladder yet
+            payment_received=False,
             is_verified=True,
-            access_token=secrets.token_urlsafe(16)
+            access_token=access_token,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
         )
 
         # Mark agents as paired
@@ -6296,7 +6330,89 @@ def admin_pair_free_agents_ladder():
         db.session.add(new_team)
         db.session.commit()
 
-        flash(f"Successfully created team '{team_name}' in the {gender.capitalize()}'s ladder at rank #{next_rank}!", "success")
+        # Generate access link
+        base_url = "https://goeclectic.xyz"
+        access_link = f"{base_url}/ladder/my-team/{access_token}"
+
+        # Send confirmation email to Player 1
+        from utils import send_email_notification
+        if gender == 'men':
+            whatsapp_link = "https://chat.whatsapp.com/Fw54Nxdk6jS9GTMOTnC0UD"
+        else: # women
+            whatsapp_link = "https://chat.whatsapp.com/GswFleVQhxF4gziShBhstd"
+
+        email_body = f"""Hi {player1.name},
+
+✅ Your team "{team_name}" has been successfully registered for the Ladder Tournament!
+
+📋 Registration Details:
+- Team Name: {team_name}
+- Gender Category: {gender.capitalize()}
+- Player 1: {player1.name} (You)
+- Player 2: {player2.name}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 PAYMENT REQUIRED - IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To complete your registration and be listed on the ladder rankings, please make a payment of BDT 500 PER TEAM (NOT per player).
+
+Payment Method: bKash
+Payment Number: 01313399918
+Amount: BDT 500 (TOTAL FOR THE ENTIRE TEAM)
+
+⚠️ IMPORTANT: 
+1. This is BDT 500 for the WHOLE TEAM
+2. When making the payment, you MUST put your team name in the reference/note field:
+
+Reference: {team_name}
+
+Once payment is confirmed by admin, your team will be visible on the ladder rankings and you can start challenging other teams.
+
+🔗 Your Team Access Link:
+{access_link}
+
+🔑 Access Token (for team login page):
+{access_token}
+
+💬 Join Your Division's WhatsApp Group:
+{whatsapp_link}
+
+Good luck climbing the ladder! 🚀
+
+- BD Padel League
+"""
+        send_email_notification(player1.email, f"Ladder Team Registered - {team_name}", email_body)
+
+        # Send confirmation email to Player 2
+        email_body_p2 = f"""Hi {player2.name},
+
+✅ You've been registered as part of team "{team_name}" for the Ladder Tournament!
+
+📋 Team Details:
+- Team Name: {team_name}
+- Gender Category: {gender.capitalize()}
+- Partner: {player1.name}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💳 PAYMENT REQUIRED - IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To complete your registration and be listed on the ladder rankings, a payment of BDT 500 per team is required.
+
+Payment Method: bKash
+Payment Number: 01313399918
+Amount: BDT 500 (TOTAL FOR THE ENTIRE TEAM)
+
+Reference: {team_name}
+
+Once payment is confirmed by admin, your team will be visible on the ladder rankings.
+
+- BD Padel League
+"""
+        send_email_notification(player2.email, f"Ladder Team Registered - {team_name}", email_body_p2)
+
+        flash(f"Successfully created team '{team_name}' (Pending Payment). Confirmation emails sent.", "success")
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error pairing free agents: {str(e)}")

@@ -2116,12 +2116,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 Registered: {{ team.created_at.strftime('%b %d, %Y at %I:%M %p') if team.created_at else 'N/A' }}
               </div>
             </div>
-            <form method="POST" action="{{ url_for('admin_ladder_toggle_payment') }}" class="ml-4">
-              <input type="hidden" name="team_id" value="{{ team.id }}">
-              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                ✓ Mark as Paid
-              </button>
-            </form>
+          <form method="POST" action="{{ url_for('admin_mark_ladder_team_paid', team_id=team.id) }}" class="ml-4">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+              ✓ Mark as Paid
+            </button>
+          </form>
           </div>
           {% endfor %}
         </div>
@@ -2151,12 +2150,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 Registered: {{ team.created_at.strftime('%b %d, %Y at %I:%M %p') if team.created_at else 'N/A' }}
               </div>
             </div>
-            <form method="POST" action="{{ url_for('admin_ladder_toggle_payment') }}" class="ml-4">
-              <input type="hidden" name="team_id" value="{{ team.id }}">
-              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                ✓ Mark as Paid
-              </button>
-            </form>
+          <form method="POST" action="{{ url_for('admin_mark_ladder_team_paid', team_id=team.id) }}" class="ml-4">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+              ✓ Mark as Paid
+            </button>
+          </form>
           </div>
           {% endfor %}
         </div>
@@ -2186,12 +2184,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 Registered: {{ team.created_at.strftime('%b %d, %Y at %I:%M %p') if team.created_at else 'N/A' }}
               </div>
             </div>
-            <form method="POST" action="{{ url_for('admin_ladder_toggle_payment') }}" class="ml-4">
-              <input type="hidden" name="team_id" value="{{ team.id }}">
-              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                ✓ Mark as Paid
-              </button>
-            </form>
+          <form method="POST" action="{{ url_for('admin_mark_ladder_team_paid', team_id=team.id) }}" class="ml-4">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+              ✓ Mark as Paid
+            </button>
+          </form>
           </div>
           {% endfor %}
         </div>
