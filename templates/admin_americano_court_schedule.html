@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+    <div>
+      <a href="{{ url_for('admin_americano_detail', tournament_id=tournament.id) }}" class="inline-flex items-center text-white/80 hover:text-white mb-2 transition-colors text-sm">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Tournament
+      </a>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">Court Schedule</h2>
+      <p class="text-white/80">
+        {{ tournament.gender.title() }}'s Division - {{ tournament.tournament_date.strftime('%B %d, %Y') }}
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      <a href="{{ url_for('admin_americano_scores', tournament_id=tournament.id) }}"
+         class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+        Bulk Score Entry
+      </a>
+      <a href="{{ url_for('admin_americano_leaderboard', tournament_id=tournament.id) }}"
+         class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+        Leaderboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  {% set total_matches = matches_by_round.values()|sum(attribute='values')|sum(attribute='length', default=0) %}
+  {% set completed_matches = 0 %}
+  {% for round_num, courts in matches_by_round.items() %}
+    {% for court_num, matches in courts.items() %}
+      {% for m in matches %}
+        {% if m.match.status == 'completed' %}
+          {% set completed_matches = completed_matches + 1 %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+  <div class="bg-white/95 rounded-xl p-4 mb-6">
+    <div class="flex justify-between text-sm text-gray-600 mb-2">
+      <span>Progress</span>
+      <span>{{ completed_matches }} / {{ total_matches }} matches completed</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-3">
+      <div class="bg-gradient-to-r from-purple-600 to-indigo-700 h-3 rounded-full transition-all"
+           style="width: {% if total_matches > 0 %}{{ (completed_matches / total_matches * 100)|int }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+
+  <!-- Rounds -->
+  {% for round_num in matches_by_round.keys()|sort %}
+  {% set round_complete = true %}
+  {% for court_num, matches in matches_by_round[round_num].items() %}
+    {% for m in matches %}
+      {% if m.match.status != 'completed' %}
+        {% set round_complete = false %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  <div class="mb-8">
+    <!-- Round Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold text-white flex items-center">
+        Round {{ round_num }}
+        {% if round_complete %}
+        <span class="ml-2 text-sm bg-green-500 text-white px-2 py-1 rounded">Complete</span>
+        {% elif round_num == current_round %}
+        <span class="ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded animate-pulse">Current</span>
+        {% elif round_num > current_round %}
+        <span class="ml-2 text-sm bg-gray-500 text-white px-2 py-1 rounded">Locked</span>
+        {% endif %}
+      </h3>
+    </div>
+
+    <!-- Courts Grid -->
+    <div class="grid grid-cols-1 {% if num_courts > 1 %}lg:grid-cols-{{ num_courts }}{% endif %} gap-4">
+      {% for court_num in matches_by_round[round_num].keys()|sort %}
+      <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-3 flex justify-between items-center">
+          <h4 class="text-white font-bold">Court {{ court_num }}</h4>
+          <span class="text-white/80 text-sm">
+            {{ matches_by_round[round_num][court_num]|selectattr('match.status', 'equalto', 'completed')|list|length }}/{{ matches_by_round[round_num][court_num]|length }} done
+          </span>
+        </div>
+
+        <div class="p-4 space-y-4">
+          {% for match_data in matches_by_round[round_num][court_num] %}
+          {% set m = match_data.match %}
+          <div class="bg-gray-50 rounded-lg p-4 border-2 {% if m.status == 'completed' %}border-green-200{% elif round_num == current_round %}border-blue-200{% else %}border-gray-200{% endif %}">
+
+            <!-- Match Header -->
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase
+                {% if m.status == 'completed' %}text-green-600
+                {% elif round_num == current_round %}text-blue-600
+                {% else %}text-gray-400{% endif %}">
+                {% if m.status == 'completed' %}
+                Completed
+                {% elif round_num == current_round %}
+                Ready
+                {% else %}
+                Waiting
+                {% endif %}
+              </span>
+              {% if m.status == 'completed' %}
+              <span class="text-lg font-bold text-gray-900">{{ m.score_team_a }}-{{ m.score_team_b }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Teams -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex-1">
+                <div class="text-xs text-blue-600 font-semibold mb-1">Team A</div>
+                <div class="text-sm font-medium text-gray-900">{{ match_data.p1.name if match_data.p1 else 'TBD' }}</div>
+                <div class="text-sm text-gray-600">+ {{ match_data.p2.name if match_data.p2 else 'TBD' }}</div>
+              </div>
+
+              <div class="px-4 text-gray-400 text-xl font-bold">vs</div>
+
+              <div class="flex-1 text-right">
+                <div class="text-xs text-red-600 font-semibold mb-1">Team B</div>
+                <div class="text-sm font-medium text-gray-900">{{ match_data.p3.name if match_data.p3 else 'TBD' }}</div>
+                <div class="text-sm text-gray-600">+ {{ match_data.p4.name if match_data.p4 else 'TBD' }}</div>
+              </div>
+            </div>
+
+            <!-- Score Entry (only for current/past rounds, not completed) -->
+            {% if m.status != 'completed' and round_num <= current_round %}
+            <form method="POST" action="{{ url_for('admin_americano_quick_score', tournament_id=tournament.id) }}"
+                  class="flex items-center gap-2 pt-3 border-t border-gray-200">
+              <input type="hidden" name="match_id" value="{{ m.id }}">
+              <input type="number" name="team_a_score" min="0" max="50" placeholder="A"
+                     class="w-16 px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+              <span class="text-gray-400">-</span>
+              <input type="number" name="team_b_score" min="0" max="50" placeholder="B"
+                     class="w-16 px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-bold focus:border-red-500 focus:ring-1 focus:ring-red-500">
+              <button type="submit"
+                      class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                Save
+              </button>
+            </form>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

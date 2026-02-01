@@ -373,6 +373,14 @@ class AmericanoTournament(db.Model):
     created_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
 
+    # Open registration fields
+    registration_open = db.Column(db.Boolean, default=False)
+    registration_deadline = db.Column(db.DateTime, nullable=True)
+    max_participants = db.Column(db.Integer, default=24)
+    public_title = db.Column(db.String(200), nullable=True)
+    public_description = db.Column(db.Text, nullable=True)
+    num_courts = db.Column(db.Integer, default=2)
+
 
 class AmericanoMatch(db.Model):
     __tablename__ = 'americano_match'
@@ -398,6 +406,32 @@ class AmericanoMatch(db.Model):
     points_player3 = db.Column(db.Integer, default=0)
     points_player4 = db.Column(db.Integer, default=0)
     
+    created_at = db.Column(db.DateTime, nullable=True)
+
+
+class AmericanoRegistration(db.Model):
+    __tablename__ = 'americano_registration'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('americano_tournament.id'), nullable=False)
+
+    # Player info
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False, index=True)
+    email = db.Column(db.String(120), nullable=False)
+    gender = db.Column(db.String(10), nullable=False)  # 'men' or 'women'
+
+    # Source tracking (where player came from)
+    source_type = db.Column(db.String(20), nullable=True)  # 'ladder_team', 'league_team', 'free_agent', 'new'
+    source_id = db.Column(db.Integer, nullable=True)
+
+    # Link to LadderFreeAgent (created/linked for match generation)
+    ladder_free_agent_id = db.Column(db.Integer, db.ForeignKey('ladder_free_agent.id'), nullable=True)
+
+    # Status
+    status = db.Column(db.String(20), default='confirmed')  # instant confirmation
+    skill_level = db.Column(db.String(20), nullable=True)
+
     created_at = db.Column(db.DateTime, nullable=True)
 
 

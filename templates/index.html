@@ -9,6 +9,78 @@
       Two ways to play competitive padel. Choose your path!
     </p>
     
+    <!-- Featured Americano Tournament Card -->
+    {% if featured_tournament %}
+    <div class="max-w-2xl mx-auto mb-8">
+      <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 border-4 border-green-400">
+        <!-- Badge -->
+        {% if featured_tournament.registration_open %}
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3">
+          <div class="flex items-center justify-center gap-2">
+            <span class="text-2xl">🎾</span>
+            <span class="text-white font-bold text-sm sm:text-base">AMERICANO TOURNAMENT - REGISTRATION OPEN</span>
+          </div>
+        </div>
+        {% elif featured_tournament.status == 'in_progress' %}
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3">
+          <div class="flex items-center justify-center gap-2">
+            <span class="text-2xl">🎾</span>
+            <span class="text-white font-bold text-sm sm:text-base">AMERICANO TOURNAMENT - IN PROGRESS</span>
+          </div>
+        </div>
+        {% elif featured_tournament.status == 'completed' %}
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-3">
+          <div class="flex items-center justify-center gap-2">
+            <span class="text-2xl">🎾</span>
+            <span class="text-white font-bold text-sm sm:text-base">AMERICANO TOURNAMENT - COMPLETED</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="p-6 sm:p-8">
+          <div class="text-center mb-4">
+            <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              {{ featured_tournament.public_title or (featured_tournament.gender.title() + "'s Americano Tournament") }}
+            </h3>
+            <div class="flex items-center justify-center gap-4 text-gray-600 text-sm sm:text-base">
+              <span>{{ featured_tournament.tournament_date.strftime('%B %d, %Y') }}</span>
+              {% if featured_tournament.location %}
+              <span>|</span>
+              <span>{{ featured_tournament.location }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if featured_tournament.registration_open %}
+          <div class="text-center mb-4">
+            <span class="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
+              {{ featured_reg_count }}/{{ featured_tournament.max_participants or 24 }} spots filled
+            </span>
+          </div>
+          <a href="{{ url_for('tournament_register', tournament_id=featured_tournament.id) }}"
+             class="block bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            Register Now
+          </a>
+          {% elif featured_tournament.status == 'in_progress' %}
+          <a href="{{ url_for('tournament_schedule', tournament_id=featured_tournament.id) }}"
+             class="block bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            View Schedule
+          </a>
+          {% elif featured_tournament.status == 'completed' %}
+          <a href="{{ url_for('tournament_leaderboard', tournament_id=featured_tournament.id) }}"
+             class="block bg-gradient-to-r from-purple-500 to-purple-600 text-white text-center px-6 py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            View Results
+          </a>
+          {% endif %}
+
+          <p class="text-xs sm:text-sm text-gray-600 mt-4 text-center">
+            Americano format: Rotating partners, individual points, fun for everyone!
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Tournament Cards Container -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto mb-8">
       

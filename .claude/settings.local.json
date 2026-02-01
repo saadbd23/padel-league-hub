@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(python migrate_americano_registration.py:*)",
+      "Bash(python:*)"
+    ]
+  }
+}

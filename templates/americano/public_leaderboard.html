@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+    <div>
+      <a href="{{ url_for('tournament_detail', tournament_id=tournament.id) }}" class="inline-flex items-center text-white/80 hover:text-white mb-2 transition-colors text-sm">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Tournament
+      </a>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">
+        {{ tournament.public_title or (tournament.gender.title() + "'s Americano") }} - Leaderboard
+      </h2>
+      <p class="text-white/80">
+        {{ tournament.tournament_date.strftime('%B %d, %Y') }}
+      </p>
+    </div>
+    <a href="{{ url_for('tournament_schedule', tournament_id=tournament.id) }}"
+       class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+      View Schedule
+    </a>
+  </div>
+
+  <!-- Tournament Status -->
+  {% if tournament.status == 'completed' %}
+  <div class="bg-green-500 text-white rounded-lg p-4 mb-6 text-center">
+    <span class="font-bold text-lg">Tournament Complete!</span>
+  </div>
+  {% elif tournament.status == 'in_progress' %}
+  <div class="bg-blue-500 text-white rounded-lg p-4 mb-6 text-center">
+    <span class="font-bold">Tournament In Progress - Leaderboard updates after each match</span>
+  </div>
+  {% endif %}
+
+  <!-- Leaderboard -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4">
+      <h3 class="text-xl font-bold text-white">Leaderboard</h3>
+    </div>
+
+    {% if leaderboard %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Player</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Matches</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Points</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for entry in leaderboard %}
+          <tr class="{% if entry.rank == 1 %}bg-yellow-50{% elif entry.rank == 2 %}bg-gray-100{% elif entry.rank == 3 %}bg-orange-50{% else %}hover:bg-gray-50{% endif %} transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+              {% if entry.rank == 1 %}
+              <span class="text-2xl">🥇</span>
+              {% elif entry.rank == 2 %}
+              <span class="text-2xl">🥈</span>
+              {% elif entry.rank == 3 %}
+              <span class="text-2xl">🥉</span>
+              {% else %}
+              <span class="text-lg font-bold text-gray-600">#{{ entry.rank }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4">
+              <div class="font-semibold text-gray-900">{{ entry.player.name }}</div>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="text-gray-600">{{ entry.matches_played }}</span>
+            </td>
+            <td class="px-4 py-4 text-center">
+              <span class="inline-flex items-center justify-center w-12 h-8 bg-purple-100 text-purple-800 font-bold rounded-lg">
+                {{ entry.total_points }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-8 text-center text-gray-500">
+      <p>No matches completed yet. Check back once the tournament begins!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Scoring Info -->
+  <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mt-6">
+    <h4 class="font-bold text-blue-900 mb-3">How Points Work</h4>
+    <ul class="text-blue-800 space-y-2">
+      <li class="flex items-start">
+        <span class="text-blue-600 mr-2">*</span>
+        <span>Each match is played to {{ tournament.points_per_match or 24 }} points (or {{ tournament.time_limit_minutes or 20 }} minutes)</span>
+      </li>
+      <li class="flex items-start">
+        <span class="text-blue-600 mr-2">*</span>
+        <span>You earn points equal to your team's score in each match</span>
+      </li>
+      <li class="flex items-start">
+        <span class="text-blue-600 mr-2">*</span>
+        <span>Example: If your team scores 14-10, you get 14 points</span>
+      </li>
+      <li class="flex items-start">
+        <span class="text-blue-600 mr-2">*</span>
+        <span>Total points across all matches determines your ranking</span>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

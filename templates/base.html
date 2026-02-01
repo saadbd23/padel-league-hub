@@ -66,6 +66,12 @@
             </div>
           </div>
 
+          <!-- Americano Link -->
+          <a href="{{ url_for('tournaments_list') }}" class="text-gray-700 hover:text-purple-600 font-medium transition-colors relative group py-2">
+            Americano
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></span>
+          </a>
+
           <!-- Ladder Dropdown -->
           <div class="relative group">
             <button class="text-gray-700 hover:text-purple-600 font-medium transition-colors py-2 flex items-center gap-1">
@@ -76,13 +82,13 @@
             </button>
             <div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200 z-50">
               <a href="{{ url_for('ladder_men') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-t-lg">
-                👨 Men's Rankings
+                Men's Rankings
               </a>
               <a href="{{ url_for('ladder_women') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 border-t">
-                👩 Women's Rankings
+                Women's Rankings
               </a>
               <a href="{{ url_for('ladder_mixed') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-b-lg border-t">
-                👫 Mixed Rankings
+                Mixed Rankings
               </a>
             </div>
           </div>
@@ -154,17 +160,24 @@
           </a>
         </div>
 
+        <!-- Americano -->
+        <div class="border-t border-gray-200 pt-2">
+          <a href="{{ url_for('tournaments_list') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg font-medium transition-all">
+            Americano
+          </a>
+        </div>
+
         <!-- Ladder Section -->
         <div class="border-t border-gray-200 pt-2">
           <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ladder</div>
           <a href="{{ url_for('ladder_men') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all">
-            👨 Men's Rankings
+            Men's Rankings
           </a>
           <a href="{{ url_for('ladder_women') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all">
-            👩 Women's Rankings
+            Women's Rankings
           </a>
           <a href="{{ url_for('ladder_mixed') }}" class="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-all">
-            👫 Mixed Rankings
+            Mixed Rankings
           </a>
         </div>
 

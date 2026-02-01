@@ -3,7 +3,7 @@
 <div class="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-12">
   <div class="flex items-center justify-between mb-6 sm:mb-12">
     <h2 class="text-2xl sm:text-4xl font-bold text-white">Create Americano Tournament</h2>
-    <a href="{{ url_for('admin_americano_tournaments') }}" 
+    <a href="{{ url_for('admin_americano_tournaments') }}"
        class="bg-gray-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-all">
       Back to Tournaments
     </a>
@@ -11,117 +11,97 @@
 
   <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8">
     <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-      <h4 class="font-semibold text-blue-900 mb-2">📋 What is Americano Format?</h4>
+      <h4 class="font-semibold text-blue-900 mb-2">Two-Phase Tournament Setup</h4>
       <ul class="text-sm text-blue-800 space-y-1">
-        <li>• Round-robin style doubles tournament</li>
-        <li>• Players rotate partners each round</li>
-        <li>• Everyone plays with everyone else</li>
-        <li>• Individual scoring: Win = 3 points, Draw = 1 point, Loss = 0 points</li>
-        <li>• Top 50% of performers are eligible to be paired into ladder teams</li>
+        <li><strong>Phase 1 (Now):</strong> Set up registration details and open for public sign-ups</li>
+        <li><strong>Phase 2 (Match Day):</strong> Configure match format settings and generate schedules</li>
       </ul>
     </div>
 
     <form method="POST" action="{{ url_for('admin_americano_create') }}" class="space-y-6">
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Division</label>
-        <select name="gender" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all" id="division-select" onchange="updateParticipants()">
-          <option value="">Select division</option>
-          <option value="men">👨 Men's Division</option>
-          <option value="women">👩 Women's Division</option>
-        </select>
-      </div>
 
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Tournament Date</label>
-        <input type="date" name="tournament_date" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
-      </div>
+      <!-- Basic Tournament Info -->
+      <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 space-y-4">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Tournament Details</h3>
 
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Location/Venue (Optional)</label>
-        <input type="text" name="location" placeholder="e.g., Padel Club Dhaka" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
-      </div>
-
-      <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6 space-y-4">
-        <h3 class="text-lg font-bold text-purple-900 mb-4">🎯 Match Format Settings</h3>
-        
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Points per Match</label>
-          <select name="points_per_match" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
-            <option value="16">16 points</option>
-            <option value="24" selected>24 points (Recommended)</option>
-            <option value="32">32 points</option>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Division *</label>
+          <select name="gender" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
+            <option value="">Select division</option>
+            <option value="men">Men's Division</option>
+            <option value="women">Women's Division</option>
           </select>
-          <p class="text-sm text-gray-600 mt-1">Match ends when first team reaches this score OR time limit expires</p>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Time Limit</label>
-          <select name="time_limit_minutes" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
-            <option value="10">10 minutes</option>
-            <option value="20" selected>20 minutes (Recommended)</option>
-          </select>
-          <p class="text-sm text-gray-600 mt-1">Whichever comes first: points OR time</p>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Tournament Date *</label>
+          <input type="date" name="tournament_date" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Serves Before Rotation</label>
-          <select name="serves_before_rotation" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
-            <option value="2" selected>2 serves</option>
-            <option value="4">4 serves</option>
-          </select>
-          <p class="text-sm text-gray-600 mt-1">Number of serves before rotating to next team</p>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Location/Venue</label>
+          <input type="text" name="location" placeholder="e.g., Padel Club Dhaka" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all">
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-3">Select Participants (minimum 4)</label>
-        
-        <div id="men-participants" class="hidden space-y-2">
-          <div class="text-sm text-gray-600 mb-2">Men's Free Agents ({{ men_agents|length }} available):</div>
-          {% if men_agents %}
-            {% for agent in men_agents %}
-            <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-              <input type="checkbox" name="participants" value="{{ agent.id }}" class="mr-3 h-5 w-5 text-purple-600 rounded focus:ring-purple-500">
-              <div>
-                <div class="font-semibold text-gray-900">{{ agent.name }}</div>
-                <div class="text-sm text-gray-600">{{ agent.email }} • {{ agent.phone }}</div>
-              </div>
-            </label>
-            {% endfor %}
-          {% else %}
-            <div class="p-4 bg-yellow-50 rounded-lg text-center">
-              <p class="text-yellow-800">No men's free agents available. Free agents need to register first.</p>
-            </div>
-          {% endif %}
+      <!-- Registration Settings -->
+      <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6 space-y-4">
+        <h3 class="text-lg font-bold text-green-900 mb-4">Registration Settings</h3>
+
+        <div class="flex items-center">
+          <input type="checkbox" name="registration_open" id="registration_open" checked
+                 class="h-5 w-5 text-green-600 rounded focus:ring-green-500 mr-3">
+          <label for="registration_open" class="font-semibold text-gray-700">Open for public registration</label>
+        </div>
+        <p class="text-sm text-gray-600">When enabled, tournament will appear on homepage and players can register themselves</p>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Public Tournament Title</label>
+          <input type="text" name="public_title" placeholder="e.g., February Americano Tournament"
+                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
         </div>
 
-        <div id="women-participants" class="hidden space-y-2">
-          <div class="text-sm text-gray-600 mb-2">Women's Free Agents ({{ women_agents|length }} available):</div>
-          {% if women_agents %}
-            {% for agent in women_agents %}
-            <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-              <input type="checkbox" name="participants" value="{{ agent.id }}" class="mr-3 h-5 w-5 text-purple-600 rounded focus:ring-purple-500">
-              <div>
-                <div class="font-semibold text-gray-900">{{ agent.name }}</div>
-                <div class="text-sm text-gray-600">{{ agent.email }} • {{ agent.phone }}</div>
-              </div>
-            </label>
-            {% endfor %}
-          {% else %}
-            <div class="p-4 bg-yellow-50 rounded-lg text-center">
-              <p class="text-yellow-800">No women's free agents available. Free agents need to register first.</p>
-            </div>
-          {% endif %}
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Public Description</label>
+          <textarea name="public_description" rows="3" placeholder="Describe your tournament..."
+                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"></textarea>
         </div>
 
-        <div id="no-division-selected" class="p-4 bg-gray-100 rounded-lg text-center text-gray-600">
-          Please select a division to view available participants
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Max Participants</label>
+            <input type="number" name="max_participants" value="24" min="4" max="100"
+                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Number of Courts</label>
+            <select name="num_courts" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+              <option value="1">1 Court</option>
+              <option value="2" selected>2 Courts</option>
+              <option value="3">3 Courts</option>
+              <option value="4">4 Courts</option>
+            </select>
+          </div>
         </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Registration Deadline</label>
+          <input type="datetime-local" name="registration_deadline"
+                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+          <p class="text-sm text-gray-600 mt-1">Leave empty for no deadline</p>
+        </div>
+      </div>
+
+      <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+        <p class="text-sm text-purple-800">
+          <strong>Note:</strong> Match format settings (points per match, time limit, serves rotation) can be configured later before generating the match schedule.
+        </p>
       </div>
 
       <div class="flex gap-4">
         <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-lg">
-          Create Tournament & Send Invitations
+          Create Tournament
         </button>
         <a href="{{ url_for('admin_americano_tournaments') }}" class="bg-gray-300 text-gray-700 px-6 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all">
           Cancel
@@ -130,25 +110,4 @@
     </form>
   </div>
 </div>
-
-<script>
-function updateParticipants() {
-  const division = document.getElementById('division-select').value;
-  const menDiv = document.getElementById('men-participants');
-  const womenDiv = document.getElementById('women-participants');
-  const noSelection = document.getElementById('no-division-selected');
-  
-  menDiv.classList.add('hidden');
-  womenDiv.classList.add('hidden');
-  noSelection.classList.add('hidden');
-  
-  if (division === 'men') {
-    menDiv.classList.remove('hidden');
-  } else if (division === 'women') {
-    womenDiv.classList.remove('hidden');
-  } else {
-    noSelection.classList.remove('hidden');
-  }
-}
-</script>
 {% endblock %}

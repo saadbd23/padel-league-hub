@@ -42,6 +42,9 @@
         <button onclick="switchTab('freeagents')" id="freeagents-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
           🙋 Free Agents
         </button>
+        <button onclick="switchTab('americano')" id="americano-tab-btn" class="tab-button px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-200">
+          🎾 Americano
+        </button>
       </nav>
     </div>
   </div>
@@ -1870,6 +1873,93 @@
   </div>
   <!-- END FREE AGENTS TAB CONTENT -->
 
+  <!-- AMERICANO TAB CONTENT -->
+  <div id="americano-tab-content" class="tab-content hidden">
+
+    <!-- Quick Actions -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Americano Tournaments</h3>
+        <a href="{{ url_for('admin_americano_create') }}"
+           class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Create New Tournament
+        </a>
+      </div>
+    </div>
+
+    <!-- Tournament List -->
+    <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">All Tournaments</h3>
+
+      {% if americano_tournaments and americano_tournaments|length > 0 %}
+      <div class="space-y-4">
+        {% for t in americano_tournaments %}
+        <div class="bg-gray-50 rounded-xl p-4 border-2 {% if t.registration_open %}border-green-300{% elif t.status == 'in_progress' %}border-blue-300{% elif t.status == 'completed' %}border-purple-300{% else %}border-gray-200{% endif %}">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h4 class="font-bold text-gray-900">{{ t.public_title or (t.gender.title() + "'s Americano Tournament") }}</h4>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold {% if t.gender == 'men' %}bg-blue-100 text-blue-800{% else %}bg-pink-100 text-pink-800{% endif %}">
+                  {{ t.gender.title() }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">
+                {{ t.tournament_date.strftime('%B %d, %Y') }}
+                {% if t.location %} | {{ t.location }}{% endif %}
+              </div>
+              <div class="flex items-center gap-3 mt-2 text-sm">
+                {% if t.registration_open %}
+                <span class="text-green-600 font-semibold">Registration Open</span>
+                {% endif %}
+                <span class="text-gray-500">Status: {{ t.status|replace('_', ' ')|title }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <a href="{{ url_for('admin_americano_registrations', tournament_id=t.id) }}"
+                 class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm">
+                Registrations
+              </a>
+              <a href="{{ url_for('admin_americano_detail', tournament_id=t.id) }}"
+                 class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors text-sm">
+                Manage
+              </a>
+              {% if t.status == 'in_progress' %}
+              <a href="{{ url_for('admin_americano_court_schedule', tournament_id=t.id) }}"
+                 class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm">
+                Court Schedule
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <div class="text-5xl mb-4">🎾</div>
+        <p class="text-gray-600 font-medium">No Americano tournaments yet</p>
+        <p class="text-sm text-gray-500 mt-1">Create your first tournament to get started!</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info Box -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <h4 class="font-semibold text-blue-900 mb-2">About Americano Tournaments</h4>
+      <ul class="text-sm text-blue-800 space-y-1">
+        <li>* Open registration allows players to sign up via public link</li>
+        <li>* Players can be from ladder teams, league teams, or new to the system</li>
+        <li>* Court scheduling helps organize match flow during tournament day</li>
+        <li>* Quick score entry from the court schedule view</li>
+      </ul>
+    </div>
+
+  </div>
+  <!-- END AMERICANO TAB CONTENT -->
+
 </div>
 
 <style>
@@ -1932,16 +2022,20 @@ function switchTab(tabName) {
   const leagueContent = document.getElementById('league-tab-content');
   const ladderContent = document.getElementById('ladder-tab-content');
   const freeagentsContent = document.getElementById('freeagents-tab-content');
+  const americanoContent = document.getElementById('americano-tab-content');
   const leagueBtn = document.getElementById('league-tab-btn');
   const ladderBtn = document.getElementById('ladder-tab-btn');
   const freeagentsBtn = document.getElementById('freeagents-tab-btn');
+  const americanoBtn = document.getElementById('americano-tab-btn');
 
   leagueContent.classList.add('hidden');
   ladderContent.classList.add('hidden');
   freeagentsContent.classList.add('hidden');
+  americanoContent.classList.add('hidden');
   leagueBtn.classList.remove('active');
   ladderBtn.classList.remove('active');
   freeagentsBtn.classList.remove('active');
+  americanoBtn.classList.remove('active');
 
   if (tabName === 'league') {
     leagueContent.classList.remove('hidden');
@@ -1952,6 +2046,9 @@ function switchTab(tabName) {
   } else if (tabName === 'freeagents') {
     freeagentsContent.classList.remove('hidden');
     freeagentsBtn.classList.add('active');
+  } else if (tabName === 'americano') {
+    americanoContent.classList.remove('hidden');
+    americanoBtn.classList.add('active');
   }
 
   localStorage.setItem('admin-active-tab', tabName);

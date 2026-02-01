@@ -1,7 +1,9 @@
 import random
 import re
 import os
-from models import Team, Match, db
+import secrets
+from datetime import datetime
+from models import Team, Match, db, LadderFreeAgent, LadderTeam
 from sqlalchemy import func
 
 def normalize_team_name(name: str) -> str:
@@ -1398,7 +1400,249 @@ def generate_americano_pairings(player_ids):
                 partnerships[get_partnership_key(p1, p2)] += 1
                 partnerships[get_partnership_key(p3, p4)] += 1
                 oppositions[get_opposition_key(p1, p2, p3, p4)] += 1
-        
+
         rounds.append(round_matches)
-    
+
     return rounds
+
+
+# ============================================================================
+# AMERICANO REGISTRATION UTILITY FUNCTIONS
+# ============================================================================
+
+def find_existing_player_by_email(email):
+    """
+    Check all player sources for matching email (PRIMARY lookup).
+    Returns: (source_type, source_id, player_data) or (None, None, None)
+
+    player_data contains: {'name': ..., 'phone': ..., 'email': ..., 'gender': ...}
+    """
+    if not email:
+        return None, None, None
+
+    email_lower = email.lower().strip()
+
+    # Check LadderFreeAgent
+    free_agent = LadderFreeAgent.query.filter(
+        db.func.lower(LadderFreeAgent.email) == email_lower
+    ).first()
+    if free_agent:
+        return 'free_agent', free_agent.id, {
+            'name': free_agent.name,
+            'phone': free_agent.phone,
+            'email': free_agent.email,
+            'gender': free_agent.gender
+        }
+
+    # Check LadderTeam (player1 or player2)
+    ladder_team = LadderTeam.query.filter(
+        db.or_(
+            db.func.lower(LadderTeam.player1_email) == email_lower,
+            db.func.lower(LadderTeam.player2_email) == email_lower
+        )
+    ).first()
+    if ladder_team:
+        if ladder_team.player1_email and ladder_team.player1_email.lower() == email_lower:
+            return 'ladder_team', ladder_team.id, {
+                'name': ladder_team.player1_name,
+                'phone': ladder_team.player1_phone,
+                'email': ladder_team.player1_email,
+                'gender': ladder_team.gender
+            }
+        else:
+            return 'ladder_team', ladder_team.id, {
+                'name': ladder_team.player2_name,
+                'phone': ladder_team.player2_phone,
+                'email': ladder_team.player2_email,
+                'gender': ladder_team.gender
+            }
+
+    # Check league Team (player1 or player2)
+    league_team = Team.query.filter(
+        db.or_(
+            db.func.lower(Team.player1_email) == email_lower,
+            db.func.lower(Team.player2_email) == email_lower
+        )
+    ).first()
+    if league_team:
+        if league_team.player1_email and league_team.player1_email.lower() == email_lower:
+            return 'league_team', league_team.id, {
+                'name': league_team.player1_name,
+                'phone': league_team.player1_phone,
+                'email': league_team.player1_email,
+                'gender': None  # League teams don't have gender
+            }
+        else:
+            return 'league_team', league_team.id, {
+                'name': league_team.player2_name,
+                'phone': league_team.player2_phone,
+                'email': league_team.player2_email,
+                'gender': None
+            }
+
+    return None, None, None
+
+
+def find_existing_player_by_phone(phone):
+    """
+    Fallback lookup by phone if email not found.
+    Returns: (source_type, source_id, player_data) or (None, None, None)
+    """
+    if not phone:
+        return None, None, None
+
+    normalized = normalize_phone_number(phone)
+    if not normalized:
+        return None, None, None
+
+    # Check LadderFreeAgent
+    free_agent = LadderFreeAgent.query.filter(
+        LadderFreeAgent.phone == normalized
+    ).first()
+    if free_agent:
+        return 'free_agent', free_agent.id, {
+            'name': free_agent.name,
+            'phone': free_agent.phone,
+            'email': free_agent.email,
+            'gender': free_agent.gender
+        }
+
+    # Check LadderTeam (player1 or player2)
+    ladder_team = LadderTeam.query.filter(
+        db.or_(
+            LadderTeam.player1_phone == normalized,
+            LadderTeam.player2_phone == normalized
+        )
+    ).first()
+    if ladder_team:
+        if ladder_team.player1_phone == normalized:
+            return 'ladder_team', ladder_team.id, {
+                'name': ladder_team.player1_name,
+                'phone': ladder_team.player1_phone,
+                'email': ladder_team.player1_email,
+                'gender': ladder_team.gender
+            }
+        else:
+            return 'ladder_team', ladder_team.id, {
+                'name': ladder_team.player2_name,
+                'phone': ladder_team.player2_phone,
+                'email': ladder_team.player2_email,
+                'gender': ladder_team.gender
+            }
+
+    # Check league Team (player1 or player2)
+    league_team = Team.query.filter(
+        db.or_(
+            Team.player1_phone == normalized,
+            Team.player2_phone == normalized
+        )
+    ).first()
+    if league_team:
+        if league_team.player1_phone == normalized:
+            return 'league_team', league_team.id, {
+                'name': league_team.player1_name,
+                'phone': league_team.player1_phone,
+                'email': league_team.player1_email,
+                'gender': None
+            }
+        else:
+            return 'league_team', league_team.id, {
+                'name': league_team.player2_name,
+                'phone': league_team.player2_phone,
+                'email': league_team.player2_email,
+                'gender': None
+            }
+
+    return None, None, None
+
+
+def ensure_ladder_free_agent(registration):
+    """
+    Create or link LadderFreeAgent for AmericanoMatch compatibility.
+    This ensures registrations can be used with the existing match generation system.
+
+    Args:
+        registration: AmericanoRegistration object
+
+    Returns:
+        LadderFreeAgent object (existing or newly created)
+    """
+    normalized_phone = normalize_phone_number(registration.phone)
+
+    # Check if a LadderFreeAgent already exists with this phone
+    existing = LadderFreeAgent.query.filter(
+        LadderFreeAgent.phone == normalized_phone
+    ).first()
+
+    if existing:
+        # Link registration to existing free agent
+        registration.ladder_free_agent_id = existing.id
+        db.session.commit()
+        return existing
+
+    # Create new LadderFreeAgent
+    new_agent = LadderFreeAgent(
+        name=registration.name,
+        phone=normalized_phone,
+        email=registration.email,
+        gender=registration.gender,
+        skill_level=registration.skill_level,
+        access_token=secrets.token_urlsafe(32),
+        created_at=datetime.now()
+    )
+    db.session.add(new_agent)
+    db.session.flush()  # Get the ID
+
+    # Link registration to new free agent
+    registration.ladder_free_agent_id = new_agent.id
+    db.session.commit()
+
+    return new_agent
+
+
+def get_court_recommendation(num_players):
+    """
+    Get court recommendation based on number of players.
+    Returns: dict with recommendation info
+    """
+    recommendations = []
+
+    # Calculate matches per round (each match needs 4 players)
+    matches_per_round = num_players // 4
+
+    for courts in range(1, 5):
+        if matches_per_round >= courts:
+            matches_per_court = matches_per_round // courts
+            remainder = matches_per_round % courts
+
+            # Determine if this is a good option
+            is_good = 3 <= matches_per_court <= 6
+
+            recommendations.append({
+                'courts': courts,
+                'matches_per_court': matches_per_court,
+                'remainder': remainder,
+                'is_recommended': is_good and remainder == 0
+            })
+
+    # Find the best recommendation (4-6 matches per court, minimal remainder)
+    best = None
+    for rec in recommendations:
+        if rec['is_recommended']:
+            best = rec['courts']
+            break
+
+    # If no perfect recommendation, pick closest to 4-6 matches per court
+    if best is None and recommendations:
+        best = recommendations[0]['courts']
+        for rec in recommendations:
+            if 4 <= rec['matches_per_court'] <= 6:
+                best = rec['courts']
+                break
+
+    return {
+        'num_players': num_players,
+        'matches_per_round': matches_per_round,
+        'recommendations': recommendations,
+        'suggested_courts': best or 2
+    }

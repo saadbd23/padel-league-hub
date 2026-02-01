@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <!-- Back Link -->
+  <a href="{{ url_for('tournament_detail', tournament_id=tournament.id) }}" class="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Tournament
+  </a>
+
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+      <h2 class="text-xl sm:text-2xl font-bold text-white">Register for Tournament</h2>
+      <p class="text-white/80 text-sm mt-1">
+        {{ tournament.public_title or (tournament.gender.title() + "'s Americano") }} - {{ tournament.tournament_date.strftime('%B %d, %Y') }}
+      </p>
+    </div>
+
+    <div class="p-6">
+      <!-- Player Lookup Section -->
+      <div id="lookup-section" class="mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p class="text-blue-900 font-medium mb-2">Have you played in a BD Padel event before?</p>
+          <div class="flex gap-3">
+            <button type="button" onclick="showLookup()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              Yes, find me
+            </button>
+            <button type="button" onclick="showFullForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+              No, I'm new
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email/Phone Lookup -->
+      <div id="email-lookup" class="hidden mb-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Enter your email address</label>
+          <div class="flex gap-2">
+            <input type="email" id="lookup-email" placeholder="your@email.com"
+                   class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+            <button type="button" onclick="lookupPlayer()" class="px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+              Find
+            </button>
+          </div>
+          <p id="lookup-status" class="text-sm mt-2 hidden"></p>
+
+          <!-- Phone fallback -->
+          <div id="phone-fallback" class="hidden mt-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Try your WhatsApp number instead</label>
+            <div class="flex gap-2">
+              <input type="tel" id="lookup-phone" placeholder="01712345678"
+                     class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+              <button type="button" onclick="lookupByPhone()" class="px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                Find
+              </button>
+            </div>
+          </div>
+
+          <button type="button" onclick="showFullForm()" class="text-green-600 hover:text-green-700 text-sm mt-3 underline">
+            Register as new player instead
+          </button>
+        </div>
+      </div>
+
+      <!-- Welcome Back Message -->
+      <div id="welcome-back" class="hidden mb-4">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p class="text-green-800 font-semibold">Welcome back, <span id="found-name"></span>!</p>
+          <p class="text-green-700 text-sm">We found your details. Please confirm below.</p>
+        </div>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="registration-form" method="POST" action="{{ url_for('tournament_register', tournament_id=tournament.id) }}" class="space-y-4">
+        <input type="hidden" name="source_type" id="source_type" value="new">
+        <input type="hidden" name="source_id" id="source_id" value="">
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+          <input type="text" name="name" id="name" required
+                 value="{{ form_data.name if form_data else '' }}"
+                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                 placeholder="Your full name">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+          <input type="email" name="email" id="email" required
+                 value="{{ form_data.email if form_data else '' }}"
+                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                 placeholder="your@email.com">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number *</label>
+          <input type="tel" name="phone" id="phone" required
+                 value="{{ form_data.phone if form_data else '' }}"
+                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                 placeholder="01712345678">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Gender *</label>
+          <select name="gender" id="gender" required
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+            <option value="">Select gender</option>
+            <option value="men" {% if tournament.gender == 'men' %}selected{% endif %}>Male</option>
+            <option value="women" {% if tournament.gender == 'women' %}selected{% endif %}>Female</option>
+          </select>
+          {% if tournament.gender %}
+          <p class="text-sm text-gray-500 mt-1">This tournament is for {{ tournament.gender }}'s division</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Skill Level (Optional)</label>
+          <select name="skill_level" id="skill_level"
+                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all">
+            <option value="">Select skill level</option>
+            <option value="beginner">Beginner (just started playing)</option>
+            <option value="intermediate">Intermediate (play regularly)</option>
+            <option value="advanced">Advanced (competitive player)</option>
+          </select>
+        </div>
+
+        <button type="submit"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:-translate-y-1 transition-all">
+          Register for Tournament
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function showLookup() {
+  document.getElementById('lookup-section').classList.add('hidden');
+  document.getElementById('email-lookup').classList.remove('hidden');
+}
+
+function showFullForm() {
+  document.getElementById('lookup-section').classList.add('hidden');
+  document.getElementById('email-lookup').classList.add('hidden');
+  document.getElementById('welcome-back').classList.add('hidden');
+}
+
+async function lookupPlayer() {
+  const email = document.getElementById('lookup-email').value.trim();
+  if (!email) return;
+
+  const status = document.getElementById('lookup-status');
+  status.classList.remove('hidden', 'text-green-600', 'text-red-600');
+  status.textContent = 'Searching...';
+  status.classList.add('text-gray-600');
+
+  try {
+    const response = await fetch(`/api/check-player?email=${encodeURIComponent(email)}`);
+    const data = await response.json();
+
+    if (data.found) {
+      fillForm(data);
+      status.textContent = 'Found! Details filled in below.';
+      status.classList.remove('text-gray-600');
+      status.classList.add('text-green-600');
+    } else {
+      status.textContent = 'Email not found in our system.';
+      status.classList.remove('text-gray-600');
+      status.classList.add('text-red-600');
+      document.getElementById('phone-fallback').classList.remove('hidden');
+    }
+  } catch (err) {
+    status.textContent = 'Error searching. Please try again.';
+    status.classList.remove('text-gray-600');
+    status.classList.add('text-red-600');
+  }
+}
+
+async function lookupByPhone() {
+  const phone = document.getElementById('lookup-phone').value.trim();
+  if (!phone) return;
+
+  const status = document.getElementById('lookup-status');
+  status.textContent = 'Searching...';
+
+  try {
+    const response = await fetch(`/api/check-player?phone=${encodeURIComponent(phone)}`);
+    const data = await response.json();
+
+    if (data.found) {
+      fillForm(data);
+      status.textContent = 'Found! Details filled in below.';
+      status.classList.remove('text-red-600');
+      status.classList.add('text-green-600');
+    } else {
+      status.textContent = 'Not found. Please fill in your details below.';
+      showFullForm();
+    }
+  } catch (err) {
+    status.textContent = 'Error searching. Please fill in your details below.';
+    showFullForm();
+  }
+}
+
+function fillForm(data) {
+  document.getElementById('name').value = data.name || '';
+  document.getElementById('email').value = data.email || '';
+  document.getElementById('phone').value = data.phone || '';
+  if (data.gender) {
+    document.getElementById('gender').value = data.gender;
+  }
+  document.getElementById('source_type').value = data.source_type || 'new';
+  document.getElementById('source_id').value = data.source_id || '';
+
+  document.getElementById('found-name').textContent = data.name;
+  document.getElementById('welcome-back').classList.remove('hidden');
+  document.getElementById('email-lookup').classList.add('hidden');
+}
+</script>
+{% endblock %}

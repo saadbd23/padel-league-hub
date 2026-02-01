@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+    <div>
+      <a href="{{ url_for('tournament_detail', tournament_id=tournament.id) }}" class="inline-flex items-center text-white/80 hover:text-white mb-2 transition-colors text-sm">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to Tournament
+      </a>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">
+        {{ tournament.public_title or (tournament.gender.title() + "'s Americano") }} - Live Schedule
+      </h2>
+      <p class="text-white/80">
+        {{ tournament.tournament_date.strftime('%B %d, %Y') }}
+        {% if tournament.location %} | {{ tournament.location }}{% endif %}
+      </p>
+    </div>
+    <a href="{{ url_for('tournament_leaderboard', tournament_id=tournament.id) }}"
+       class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+      View Leaderboard
+    </a>
+  </div>
+
+  <!-- Player Search -->
+  <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
+    <h3 class="font-bold text-gray-900 mb-3">Find Your Matches</h3>
+    <div class="flex gap-2">
+      <input type="text" id="player-search" placeholder="Enter your name..."
+             class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
+             onkeyup="filterMatches()">
+      <button onclick="clearSearch()" class="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+        Clear
+      </button>
+    </div>
+
+    <!-- Player's Matches Summary -->
+    <div id="player-matches-summary" class="hidden mt-4 bg-purple-50 rounded-lg p-4">
+      <h4 class="font-semibold text-purple-900 mb-2">Your Matches (<span id="match-count">0</span>)</h4>
+      <div id="player-match-list" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Round Tabs (Mobile) -->
+  <div class="sm:hidden mb-4 overflow-x-auto">
+    <div class="flex gap-2 pb-2">
+      {% for round_num in matches_by_round.keys()|sort %}
+      <button onclick="showRound({{ round_num }})"
+              class="round-tab px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors
+                     {% if round_num == current_round %}bg-purple-600 text-white{% else %}bg-white/80 text-gray-700 hover:bg-white{% endif %}"
+              data-round="{{ round_num }}">
+        Round {{ round_num }}
+        {% if round_num < current_round %}
+        <span class="text-xs ml-1">Done</span>
+        {% elif round_num == current_round %}
+        <span class="text-xs ml-1">Current</span>
+        {% endif %}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Schedule by Round -->
+  {% for round_num in matches_by_round.keys()|sort %}
+  <div class="round-section mb-8 {% if round_num != current_round %}hidden sm:block{% endif %}" data-round="{{ round_num }}">
+    <!-- Round Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold text-white flex items-center">
+        Round {{ round_num }}
+        {% if round_num < current_round %}
+        <span class="ml-2 text-sm bg-green-500 text-white px-2 py-1 rounded">Completed</span>
+        {% elif round_num == current_round %}
+        <span class="ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded">Current</span>
+        {% else %}
+        <span class="ml-2 text-sm bg-gray-500 text-white px-2 py-1 rounded">Upcoming</span>
+        {% endif %}
+      </h3>
+    </div>
+
+    <!-- Courts Grid -->
+    <div class="grid grid-cols-1 {% if num_courts > 1 %}md:grid-cols-{{ num_courts }}{% endif %} gap-4">
+      {% for court_num in matches_by_round[round_num].keys()|sort %}
+      <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-3">
+          <h4 class="text-white font-bold">Court {{ court_num }}</h4>
+        </div>
+
+        <div class="p-4 space-y-3">
+          {% for match_data in matches_by_round[round_num][court_num] %}
+          {% set m = match_data.match %}
+          <div class="match-card bg-gray-50 rounded-lg p-3 border-2 {% if m.status == 'completed' %}border-green-200{% else %}border-gray-200{% endif %}"
+               data-players="{{ match_data.p1.name|lower if match_data.p1 else '' }} {{ match_data.p2.name|lower if match_data.p2 else '' }} {{ match_data.p3.name|lower if match_data.p3 else '' }} {{ match_data.p4.name|lower if match_data.p4 else '' }}">
+
+            <!-- Status Badge -->
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold
+                {% if m.status == 'completed' %}text-green-600
+                {% elif round_num == current_round %}text-blue-600
+                {% else %}text-gray-500{% endif %}">
+                {% if m.status == 'completed' %}
+                COMPLETED
+                {% elif round_num == current_round %}
+                NOW PLAYING
+                {% else %}
+                SCHEDULED
+                {% endif %}
+              </span>
+              {% if m.status == 'completed' %}
+              <span class="text-sm font-bold text-gray-900">{{ m.score_team_a }}-{{ m.score_team_b }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Teams -->
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <div class="text-xs text-blue-600 font-semibold mb-1">Team A</div>
+                <div class="text-sm font-medium text-gray-900 player-name">{{ match_data.p1.name if match_data.p1 else 'TBD' }}</div>
+                <div class="text-sm text-gray-600 player-name">+ {{ match_data.p2.name if match_data.p2 else 'TBD' }}</div>
+              </div>
+
+              <div class="px-3 text-gray-400 text-lg font-bold">vs</div>
+
+              <div class="flex-1 text-right">
+                <div class="text-xs text-red-600 font-semibold mb-1">Team B</div>
+                <div class="text-sm font-medium text-gray-900 player-name">{{ match_data.p3.name if match_data.p3 else 'TBD' }}</div>
+                <div class="text-sm text-gray-600 player-name">+ {{ match_data.p4.name if match_data.p4 else 'TBD' }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function filterMatches() {
+  const search = document.getElementById('player-search').value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.match-card');
+  const summary = document.getElementById('player-matches-summary');
+  const matchList = document.getElementById('player-match-list');
+  const matchCount = document.getElementById('match-count');
+
+  if (!search) {
+    cards.forEach(card => {
+      card.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50');
+      card.classList.add('bg-gray-50');
+    });
+    summary.classList.add('hidden');
+    return;
+  }
+
+  let found = 0;
+  matchList.innerHTML = '';
+
+  cards.forEach(card => {
+    const players = card.dataset.players;
+    if (players.includes(search)) {
+      card.classList.remove('bg-gray-50');
+      card.classList.add('ring-2', 'ring-purple-500', 'bg-purple-50');
+      found++;
+
+      // Get round and court info
+      const roundSection = card.closest('.round-section');
+      const roundNum = roundSection ? roundSection.dataset.round : '?';
+      const courtDiv = card.closest('.bg-white\\/95');
+      const courtHeader = courtDiv ? courtDiv.querySelector('h4').textContent : 'Court ?';
+
+      // Get match status
+      const statusEl = card.querySelector('.text-xs.font-semibold');
+      const status = statusEl ? statusEl.textContent.trim() : '';
+      const scoreEl = card.querySelector('.text-sm.font-bold.text-gray-900');
+      const score = scoreEl ? scoreEl.textContent : '';
+
+      // Add to summary
+      const matchInfo = document.createElement('div');
+      matchInfo.className = 'text-sm text-purple-800';
+      matchInfo.innerHTML = `Round ${roundNum} - ${courtHeader} - <span class="font-semibold">${status}</span> ${score ? '(' + score + ')' : ''}`;
+      matchList.appendChild(matchInfo);
+    } else {
+      card.classList.add('bg-gray-50');
+      card.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50');
+    }
+  });
+
+  matchCount.textContent = found;
+  if (found > 0) {
+    summary.classList.remove('hidden');
+  } else {
+    summary.classList.add('hidden');
+  }
+}
+
+function clearSearch() {
+  document.getElementById('player-search').value = '';
+  filterMatches();
+}
+
+function showRound(roundNum) {
+  // Update tabs
+  document.querySelectorAll('.round-tab').forEach(tab => {
+    if (parseInt(tab.dataset.round) === roundNum) {
+      tab.classList.remove('bg-white/80', 'text-gray-700');
+      tab.classList.add('bg-purple-600', 'text-white');
+    } else {
+      tab.classList.add('bg-white/80', 'text-gray-700');
+      tab.classList.remove('bg-purple-600', 'text-white');
+    }
+  });
+
+  // Show/hide sections on mobile
+  document.querySelectorAll('.round-section').forEach(section => {
+    if (parseInt(section.dataset.round) === roundNum) {
+      section.classList.remove('hidden');
+    } else {
+      section.classList.add('hidden', 'sm:block');
+    }
+  });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  const search = document.getElementById('player-search').value;
+  if (!search) {
+    location.reload();
+  }
+}, 30000);
+</script>
+{% endblock %}
